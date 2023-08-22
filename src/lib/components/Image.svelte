@@ -8,7 +8,7 @@
   import IIIFInfo from 'ol/format/IIIFInfo.js'
   import VectorSource from 'ol/source/Vector.js'
   import VectorLayer from 'ol/layer/Vector.js'
-  import Feature from 'ol/feature.js'
+  import Feature from 'ol/Feature.js'
   import Polygon from 'ol/geom/Polygon.js'
 
   import { gameService, currentRound, currentRoundIndex } from '$lib/shared/stores/game.js'
