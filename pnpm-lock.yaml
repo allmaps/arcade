@@ -6,25 +6,25 @@ settings:
 
 dependencies:
   '@allmaps/annotation':
-    specifier: ^1.0.0-beta.14
+    specifier: ^1.0.0-beta.15
     version: 1.0.0-beta.15
   '@allmaps/iiif-parser':
     specifier: ^1.0.0-beta.25
     version: 1.0.0-beta.25
   '@allmaps/openlayers':
-    specifier: ^1.0.0-beta.34
+    specifier: ^1.0.0-beta.35
     version: 1.0.0-beta.35
   '@allmaps/stdlib':
-    specifier: ^1.0.0-beta.10
+    specifier: ^1.0.0-beta.11
     version: 1.0.0-beta.11
   '@allmaps/tailwind':
-    specifier: ^1.0.0-beta.6
+    specifier: ^1.0.0-beta.7
     version: 1.0.0-beta.7
   '@allmaps/transform':
     specifier: ^1.0.0-beta.15
     version: 1.0.0-beta.15
   '@allmaps/ui':
-    specifier: ^1.0.0-beta.16
+    specifier: ^1.0.0-beta.17
     version: 1.0.0-beta.17(@sveltejs/kit@1.22.1)(svelte@4.0.5)
   '@turf/rewind':
     specifier: ^6.5.0
