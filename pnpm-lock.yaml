@@ -36,8 +36,11 @@ dependencies:
     specifier: ^3.1.0
     version: 3.1.0
   ol:
-    specifier: ^7.5.1
-    version: 7.5.1
+    specifier: ^8.1.0
+    version: 8.1.0
+  ol-mapbox-style:
+    specifier: ^11.0.3
+    version: 11.0.3(ol@8.1.0)
   xstate:
     specifier: ^4.38.0
     version: 4.38.2
@@ -1392,7 +1395,7 @@ packages:
       lerc: 3.0.0
       pako: 2.1.0
       parse-headers: 2.0.5
-      quick-lru: 6.1.1
+      quick-lru: 6.1.2
       web-worker: 1.2.0
       xml-utils: 1.7.0
     dev: false
@@ -1773,12 +1776,14 @@ packages:
     engines: {node: '>= 6'}
     dev: true
 
-  /ol-mapbox-style@10.7.0:
-    resolution: {integrity: sha512-S/UdYBuOjrotcR95Iq9AejGYbifKeZE85D9VtH11ryJLQPTZXZSW1J5bIXcr4AlAH6tyjPPHTK34AdkwB32Myw==}
+  /ol-mapbox-style@11.0.3(ol@8.1.0):
+    resolution: {integrity: sha512-jc3PX1kHtvq8e5jPYVh9WFAppAbLrndik9qBicIemlQKPz0oFeQ98D3ITub3wfwVXXVReqeOKa43NGOseUne1Q==}
+    peerDependencies:
+      ol: '>=8.0.0 || >8.0.0-dev.0 < 8.0.0 || >=7.0.0 <=7.5.1'
     dependencies:
       '@mapbox/mapbox-gl-style-spec': 13.28.0
       mapbox-to-css-font: 2.4.2
-      ol: 7.5.1
+      ol: 8.1.0
     dev: false
 
   /ol-mapbox-style@8.2.1:
@@ -1797,12 +1802,11 @@ packages:
       rbush: 3.0.1
     dev: false
 
-  /ol@7.5.1:
-    resolution: {integrity: sha512-CFXDhO8YdQt7I+zwrGYSONo/ZM2oLr7vUvxqpLEUyy+USaQjUeE8L6FBOWIPboopGVhnSVYd5hdEirn9ifKBZQ==}
+  /ol@8.1.0:
+    resolution: {integrity: sha512-cx3SH2plpFS9fM8pp1nCypgQXGJD7Mcb1E3mEySmy5XEw1DUEo+kkNzgtAZz5qupekqi7aU9iBJEjCoMfqvO2Q==}
     dependencies:
       earcut: 2.2.4
       geotiff: 2.0.7
-      ol-mapbox-style: 10.7.0
       pbf: 3.2.1
       rbush: 3.0.1
     dev: false
@@ -2057,8 +2061,8 @@ packages:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
     dev: true
 
-  /quick-lru@6.1.1:
-    resolution: {integrity: sha512-S27GBT+F0NTRiehtbrgaSE1idUAJ5bX8dPAQTdylEyNlrdcH5X4Lz7Edz3DYzecbsCluD5zO8ZNEe04z3D3u6Q==}
+  /quick-lru@6.1.2:
+    resolution: {integrity: sha512-AAFUA5O1d83pIHEhJwWCq/RQcRukCkn/NSm2QsTEMle5f2hP0ChI2+3Xb051PZCkLryI/Ir1MVKviT2FIloaTQ==}
     engines: {node: '>=12'}
     dev: false
 
