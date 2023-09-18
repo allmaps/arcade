@@ -3,17 +3,27 @@
 
   import OLMap from 'ol/Map.js'
   import View from 'ol/View.js'
-  import XYZ from 'ol/source/XYZ.js'
-  import TileLayer from 'ol/layer/Tile.js'
   import GeoJSON from 'ol/format/GeoJSON.js'
+  import VectorTile from 'ol/layer/VectorTile.js'
+  import Attribution from 'ol/control/Attribution.js'
+
+  import { useGeographic } from 'ol/proj.js'
+  import { getCenter } from 'ol/extent.js'
+  import { getArea, getDistance } from 'ol/sphere.js'
+  import { fromExtent } from 'ol/geom/Polygon.js'
+  import LineString from 'ol/geom/LineString.js'
+
+  import { applyStyle } from 'ol-mapbox-style'
 
   import { GCPTransformer } from '@allmaps/transform'
   import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
 
   import { geometryToPath } from '$lib/shared/geometry.js'
+  import { computeScore } from '$lib/shared/score.js'
 
   import { gameService, currentRound, currentRoundIndex } from '$lib/shared/stores/game.js'
   import { colorForRounds } from '$lib/shared/colors.js'
+  import { style } from '$lib/shared/protomaps'
 
   import type { Polygon } from 'geojson'
 
@@ -30,46 +40,37 @@
 
   let contentBoxSize: ResizeObserverSize
 
-  function getDistance(a: number[], b: number[]) {
-    return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2))
-  }
-
   function handleMoveend() {
     if (!path || !geoMask || !ol) {
       return
     }
-    // pak bbox van geomask
-    // geometryToPath van bbox
 
     const svgPixelBBox = path.getBBox()
-    const svgPixelTopLeft = [svgPixelBBox.x, svgPixelBBox.y]
-    const svgPixelBottomRight = [
-      svgPixelBBox.x + svgPixelBBox.width,
-      svgPixelBBox.y + svgPixelBBox.height
+    const svgPixelCenter = [
+      svgPixelBBox.x + svgPixelBBox.width / 2,
+      svgPixelBBox.y + svgPixelBBox.height / 2
     ]
 
-    const warpedMapGeoBBox = new GeoJSON()
-      .readGeometry(geoMask, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857'
-      })
-      .getExtent()
+    const warpedMapGeoMask = new GeoJSON().readGeometry(geoMask)
 
-    const warpedMapPixelTopLeft = ol.getPixelFromCoordinate([
-      warpedMapGeoBBox[0],
-      warpedMapGeoBBox[3]
-    ])
-    const warpedMapPixelBottomRight = ol.getPixelFromCoordinate([
-      warpedMapGeoBBox[2],
-      warpedMapGeoBBox[1]
+    const warpedMapGeoMaskCenter = getCenter(warpedMapGeoMask.getExtent())
+
+    const svgGeoTopLeft = ol.getCoordinateFromPixel([svgPixelBBox.x, svgPixelBBox.y])
+    const svgGeoBottomRight = ol.getCoordinateFromPixel([
+      svgPixelBBox.x + svgPixelBBox.width,
+      svgPixelBBox.y + svgPixelBBox.height
     ])
 
-    const distance =
-      (getDistance(warpedMapPixelTopLeft, svgPixelTopLeft) +
-        getDistance(warpedMapPixelBottomRight, svgPixelBottomRight)) /
-      2
+    const warpedMapGeoMaskArea = getArea(fromExtent(warpedMapGeoMask.getExtent()))
 
-    console.log('Distance:', distance)
+    const svgGeoArea = getArea(
+      fromExtent(new LineString([svgGeoTopLeft, svgGeoBottomRight]).getExtent())
+    )
+
+    const svgGeoCenter = ol.getCoordinateFromPixel(svgPixelCenter)
+
+    const distance = getDistance(warpedMapGeoMaskCenter, svgGeoCenter)
+    const score = computeScore(distance, warpedMapGeoMaskArea, svgGeoArea)
   }
 
   onMount(() => {
@@ -82,14 +83,12 @@
     const transformer = new GCPTransformer($currentRound.map.gcps)
     geoMask = transformer.toGeoJSONPolygon($currentRound.map.resourceMask)
 
-    const tileSource = new XYZ({
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-      maxZoom: 19
-    })
+    const baseLayer = new VectorTile({ declutter: true })
+    applyStyle(baseLayer, style)
 
-    const tileLayer = new TileLayer({
-      source: tileSource
-    })
+    // const attribution = new Attribution({
+    //   collapsible: false
+    // })
 
     const warpedMapSource = new WarpedMapSource()
 
@@ -99,9 +98,11 @@
 
     warpedMapSource.addMap($currentRound.map)
 
+    useGeographic()
+
     ol = new OLMap({
       target: element,
-      layers: [tileLayer, warpedMapLayer],
+      layers: [baseLayer, warpedMapLayer],
       controls: [],
       view: new View({
         center: [0, 0],
