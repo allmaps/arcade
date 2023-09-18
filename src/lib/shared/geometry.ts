@@ -13,9 +13,10 @@ export function geometryToPath(polygon: Polygon, width: number, height: number) 
   mercator.scale(1).translate([0, 0])
 
   const bounds = path.bounds(polygon)
+
+  // TODO: read 0.7 from config
   const scale =
-    1 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height)
-  // 0.9 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height)
+    0.7 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height)
 
   const translate: [number, number] = [
     (width - scale * (bounds[1][0] + bounds[0][0])) / 2,

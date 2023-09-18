@@ -80,8 +80,12 @@
           extent = featureGeometry.getExtent()
         }
 
+        // TODO: read 0.7 from config
+        const paddingX = Math.round((element.clientWidth - element.clientWidth * 0.7) / 2)
+        const paddingY = Math.round((element.clientHeight - element.clientHeight * 0.7) / 2)
+
         ol.getView().fit(extent, {
-          padding: [25, 25, 25, 25]
+          padding: [paddingY, paddingX, paddingY, paddingX]
         })
 
         ol.on('rendercomplete', () => {
