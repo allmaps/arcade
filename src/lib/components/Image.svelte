@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { createEventDispatcher } from 'svelte'
 
   import OLMap from 'ol/Map.js'
   import View from 'ol/View.js'
@@ -19,6 +20,8 @@
   let element: HTMLElement
 
   let bgClass: string
+
+  const dispatch = createEventDispatcher()
 
   onMount(() => {
     if (!$currentRound || !$currentRound.loaded || $currentRoundIndex === undefined) {
@@ -70,13 +73,20 @@
             constrainOnlyCenter: true
           })
         )
-        ol.getView().fit(tileGrid.getExtent(), {
+
+        let extent = tileGrid.getExtent()
+        const featureGeometry = feature.getGeometry()
+        if (featureGeometry) {
+          extent = featureGeometry.getExtent()
+        }
+
+        ol.getView().fit(extent, {
           padding: [25, 25, 25, 25]
         })
 
-        // ol.on('rendercomplete', () => {
-        //   // Done loading all tiles
-        // })
+        ol.on('rendercomplete', () => {
+          dispatch('ready')
+        })
 
         gameService.send({
           type: 'SET_OL_IMAGE',
