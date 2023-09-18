@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte'
-  import { browser } from '$app/environment'
+  import { onMount } from 'svelte'
 
   import Header from '$lib/components/Header.svelte'
-  import Footer from '$lib/components/Footer.svelte'
   import Start from '$lib/components/Start.svelte'
   import GameIntro from '$lib/components/GameIntro.svelte'
   import Round from '$lib/components/Round.svelte'
@@ -56,10 +54,8 @@
     document.addEventListener('keypress', handleKeypress)
     document.addEventListener('keyup', handleKeyup)
     document.addEventListener('keydown', handleKeydown)
-  })
 
-  onDestroy(() => {
-    if (browser) {
+    return () => {
       document.removeEventListener('keypress', handleKeypress)
       document.removeEventListener('keyup', handleKeyup)
       document.removeEventListener('keydown', handleKeydown)
@@ -83,4 +79,3 @@
     <div>Highscores</div>
   {/if}
 </main>
-<Footer />
