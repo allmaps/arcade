@@ -278,8 +278,6 @@
     })
 
     ol.on('moveend', () => {
-      console.log('current zoom', ol.getView().getZoom())
-
       const submissionZoom = getSubmissionZoom()
 
       const zoomDiff = Math.abs(submissionZoom - warpedMapZoom)
