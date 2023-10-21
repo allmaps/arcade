@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -26,7 +26,13 @@ dependencies:
   '@allmaps/ui':
     specifier: ^1.0.0-beta.17
     version: 1.0.0-beta.17(@sveltejs/kit@1.22.6)(svelte@4.2.0)
+  '@turf/bearing':
+    specifier: ^6.5.0
+    version: 6.5.0
   '@turf/rewind':
+    specifier: ^6.5.0
+    version: 6.5.0
+  '@turf/rhumb-bearing':
     specifier: ^6.5.0
     version: 6.5.0
   '@xstate/svelte':
@@ -660,6 +666,13 @@ packages:
       '@turf/helpers': 6.5.0
       '@turf/invariant': 6.5.0
       '@turf/meta': 6.5.0
+    dev: false
+
+  /@turf/rhumb-bearing@6.5.0:
+    resolution: {integrity: sha512-jMyqiMRK4hzREjQmnLXmkJ+VTNTx1ii8vuqRwJPcTlKbNWfjDz/5JqJlb5NaFDcdMpftWovkW5GevfnuzHnOYA==}
+    dependencies:
+      '@turf/helpers': 6.5.0
+      '@turf/invariant': 6.5.0
     dev: false
 
   /@types/cookie@0.5.1:

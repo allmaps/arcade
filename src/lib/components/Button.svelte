@@ -1,19 +1,40 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount, createEventDispatcher } from 'svelte'
+
+  const dispatch = createEventDispatcher()
 
   export let timeout = 0
   export let disabled = false
+  export let shortcutKey: string | undefined = undefined
+
+  let timeoutId: number
 
   let button: HTMLButtonElement
 
+  function handleKeypress(event: KeyboardEvent) {
+    if (event.key === shortcutKey && !event.repeat) {
+      button.dispatchEvent(new Event('click'))
+    }
+  }
+
   onMount(() => {
     if (timeout > 0) {
-      const timeoutId = setTimeout(() => {
+      timeoutId = setTimeout(() => {
         button.dispatchEvent(new Event('click'))
       }, timeout)
+    }
 
-      return () => {
+    if (shortcutKey) {
+      document.addEventListener('keypress', handleKeypress)
+    }
+
+    return () => {
+      if (timeoutId) {
         clearTimeout(timeoutId)
+      }
+
+      if (shortcutKey) {
+        document.removeEventListener('keypress', handleKeypress)
       }
     }
   })
@@ -23,7 +44,7 @@
   bind:this={button}
   {disabled}
   type="button"
-  class="relative text-white bg-purple-300 border-purple-600 border-8 font-medium rounded-full px-5 py-2.5 mr-2 mb-2 focus:outline-none pointer-events-auto overflow-hidden"
+  class="relative h-min w-fit text-white bg-purple-300 disabled:bg-gray-400 border-purple-600 border-8 font-medium rounded-full px-5 py-2.5 mr-2 focus:outline-none pointer-events-auto overflow-hidden"
   on:click
 >
   <div

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentRound } from '$lib/shared/stores/game.js'
+  import { currentRound } from '$lib/shared/machines/game.js'
   import { endTime } from '$lib/shared/stores/timer.js'
 
   let seconds: number

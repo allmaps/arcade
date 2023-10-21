@@ -12,10 +12,15 @@
   import Feature from 'ol/Feature.js'
   import Polygon from 'ol/geom/Polygon.js'
 
-  import { gameService, currentRound, currentRoundIndex } from '$lib/shared/stores/game.js'
+  import {
+    gameService,
+    rounds,
+    currentRound,
+    currentRoundIndex
+  } from '$lib/shared/machines/game.js'
 
   import { maskStyle, maskToPolygon } from '$lib/shared/openlayers.js'
-  import { colorForRounds } from '$lib/shared/colors.js'
+  import { PADDING } from '$lib/shared/constants.js'
 
   let element: HTMLElement
 
@@ -32,13 +37,11 @@
 
     const vectorSource = new VectorSource()
 
-    const roundColor = colorForRounds[$currentRoundIndex]
-
-    bgClass = roundColor.bgClass
+    bgClass = $currentRound.colors.bgClass
 
     const vectorLayer = new VectorLayer({
       source: vectorSource,
-      style: maskStyle(roundColor.color)
+      style: maskStyle($currentRound.colors.color)
     })
 
     const feature = new Feature({
@@ -70,7 +73,8 @@
           new View({
             resolutions: tileGrid.getResolutions(),
             extent: tileGrid.getExtent(),
-            constrainOnlyCenter: true
+            constrainOnlyCenter: true,
+            enableRotation: false
           })
         )
 
@@ -80,17 +84,11 @@
           extent = featureGeometry.getExtent()
         }
 
-        // TODO: read 0.7 from config
-        const paddingX = Math.round((element.clientWidth - element.clientWidth * 0.7) / 2)
-        const paddingY = Math.round((element.clientHeight - element.clientHeight * 0.7) / 2)
-
         ol.getView().fit(extent, {
-          padding: [paddingY, paddingX, paddingY, paddingX]
+          padding: PADDING
         })
 
-        ol.on('rendercomplete', () => {
-          dispatch('ready')
-        })
+        ol.on('rendercomplete', () => dispatch('ready'))
 
         gameService.send({
           type: 'SET_OL_IMAGE',
