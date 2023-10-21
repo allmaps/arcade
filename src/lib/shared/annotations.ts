@@ -31,7 +31,7 @@ export function getRandomAnnotationUrl(previousAnnotationUrls: string[]) {
   const randomAnnotationUrl =
     filteredAnnotationUrls[Math.floor(Math.random() * filteredAnnotationUrls.length)]
 
-  return 'http://annotations.localhost:9584/maps/random'
+  // return 'http://annotations.localhost:9584/maps/random'
   return randomAnnotationUrl
 }
 
