@@ -32,9 +32,6 @@ dependencies:
   '@turf/rewind':
     specifier: ^6.5.0
     version: 6.5.0
-  '@turf/rhumb-bearing':
-    specifier: ^6.5.0
-    version: 6.5.0
   '@xstate/svelte':
     specifier: ^2.0.1
     version: 2.1.0(svelte@4.2.0)(xstate@4.38.2)
@@ -666,13 +663,6 @@ packages:
       '@turf/helpers': 6.5.0
       '@turf/invariant': 6.5.0
       '@turf/meta': 6.5.0
-    dev: false
-
-  /@turf/rhumb-bearing@6.5.0:
-    resolution: {integrity: sha512-jMyqiMRK4hzREjQmnLXmkJ+VTNTx1ii8vuqRwJPcTlKbNWfjDz/5JqJlb5NaFDcdMpftWovkW5GevfnuzHnOYA==}
-    dependencies:
-      '@turf/helpers': 6.5.0
-      '@turf/invariant': 6.5.0
     dev: false
 
   /@types/cookie@0.5.1:
