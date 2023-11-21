@@ -4,6 +4,7 @@
   import { gameService } from '$lib/shared/machines/game.js'
 
   import Diamonds from '$lib/components/Diamonds.svelte'
+  import Masks from '$lib/components/Masks.svelte'
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
   import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
@@ -38,6 +39,7 @@
   </div>
 
   <div class="absolute -z-10 top-0 left-0 w-full h-full overflow-hidden">
+    <!-- <Masks /> -->
     <Diamonds />
   </div>
 </div>

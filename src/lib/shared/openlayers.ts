@@ -19,7 +19,8 @@ export function maskStyle(color: string) {
   return new Style({
     stroke: new Stroke({
       color,
-      width: 10
+      width: 10,
+      lineCap: 'square'
     }),
     fill: new Fill({
       color: 'rgba(255, 255, 255, 0.0)'

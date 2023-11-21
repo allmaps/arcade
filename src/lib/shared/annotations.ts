@@ -1,38 +1,54 @@
+import {
+  ARCADE_ANNOTATIONS_DIR,
+  ARCADE_ANNOTATIONS_URL,
+  ARCADE_RANDOM_ANNOTATIONS_URL
+} from '$env/static/public'
+
 import { fetchJson } from '@allmaps/stdlib'
 import { parseAnnotation } from '@allmaps/annotation'
 
-const annotationUrls = [
-  'https://annotations.allmaps.org/images/7e878f46e9fd1f3d',
-  'https://annotations.allmaps.org/images/429775761c71fd3a',
-  'https://annotations.allmaps.org/images/21c23f5e87c7af1d',
-  'https://annotations.allmaps.org/images/c8a3b5c5859f4339',
-  'https://annotations.allmaps.org/images/dfc152fb043b671a',
-  'https://annotations.allmaps.org/images/648025be6c447efc',
-  'https://annotations.allmaps.org/manifests/718f750d5408814f',
-  'https://annotations.allmaps.org/manifests/02c7b8df6fac1378',
-  'https://annotations.allmaps.org/images/9f888622a47479cc',
-  'https://annotations.allmaps.org/images/3d3cb6e11cb24f96',
-  'https://annotations.allmaps.org/manifests/718f750d5408814f',
-  'https://annotations.allmaps.org/maps/71bdb9db8c165c09',
-  'https://annotations.allmaps.org/maps/a097ce9981aee5fd',
-  'https://annotations.allmaps.org/images/9562452c7c431b37',
-  'https://annotations.allmaps.org/maps/4d352f7d1a309151',
-  'https://annotations.allmaps.org/maps/f72b9431c691a7c0',
-  'https://annotations.allmaps.org/maps/dd8af01a1789ed7e',
-  'https://annotations.allmaps.org/maps/603cadb0e08ac55b',
-  'https://annotations.allmaps.org/maps/68e20c1468b759b6'
-]
+let annotationUrls: string[] = []
+
+if (ARCADE_ANNOTATIONS_DIR) {
+  // Fetch JSON directory list from Caddy server
+  fetch(ARCADE_ANNOTATIONS_DIR, {
+    headers: {
+      Accept: 'application/json'
+    }
+  })
+    .then((response) => response.json())
+    .then((dirList) => {
+      annotationUrls = dirList.map(
+        ({ name }: { name: string }) => `${ARCADE_ANNOTATIONS_DIR}${name}`
+      )
+    })
+} else if (ARCADE_ANNOTATIONS_URL) {
+  // Fetch JSON file with array of URLs
+  fetchJson(ARCADE_ANNOTATIONS_URL).then((json) => {
+    annotationUrls = json as string[]
+  })
+} else {
+  ARCADE_RANDOM_ANNOTATIONS_URL
+}
+
+// http://localhost/annotations/
+
+// application/json
+// ANNOTATIONS_DIR=http://localhost/annotations/
+// ANNOTATIONS_URL=http://localhost/annotations.json
+// RANDOM_ANNOTATIONS_URL=https://new.annotations.allmaps.org/maps/random
 
 export function getRandomAnnotationUrl(previousAnnotationUrls: string[]) {
-  const filteredAnnotationUrls = annotationUrls.filter(
-    (annotationUrl) => !previousAnnotationUrls.includes(annotationUrl)
-  )
+  if (annotationUrls.length > 0) {
+    const filteredAnnotationUrls = annotationUrls.filter(
+      (annotationUrl) => !previousAnnotationUrls.includes(annotationUrl)
+    )
 
-  const randomAnnotationUrl =
-    filteredAnnotationUrls[Math.floor(Math.random() * filteredAnnotationUrls.length)]
-
-  // return 'http://annotations.localhost:9584/maps/random'
-  return randomAnnotationUrl
+    return filteredAnnotationUrls[Math.floor(Math.random() * filteredAnnotationUrls.length)]
+  } else {
+    const maxArea = 1_500_000 // 1.500 km², size of the Province of Utrecht
+    return `${ARCADE_RANDOM_ANNOTATIONS_URL}?maxarea=${maxArea}`
+  }
 }
 
 export async function fetchMap(annotationUrl: string) {

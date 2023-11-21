@@ -1,4 +1,4 @@
-import { red, yellow, blue, orange, green } from '@allmaps/tailwind'
+import { red, yellow, darkblue, orange, green } from '@allmaps/tailwind'
 
 export const colorForRounds = [
   {
@@ -10,15 +10,15 @@ export const colorForRounds = [
     color: yellow
   },
   {
-    bgClass: 'bg-blue-200',
-    color: blue
-  },
-  {
     bgClass: 'bg-orange-200',
     color: orange
   },
   {
     bgClass: 'bg-green-200',
     color: green
+  },
+  {
+    bgClass: 'bg-darkblue-200',
+    color: darkblue
   }
 ]

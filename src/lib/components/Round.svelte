@@ -31,6 +31,9 @@
 
   let imageReady = false
 
+  let submitted = false
+  $: submitted = $gameService.matches('round.progress.submitted')
+
   function focusOlContainer(container: HTMLElement) {
     if (!container) {
       return
@@ -49,8 +52,6 @@
   $: displayMap = $gameService.matches('round.display.map')
 
   $: {
-    // if ($gameService.matches('round.progress.intro')) {
-    //   focusOlContainer(containerImage)
     if (displayImage) {
       focusOlContainer(containerImage)
     } else if (displayMap) {
@@ -63,6 +64,8 @@
       gameService.send('SHOW_MAP')
     } else if (state.event.type === 'SUBMIT') {
       stopTimer()
+    } else if (state.event.type === 'NEXT') {
+      gameService.send('SHOW_IMAGE')
     }
   })
 
@@ -90,6 +93,14 @@
   function stopTimer() {
     // $endTime = 0
     clearInterval(intervalId)
+  }
+
+  function handleToggleImageStart() {
+    gameService.send('SHOW_IMAGE')
+  }
+
+  function handleToggleImageEnd() {
+    gameService.send('SHOW_MAP')
   }
 
   onMount(() => {
@@ -141,7 +152,7 @@
       <Map bind:this={map} />
     </div>
 
-    {#if $gameService.matches('round.progress.submitted')}
+    {#if submitted}
       <Footer>
         {#if $isLastRound}
           <Button shortcutKey={BUTTON_1} on:click={() => gameService.send('NEXT')}
@@ -155,9 +166,16 @@
       </Footer>
     {:else}
       <Footer>
-        <div class="w-full flex flex-row items-center [&>*]:w-1/3">
+        <div class="w-full flex flex-row items-end [&>*]:w-1/3">
           <div>
-            <Button>Toggle <ArcadeButtonIcon bgClass="bg-white" /></Button>
+            <Button
+              shortcutKey={BUTTON_1}
+              on:mousedown={handleToggleImageStart}
+              on:touchstart={handleToggleImageStart}
+              on:mouseup={handleToggleImageEnd}
+              on:touchend={handleToggleImageEnd}
+              >Toggle <ArcadeButtonIcon bgClass="bg-white" /></Button
+            >
           </div>
           <div class="flex justify-center">
             <Button shortcutKey={BUTTON_4} on:click={handleSubmit}

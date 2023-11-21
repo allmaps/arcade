@@ -36,6 +36,7 @@ export type Round = LoadingRound | LoadedRound | SubmittedRound
 export type Rounds = Round[]
 
 export type Submission = {
+  area: number
   zoom: {
     submission: number
     warpedMap: number
@@ -44,6 +45,7 @@ export type Submission = {
     submission: number[]
     warpedMap: number[]
   }
+  distance: number
 }
 
 // TODO: import from stdlib

@@ -21,8 +21,10 @@
           <div>
             {round.score} Points
           </div>
-          <div>distance zoom time</div>
-          <div>{round.endTime - round.startTime}</div>
+          <div>Area: {Math.round(round.submission.area)} m2</div>
+          <div>Zoom: {round.submission.zoom.submission / round.submission.zoom.warpedMap}</div>
+          <div>Distance: {Math.round(round.submission.distance)} m</div>
+          <div>Time: {(round.endTime - round.startTime) / 1000} s</div>
         </li>
       {/if}
     {/each}

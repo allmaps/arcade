@@ -11,7 +11,7 @@
 
   import { gameService, currentRoundNumber, olTarget } from '$lib/shared/machines/game.js'
 
-  import { BUTTON_1, BUTTON_2, BUTTON_3 } from '$lib/shared/constants.js'
+  import { BUTTON_2, BUTTON_3 } from '$lib/shared/constants.js'
 
   import 'ol/ol.css'
 
@@ -31,55 +31,13 @@
         })
       )
     }
-
-    // if (event.key === 'z' && !event.repeat) {
-    //   if (!$gameService.matches('round')) {
-    //     gameService.send('NEXT')
-    //   }
-    // } else if (event.key === 'x') {
-    //   // Zoom in!
-    //   $olTarget?.dispatchEvent(
-    //     new KeyboardEvent('keypress', {
-    //       key: '-'
-    //     })
-    //   )
-    // } else if (event.key === 'c') {
-    //   // Zoom out!
-    //   $olTarget?.dispatchEvent(
-    //     new KeyboardEvent('keypress', {
-    //       key: '+'
-    //     })
-    //   )
-    // } else if (event.key === 'v' && !event.repeat) {
-    //   gameService.send('SUBMIT')
-    // }
-  }
-
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === BUTTON_1 && !event.repeat) {
-      if ($gameService.matches('round.progress.playing')) {
-        gameService.send('SHOW_IMAGE')
-      }
-    }
-  }
-
-  function handleKeyup(event: KeyboardEvent) {
-    if (event.key === BUTTON_1 && !event.repeat) {
-      if ($gameService.matches('round.progress.playing')) {
-        gameService.send('SHOW_MAP')
-      }
-    }
   }
 
   onMount(() => {
     document.addEventListener('keypress', handleKeypress)
-    document.addEventListener('keyup', handleKeyup)
-    document.addEventListener('keydown', handleKeydown)
 
     return () => {
       document.removeEventListener('keypress', handleKeypress)
-      document.removeEventListener('keyup', handleKeyup)
-      document.removeEventListener('keydown', handleKeydown)
     }
   })
 </script>

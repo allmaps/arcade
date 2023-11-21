@@ -12,6 +12,7 @@
   import Feature from 'ol/Feature.js'
   import Polygon from 'ol/geom/Polygon.js'
   import { toLonLat } from 'ol/proj'
+  import { getDistance, getArea } from 'ol/sphere.js'
 
   import { applyStyle } from 'ol-mapbox-style'
 
@@ -103,15 +104,28 @@
   }
 
   export function getSubmission(): Submission {
+    const warpedMapZoom = getWarpedMapZoom()
+    const submissionZoom = getSubmissionZoom()
+
+    const warpedMapCenter = getWarpedMapCenter()
+    const submissionCenter = getSubmissionCenter()
+
     return {
+      area: getArea(
+        new GeoJSON().readGeometry(geoMask, {
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857'
+        })
+      ),
       zoom: {
-        warpedMap: getWarpedMapZoom(),
-        submission: getSubmissionZoom()
+        warpedMap: warpedMapZoom,
+        submission: submissionZoom
       },
       center: {
-        warpedMap: getWarpedMapCenter(),
-        submission: getSubmissionCenter()
-      }
+        warpedMap: warpedMapCenter,
+        submission: submissionCenter
+      },
+      distance: getDistance(warpedMapCenter, submissionCenter)
     }
   }
 
@@ -131,6 +145,7 @@
 
       vectorSource.addFeature(feature)
 
+      // TODO: rename!!!
       const f2 = new Feature(
         new GeoJSON().readGeometry(geoMask, {
           dataProjection: 'EPSG:4326',
@@ -148,9 +163,6 @@
 
       ol.getView().fit(getGeoMaskExtent(), {
         maxZoom: Math.max(warpedMapZoom - 1, submissionZoom),
-        // maxZoom: Math.min(submissionZoom, warpedMapZoom - 2),
-
-        // minZoom: Math.max(warpedMapZoom, submissionZoom - 4),
         padding: PADDING,
         duration
       })
@@ -187,7 +199,7 @@
     const transformer = new GCPTransformer($currentRound.map.gcps)
     geoMask = transformer.toGeoJSONPolygon($currentRound.map.resourceMask)
 
-    const baseLayer = new VectorTile({ declutter: true, maxZoom: 16 })
+    const baseLayer = new VectorTile({ declutter: true, maxZoom: 20 })
     applyStyle(baseLayer, style)
 
     const warpedMapSource = new WarpedMapSource()
@@ -246,6 +258,9 @@
     const minZoom = 2 + fraction
     const maxZoom = warpedMapZoom + 2
 
+    // console.log('warpedMapZoom', warpedMapZoom)
+    // console.log('minZoom', minZoom, 'maxZoom', maxZoom)
+
     view.setMinZoom(minZoom)
     view.setMaxZoom(maxZoom)
     view.setZoom(minZoom)
@@ -285,7 +300,7 @@
       // en center bijna gelijk aan 128 px
       // https://github.com/openlayers/openlayers/blob/be95fd71b6edeeb947411db740d839ae9d455dd4/src/ol/interaction/KeyboardPan.js#L75C63-L75C66
 
-      const zoomDiffPerfectScore = 0.05
+      const zoomDiffPerfectScore = 0.1
       const distanceThreshold = 128 + 10
 
       if (zoomDiff < zoomDiffPerfectScore) {
@@ -307,6 +322,11 @@
           }
         }
       }
+
+      return () => {
+        warpedMapLayer.dispose()
+        warpedMapSource.dispose()
+      }
     })
 
     contentBoxSize = { inlineSize: element.clientWidth, blockSize: element.clientHeight }
@@ -321,6 +341,9 @@
 
     resizeObserver.observe(element)
   })
+
+  // stroke-linejoin="round"
+  // stroke-linecap="round"
 </script>
 
 <div class="relative w-full h-full">
@@ -334,8 +357,6 @@
           bind:this={svgPolygon}
           class="fill-none stroke-[10px]"
           stroke={strokeColor}
-          stroke-linejoin="round"
-          stroke-linecap="round"
           points={coordinatesToSvgPoints(svgCoordinates)}
         />
       </svg>

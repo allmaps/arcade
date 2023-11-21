@@ -1,4 +1,6 @@
-export const tileUrl = 'https://api.protomaps.com/tiles/v2/{z}/{x}/{y}.pbf?key=507ade1803ce471c'
+import { ARCADE_PMTILES_URL } from '$env/static/public'
+
+export const tileUrl = ARCADE_PMTILES_URL
 
 export const style = {
   version: 8,
@@ -6,7 +8,8 @@ export const style = {
   sources: {
     protomaps: {
       type: 'vector',
-      tiles: ['https://api.protomaps.com/tiles/v2/{z}/{x}/{y}.pbf?key=507ade1803ce471c'],
+      tiles: [tileUrl],
+      maxzoom: 14,
       attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>'
     }
   },
