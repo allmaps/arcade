@@ -3,8 +3,6 @@ import { parseAnnotation } from '@allmaps/annotation'
 
 let annotationUrls: string[] = []
 
-console.log(import.meta.env)
-
 if (import.meta.env.ARCADE_ANNOTATIONS_DIR) {
   // Fetch JSON directory list from Caddy server
   fetch(import.meta.env.ARCADE_ANNOTATIONS_DIR, {
