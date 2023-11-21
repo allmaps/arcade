@@ -1,6 +1,6 @@
-import env from '$env/static/public'
+import { ARCADE_PMTILES_URL } from '$env/static/public'
 
-export const tileUrl = env.ARCADE_PMTILES_URL
+export const tileUrl = ARCADE_PMTILES_URL
 
 export const style = {
   version: 8,
