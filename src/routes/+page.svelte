@@ -11,6 +11,7 @@
 
   import { gameService, currentRoundNumber, olTarget } from '$lib/shared/machines/game.js'
 
+  import { isCabinet } from '$lib/shared/cabinet.js'
   import { BUTTON_2, BUTTON_3 } from '$lib/shared/constants.js'
 
   import 'ol/ol.css'
@@ -43,7 +44,10 @@
 </script>
 
 <Header />
-<main class="absolute w-full h-full flex flex-col items-center justify-center">
+<main
+  class="absolute w-full h-full flex flex-col items-center justify-center"
+  class:cursor-none={isCabinet}
+>
   {#if $gameService.matches('error')}
     <Error />
   {:else if $gameService.matches('start')}
