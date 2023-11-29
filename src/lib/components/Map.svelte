@@ -31,8 +31,6 @@
   import type { Polygon as GeoJsonPolygon } from 'geojson'
   import type { Submission } from '$lib/shared/types.js'
 
-  // import { env } from '$env/dynamic/public'
-
   let ol: OLMap
 
   let vectorSource: VectorSource
@@ -258,11 +256,9 @@
     const minZoom = 2 + fraction
     const maxZoom = warpedMapZoom + 2
 
-    // console.log('warpedMapZoom', warpedMapZoom)
-    // console.log('minZoom', minZoom, 'maxZoom', maxZoom)
-
     view.setMinZoom(minZoom)
     view.setMaxZoom(maxZoom)
+
     view.setZoom(minZoom)
 
     ol.on('postrender', () => {

@@ -5,11 +5,16 @@ import { useSelector } from '@xstate/svelte'
 import { fetchImageInfo } from '@allmaps/stdlib'
 import { GCPTransformer } from '@allmaps/transform'
 
-import { getRandomAnnotationUrl, fetchMap } from '$lib/shared/annotations.js'
+import { fetchMap } from '$lib/shared/maps.js'
 import { computeScore } from '$lib/shared/score.js'
 import { colorForRounds } from '$lib/shared/colors.js'
 
-import { failedAnnotationUrls, addFailedAnnotationUrl } from '$lib/shared/stores/annotation-urls.js'
+import {
+  getRandomAnnotationUrl,
+  failedAnnotationUrls,
+  addFailedAnnotationUrl,
+  resetFailedAnnotationUrls
+} from '$lib/shared/stores/annotations.js'
 
 import type { Map } from '@allmaps/annotation'
 
@@ -24,6 +29,7 @@ type Context = {
   olImage?: OLMap
   olMap?: OLMap
   rounds: Rounds
+  error?: Error
 }
 
 type GameEvent =
@@ -62,14 +68,16 @@ export const machine = createMachine(
       events: {} as GameEvent
     },
     context: {
-      rounds: []
+      rounds: [],
+      error: undefined
     },
     initial: 'start',
     states: {
       error: {
         on: {
           NEXT: {
-            target: 'start'
+            target: 'start',
+            actions: 'resetRounds'
           }
         }
       },
@@ -106,7 +114,10 @@ export const machine = createMachine(
                     }))
                   },
                   onError: {
-                    target: '#game.error'
+                    target: '#game.error',
+                    actions: assign({
+                      error: (_, event) => event.data
+                    })
                   }
                 }
               },
@@ -200,8 +211,12 @@ export const machine = createMachine(
             colors: colorForRounds[context.rounds.length]
           })
       }),
+      // resetFailedAnnotationUrls
       resetRounds: assign({
-        rounds: []
+        rounds: () => {
+          resetFailedAnnotationUrls()
+          return []
+        }
       }),
       setStartTime: assignLastRound((round) => {
         if (round.loaded) {
@@ -247,7 +262,7 @@ export const machine = createMachine(
               .filter((round): round is LoadedRound => round.loaded)
               .map((round) => round.annotationUrl),
             ...get(failedAnnotationUrls)
-          ]
+          ].filter((url) => url)
 
           annotationUrl = getRandomAnnotationUrl(previousAnnotationUrls)
 
@@ -259,10 +274,10 @@ export const machine = createMachine(
               success = true
             } catch (err) {
               console.warn('Failed to load annotation', annotationUrl)
+              addFailedAnnotationUrl(annotationUrl)
             }
           }
 
-          addFailedAnnotationUrl(annotationUrl)
           tries++
         }
 
@@ -289,6 +304,8 @@ export const machine = createMachine(
 export const gameService = interpret(machine).start()
 
 export const rounds = useSelector(gameService, (state) => state.context.rounds)
+
+export const error = useSelector(gameService, (state) => state.context.error)
 
 export const currentRoundIndex = useSelector(gameService, (state) =>
   state.context.rounds.length >= 0 ? state.context.rounds.length - 1 : undefined

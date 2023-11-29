@@ -3,21 +3,16 @@
   import { createEventDispatcher } from 'svelte'
 
   import OLMap from 'ol/Map.js'
-  import View from 'ol/View.js'
+
   import TileLayer from 'ol/layer/Tile.js'
-  import IIIF from 'ol/source/IIIF.js'
+  import IIIFSource from 'ol/source/IIIF.js'
   import IIIFInfo from 'ol/format/IIIFInfo.js'
   import VectorSource from 'ol/source/Vector.js'
   import VectorLayer from 'ol/layer/Vector.js'
   import Feature from 'ol/Feature.js'
   import Polygon from 'ol/geom/Polygon.js'
 
-  import {
-    gameService,
-    rounds,
-    currentRound,
-    currentRoundIndex
-  } from '$lib/shared/machines/game.js'
+  import { gameService, currentRound, currentRoundIndex } from '$lib/shared/machines/game.js'
 
   import { maskStyle, maskToPolygon } from '$lib/shared/openlayers.js'
   import { PADDING } from '$lib/shared/constants.js'
@@ -55,8 +50,7 @@
 
     if (options) {
       options.zDirection = -1
-
-      const iiifTileSource = new IIIF(options)
+      const iiifTileSource = new IIIFSource(options)
 
       const tileGrid = iiifTileSource.getTileGrid()
 
@@ -69,14 +63,6 @@
         })
 
         tileLayer.setSource(iiifTileSource)
-        ol.setView(
-          new View({
-            resolutions: tileGrid.getResolutions(),
-            extent: tileGrid.getExtent(),
-            constrainOnlyCenter: true,
-            enableRotation: false
-          })
-        )
 
         let extent = tileGrid.getExtent()
         const featureGeometry = feature.getGeometry()

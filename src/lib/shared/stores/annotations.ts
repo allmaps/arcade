@@ -1,7 +1,10 @@
-import { fetchJson } from '@allmaps/stdlib'
-import { parseAnnotation } from '@allmaps/annotation'
+import { writable, get } from 'svelte/store'
 
-let annotationUrls: string[] = []
+import { fetchJson } from '@allmaps/stdlib'
+
+export const annotationUrls = writable<string[]>([])
+
+export const failedAnnotationUrls = writable<string[]>([])
 
 if (import.meta.env.ARCADE_ANNOTATIONS_DIR) {
   // Fetch JSON directory list from Caddy server
@@ -12,20 +15,26 @@ if (import.meta.env.ARCADE_ANNOTATIONS_DIR) {
   })
     .then((response) => response.json())
     .then((dirList) => {
-      annotationUrls = dirList.map(
-        ({ name }: { name: string }) => `${import.meta.env.ARCADE_ANNOTATIONS_DIR}${name}`
+      annotationUrls.set(
+        dirList.map(
+          ({ name }: { name: string }) => `${import.meta.env.ARCADE_ANNOTATIONS_DIR}${name}`
+        )
       )
     })
 } else if (import.meta.env.ARCADE_ANNOTATIONS_URL) {
   // Fetch JSON file with array of URLs
   fetchJson(import.meta.env.ARCADE_ANNOTATIONS_URL).then((json) => {
-    annotationUrls = json as string[]
+    annotationUrls.set(json as string[])
   })
 }
 
 export function getRandomAnnotationUrl(previousAnnotationUrls: string[]) {
-  if (annotationUrls.length > 0) {
-    const filteredAnnotationUrls = annotationUrls.filter(
+  // return 'http://localhost/annotations/ce25e56f27790a98.json'
+  // return 'http://localhost/annotations/dd8af01a1789ed7e.json'
+
+  const $annotationUrls = get(annotationUrls)
+  if ($annotationUrls.length > 0) {
+    const filteredAnnotationUrls = $annotationUrls.filter(
       (annotationUrl) => !previousAnnotationUrls.includes(annotationUrl)
     )
 
@@ -36,16 +45,13 @@ export function getRandomAnnotationUrl(previousAnnotationUrls: string[]) {
   }
 }
 
-export async function fetchMap(annotationUrl: string) {
-  const annotation = await fetchJson(annotationUrl)
-  const maps = parseAnnotation(annotation)
-
-  const map = maps[Math.floor(Math.random() * maps.length)]
-
-  if (import.meta.env.DEV && map.id) {
-    console.log('Copying to clipboard:\n', map.id)
-    navigator.clipboard.writeText(map.id)
+export function addFailedAnnotationUrl(annotationUrl: string) {
+  if (!annotationUrl) {
+    return
   }
+  failedAnnotationUrls.update((failedAnnotationUrls) => [...failedAnnotationUrls, annotationUrl])
+}
 
-  return map
+export function resetFailedAnnotationUrls() {
+  failedAnnotationUrls.set([])
 }

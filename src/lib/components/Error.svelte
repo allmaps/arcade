@@ -3,12 +3,13 @@
   import Button from '$lib/components/Button.svelte'
   import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
 
-  import { gameService } from '$lib/shared/machines/game.js'
+  import { gameService, error } from '$lib/shared/machines/game.js'
 
   import { BUTTON_1, AUTO_ADVANCE } from '$lib/shared/constants.js'
 </script>
 
-Error!
+<div>Error!</div>
+<div>{$error && $error.message}</div>
 
 <Footer>
   <Button timeout={AUTO_ADVANCE} shortcutKey={BUTTON_1} on:click={() => gameService.send('NEXT')}
