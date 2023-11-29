@@ -253,7 +253,7 @@
 
     const view = ol.getView()
 
-    const minZoom = 2 + fraction
+    const minZoom = 3 + fraction
     const maxZoom = warpedMapZoom + 2
 
     view.setMinZoom(minZoom)
