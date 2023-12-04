@@ -16,7 +16,7 @@
 
   import { applyStyle } from 'ol-mapbox-style'
 
-  import { GCPTransformer } from '@allmaps/transform'
+  import { GcpTransformer } from '@allmaps/transform'
   import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
 
   import { geometryToPixels, coordinatesToSvgPoints } from '$lib/shared/geometry.js'
@@ -194,8 +194,8 @@
 
     strokeColor = $currentRound.colors.color
 
-    const transformer = new GCPTransformer($currentRound.map.gcps)
-    geoMask = transformer.toGeoJSONPolygon($currentRound.map.resourceMask)
+    const transformer = new GcpTransformer($currentRound.map.gcps)
+    geoMask = transformer.transformToGeoAsGeojson([$currentRound.map.resourceMask])
 
     const baseLayer = new VectorTile({ declutter: true, maxZoom: 20 })
     applyStyle(baseLayer, style)

@@ -3,7 +3,7 @@ import { createMachine, assign, interpret, type EventObject } from 'xstate'
 import { useSelector } from '@xstate/svelte'
 
 import { fetchImageInfo } from '@allmaps/stdlib'
-import { GCPTransformer } from '@allmaps/transform'
+import { GcpTransformer } from '@allmaps/transform'
 
 import { fetchMap } from '$lib/shared/maps.js'
 import { computeScore } from '$lib/shared/score.js'
@@ -249,7 +249,7 @@ export const machine = createMachine(
       fetchRoundData: async (context): Promise<Partial<LoadedRound>> => {
         let annotationUrl: string | undefined
         let map: Map | undefined
-        let transformer: GCPTransformer | undefined
+        let transformer: GcpTransformer | undefined
         let imageInfo: unknown | undefined
 
         const maxTries = 5
@@ -269,7 +269,7 @@ export const machine = createMachine(
           if (annotationUrl) {
             try {
               map = await fetchMap(annotationUrl)
-              transformer = new GCPTransformer(map.gcps)
+              transformer = new GcpTransformer(map.gcps)
               imageInfo = await fetchImageInfo(map.resource.id)
               success = true
             } catch (err) {

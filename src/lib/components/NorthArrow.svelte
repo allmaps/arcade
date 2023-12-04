@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { GCPTransformer } from '@allmaps/transform'
-  import { computeBBox } from '@allmaps/stdlib'
+  import { GcpTransformer } from '@allmaps/transform'
+  import { computeBbox } from '@allmaps/stdlib'
 
   import computeBearing from '@turf/bearing'
 
@@ -19,12 +19,12 @@
 
   $: {
     if ($currentRound && $currentRound.loaded) {
-      const transformer = new GCPTransformer($currentRound.map.gcps)
+      const transformer = new GcpTransformer($currentRound.map.gcps)
 
-      const bbox = computeBBox($currentRound.map.resourceMask)
+      const bbox = computeBbox($currentRound.map.resourceMask)
 
-      const topLeft = transformer.toGeo([bbox[0], bbox[1]])
-      const bottomLeft = transformer.toGeo([bbox[0], bbox[3]])
+      const topLeft = transformer.transformToGeo([bbox[0], bbox[1]])
+      const bottomLeft = transformer.transformToGeo([bbox[0], bbox[3]])
 
       bearing = -computeBearing(bottomLeft, topLeft)
     }
