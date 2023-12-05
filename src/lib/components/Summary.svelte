@@ -20,7 +20,7 @@
             <Thumbnail imageInfo={round.imageInfo} width={1200 / 5} height={400} />
           </div>
 
-          <div>
+          <div class="mb-2">
             {round.score} Points
           </div>
           <div>Area: {Math.round(round.submission.area)} m2</div>
