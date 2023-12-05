@@ -10,8 +10,9 @@ const config = {
     adapter: adapter({
       pages: 'build',
       assets: 'build',
-      fallback: 'index.html',
-      precompress: false
+      fallback: undefined,
+      precompress: false,
+      strict: true
     }),
     env: {
       publicPrefix: 'ARCADE_'
