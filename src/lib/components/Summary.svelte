@@ -16,7 +16,7 @@
     {#each $rounds as round}
       {#if round.submitted}
         <li class={`${round.colors.bgClass} p-4`}>
-          <div class="w-full">
+          <div class="w-full relative overflow-hidden aspect-square">
             <Thumbnail imageInfo={round.imageInfo} width={1200 / 5} height={400} />
           </div>
 
