@@ -29,7 +29,7 @@
     animation: translate linear reverse 15s infinite;
     transform-origin: center center;
 
-    scale: 1.3;
+    scale: 1.5;
   }
 
   @keyframes translate {
