@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { parseAnnotation } from '@allmaps/annotation'
   import { fetchJson, fetchImageInfo } from '@allmaps/stdlib'
 
@@ -111,4 +111,4 @@
     border-radius: 5px;
     overflow: hidden;
   }
-</style>
+</style> -->
