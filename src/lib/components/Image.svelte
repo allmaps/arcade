@@ -13,15 +13,17 @@
   import Polygon from 'ol/geom/Polygon.js'
 
   import { gameService, currentRound, currentRoundIndex } from '$lib/shared/machines/game.js'
+  import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
   import { maskStyle, maskToPolygon } from '$lib/shared/openlayers.js'
   import { PADDING } from '$lib/shared/constants.js'
 
   let element: HTMLElement
 
-  let bgClass: string
-
   const dispatch = createEventDispatcher()
+
+  let bgClass: string | undefined
+  $: bgClass = $currentRound?.colors.bgClassFaded
 
   onMount(() => {
     if (!$currentRound || !$currentRound.loaded || $currentRoundIndex === undefined) {
@@ -32,11 +34,11 @@
 
     const vectorSource = new VectorSource()
 
-    bgClass = $currentRound.colors.bgClass
-
     const vectorLayer = new VectorLayer({
       source: vectorSource,
-      style: maskStyle($currentRound.colors.color)
+      style: maskStyle($currentRound.colors.color),
+      updateWhileAnimating: true,
+      updateWhileInteracting: true
     })
 
     const feature = new Feature({
@@ -82,6 +84,10 @@
         })
 
         element.focus()
+
+        ol.on('moveend', () => {
+          resetLastInteraction()
+        })
       }
     }
   })

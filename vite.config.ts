@@ -3,5 +3,8 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [sveltekit()],
-  envPrefix: 'ARCADE_'
+  envPrefix: 'ARCADE_',
+  build: {
+    target: 'esnext'
+  }
 })

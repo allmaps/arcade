@@ -3,42 +3,46 @@
 
   import Error from '$lib/components/Error.svelte'
   import Header from '$lib/components/Header.svelte'
-  import Start from '$lib/components/Start.svelte'
-  import GameIntro from '$lib/components/GameIntro.svelte'
+  import Title from '$lib/components/Title.svelte'
+  import Explain from '$lib/components/Explain.svelte'
   import Round from '$lib/components/Round.svelte'
-  import Summary from '$lib/components/Summary.svelte'
-  import Highscores from '$lib/components/Highscores.svelte'
+  import Results from '$lib/components/Results.svelte'
 
   import { gameService, currentRoundNumber, olTarget } from '$lib/shared/machines/game.js'
 
+  import { environment } from '$lib/shared/stores/environment.js'
+  import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
   import { isCabinet } from '$lib/shared/cabinet.js'
-  import { BUTTON_2, BUTTON_3 } from '$lib/shared/constants.js'
 
   import 'ol/ol.css'
 
-  function handleKeypress(event: KeyboardEvent) {
-    if (event.key === BUTTON_2) {
-      // Zoom in!
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.code === $environment.getButton(1).keyCode) {
+      // Zoom out!
       $olTarget?.dispatchEvent(
-        new KeyboardEvent('keypress', {
+        new KeyboardEvent('keydown', {
           key: '-'
         })
       )
-    } else if (event.key === BUTTON_3) {
-      // Zoom out!
+    } else if (event.code === $environment.getButton(2).keyCode) {
+      // Zoom in!
       $olTarget?.dispatchEvent(
-        new KeyboardEvent('keypress', {
+        new KeyboardEvent('keydown', {
           key: '+'
         })
       )
     }
   }
 
+  gameService.onTransition(() => {
+    resetLastInteraction()
+  })
+
   onMount(() => {
-    document.addEventListener('keypress', handleKeypress)
+    document.addEventListener('keydown', handleKeydown)
 
     return () => {
-      document.removeEventListener('keypress', handleKeypress)
+      document.removeEventListener('keydown', handleKeydown)
     }
   })
 </script>
@@ -50,17 +54,15 @@
 >
   {#if $gameService.matches('error')}
     <Error />
-  {:else if $gameService.matches('start')}
-    <Start />
-  {:else if $gameService.matches('gameIntro')}
-    <GameIntro />
+  {:else if $gameService.matches('title')}
+    <Title />
+  {:else if $gameService.matches('explain')}
+    <Explain />
   {:else if $gameService.matches('round')}
     {#key $currentRoundNumber}
       <Round />
     {/key}
-  {:else if $gameService.matches('summary')}
-    <Summary />
-  {:else if $gameService.matches('highscores')}
-    <Highscores />
+  {:else if $gameService.matches('results')}
+    <Results />
   {/if}
 </main>

@@ -121,6 +121,19 @@
   // const transformedPoint = point.matrixTransform(matrix);
 </script>
 
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1600 1381">
+  <path id="p1" d={pointsToPath(mask.points)} stroke="blue" fill="none" stroke-width="4" />
+  <animate
+    xlink:href="#p1"
+    attributeName="d"
+    attributeType="XML"
+    from={pointsToPath(masks[0].points)}
+    to={pointsToPath(masks[1].points)}
+    dur="10s"
+    fill="freeze"
+  />
+</svg>
+
 <svg
   class="background pointer-events-none"
   id="masks"

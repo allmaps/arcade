@@ -1,132 +1,70 @@
-import { getDistance } from 'ol/sphere.js'
-
 import { DEFAULT_RADIUS } from 'ol/sphere.js'
 
-import type { Submission } from '$lib/shared/types.js'
+import type { Submission, Ratios } from '$lib/shared/types.js'
 
-const MAX_POINTS = 5000
+const MAX_SCORE_MIN = 50
+const MAX_SCORE_MAX = 100
+
+export const DISPLAY_SCORE_MULTIPLIER = 100
+
+// Size of city block in square meters
+const AREA_MIN = 100 * 100
+
+// Size of small country in square meters
+const AREA_MAX = 25_000 * 1_000 * 1_000
+
+const TIME_MIN = 5 * 1000
+const TIME_MAX = 2 * 60 * 1000
 
 const CIRCUMFERENCE = 2 * Math.PI * DEFAULT_RADIUS
 const MAX_DISTANCE = CIRCUMFERENCE / 2
+const MAX_ZOOM_DIFFERENCE = 8
 
-const areaWeight = 50
-const distanceWeight = 0.9
-const zoomWeight = 0.3
-const timeWeight = 1
-
-const areaFunction = squaredFunction
-const distanceFunction = cubicFunction
-const zoomFunction = squaredFunction
-const timeFunction = easeInOutSineFunction
-
-function squaredFunction(ratio: number) {
-  return Math.pow(1 - ratio, 2)
-}
-
-function cubicFunction(ratio: number) {
-  return Math.pow(1 - ratio, 3)
-}
-
-function easeInOutSineFunction(ratio: number) {
-  return -(Math.cos(Math.PI * (1 - ratio)) - 1) / 2
-}
-
-function quinticFunction(ratio: number) {
-  return Math.pow(1 - ratio, 5)
-}
-
-export function scoreFunction(
-  areaRatio: number,
-  distanceRatio: number,
-  zoomRatio: number,
-  timeRatio: number
-) {
+function computeAreaRatio(area: number) {
   return (
-    ((areaWeight *
-      areaFunction(areaRatio) *
-      (distanceWeight * distanceFunction(distanceRatio) + zoomWeight * zoomFunction(zoomRatio))) /
-      (distanceWeight + zoomWeight)) *
-    timeWeight *
-    timeFunction(timeRatio)
+    1 -
+    Math.min(
+      1,
+      Math.max((Math.log(area) - Math.log(AREA_MIN)) / (Math.log(AREA_MAX) - Math.log(AREA_MIN)), 0)
+    )
   )
 }
 
-// export function computeDistanceRatio(svgCenter: number[], warpedMapCenter: number[]) {
-//   const distance = getDistance(svgCenter, warpedMapCenter)
-//   const distanceRatio = Math.max(1 - distance / MAX_DISTANCE, 0)
-//   return distanceRatio
-// }
-
-// export function computeAreaRatio(svgArea: number, warpedMapArea: number) {
-//   let areaRatio = svgArea / warpedMapArea
-
-//   if (areaRatio > 1) {
-//     areaRatio = 1 / areaRatio
-//   }
-
-//   return areaRatio
-// }
-
-//   // const distanceRatio = computeDistanceRatio(submission.center?.svg, submission.center?.warpedMap)
-//   // const zoomDiff = computeAreaRatio(submission.areas.svg, submission.areas.warpedMap)
-
-//   // const score = Math.round(distanceRatio * areaRatio * MAX_POINTS)
-
-export function computeScore(startTime: number, endTime: number, submission: Submission) {
-  const timeMax = 60 * 1000
-
-  const areaMin = 5000
-  const areaMax = 20000
-
-  const areaRatio = Math.max((submission.area - areaMin) / (areaMax - areaMin), 0)
-  const distanceRatio = submission.distance / MAX_DISTANCE
-  const zoomRatio = submission.zoom.submission / submission.zoom.warpedMap
-  const timeRatio = (endTime - startTime) / timeMax
-
-  const score = scoreFunction(areaRatio, distanceRatio, zoomRatio, timeRatio)
-  return Math.round(score / 1000) * 10
+function computeTimeRatio(time: number) {
+  return 1 - Math.min(1, Math.max((time - TIME_MIN) / (TIME_MAX - TIME_MIN), 0))
 }
 
-//     console.log('nu computeScore')
+function computeZoomRatio(submission: Submission) {
+  const zoomDiff = Math.abs(submission.zoom.warpedMap - submission.zoom.submission)
+  return 1 - Math.min(1, zoomDiff / MAX_ZOOM_DIFFERENCE)
+}
 
-//     if (event.type === 'SUBMIT') {
-//       console.log('event.data', event.data)
-//     }
+function computeDistanceRatio(submission: Submission) {
+  return 1 - Math.min(submission.distance / MAX_DISTANCE, 1)
+}
 
-//     let round = context.rounds[context.rounds.length - 1]
+export function computeScoreRatios(
+  startTime: number,
+  endTime: number,
+  submission: Submission
+): Ratios {
+  const timeRatio = computeTimeRatio(endTime - startTime)
+  const zoomRatio = computeZoomRatio(submission)
+  const distanceRatio = computeDistanceRatio(submission)
 
-//     if (!round.loaded) {
-//       throw new Error('round not loaded')
-//     }
+  return {
+    time: timeRatio,
+    zoom: zoomRatio,
+    distance: distanceRatio
+  }
+}
 
-//     if (!context.olMap) {
-//       throw new Error('olMap not set')
-//     }
+export function computeMaxScore(area: number) {
+  return (MAX_SCORE_MAX - MAX_SCORE_MIN) * computeAreaRatio(area) + MAX_SCORE_MIN
+}
 
-//     const view = context.olMap.getView()
-
-//     if (!view) {
-//       throw new Error('olMap view not set')
-//     }
-
-//     const zoom = view.getZoom()
-//     const center = view.getCenter()
-//     const extent = view.calculateExtent(context.olMap.getSize())
-
-//     if (!zoom) {
-//       throw new Error('olMap zoom not set')
-//     }
-
-//     if (!center) {
-//       throw new Error('olMap center not set')
-//     }
-
-//     round = {
-//       ...round,
-//       score: Math.round(Math.random() * 100),
-//       submission: {
-//         zoom,
-//         center,
-//         extent
-//       },
-//       submitted: true
+export function computeScore(area: number, scoreRatios: Ratios) {
+  const maxScore = computeMaxScore(area)
+  const score = maxScore * scoreRatios.time * scoreRatios.zoom * scoreRatios.distance
+  return score
+}

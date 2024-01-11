@@ -1,12 +1,11 @@
 import type { Padding } from './types.js'
 
-export const BUTTON_1 = 'z'
-export const BUTTON_2 = 'x'
-export const BUTTON_3 = 'c'
-export const BUTTON_4 = 'v'
+export const AUTO_ADVANCE_MS = 6 * 1_000
 
-export const AUTO_ADVANCE = 6 * 1_000
+export const GAME_TIMEOUT_MS = 5 * 60 * 1_000
+
+export const MIN_LOADING_MS = 2 * 1_000
 
 // Padding (in pixels) to be cleared inside the view.
 // Values in the array are top, right, bottom and left padding.
-export const PADDING = [100, 80, 120, 80] as Padding
+export const PADDING = [110, 80, 120, 80] as Padding

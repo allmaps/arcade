@@ -7,36 +7,34 @@
   import VectorSource from 'ol/source/Vector.js'
   import VectorLayer from 'ol/layer/Vector.js'
   import GeoJSON from 'ol/format/GeoJSON.js'
-  import { Stroke, Style } from 'ol/style.js'
   import { getCenter } from 'ol/extent.js'
   import Feature from 'ol/Feature.js'
   import Polygon from 'ol/geom/Polygon.js'
   import { toLonLat } from 'ol/proj'
-  import { getDistance, getArea } from 'ol/sphere.js'
+  import { getDistance } from 'ol/sphere.js'
 
   import { applyStyle } from 'ol-mapbox-style'
 
-  import { GcpTransformer } from '@allmaps/transform'
   import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
 
   import { geometryToPixels, coordinatesToSvgPoints } from '$lib/shared/geometry.js'
 
   import { gameService, currentRound, currentRoundIndex } from '$lib/shared/machines/game.js'
-  import { style } from '$lib/shared/protomaps.js'
-  import { getZoomForExtent } from '$lib/shared/openlayers.js'
+  import { style as protomapsStyle } from '$lib/shared/protomaps.js'
+  import { maskStyle, getZoomForExtent, flyTo } from '$lib/shared/openlayers.js'
   import { endTime } from '$lib/shared/stores/timer.js'
+  import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
   import { PADDING } from '$lib/shared/constants.js'
 
   import type { Polygon as GeoJsonPolygon } from 'geojson'
-  import type { Submission } from '$lib/shared/types.js'
+
+  import type { LoadedRound, Submission } from '$lib/shared/types.js'
 
   let ol: OLMap
 
   let vectorSource: VectorSource
   let vectorLayer: VectorLayer<VectorSource>
-
-  let geoMask: GeoJsonPolygon
 
   let element: HTMLElement
   let svgPolygon: SVGPathElement | undefined
@@ -48,10 +46,11 @@
 
   let pulsateDuration = 0.5
 
-  let warpedMapCenter: number[]
   let warpedMapZoom: number
 
   let submitted = false
+
+  const geoMask = ($currentRound as LoadedRound).geoMask
 
   function getGeoMaskExtent() {
     const warpedMapGeoMask = new GeoJSON().readGeometry(geoMask, {
@@ -101,6 +100,36 @@
     return view.getZoom() || 0
   }
 
+  export function flyToSubmission() {
+    const feature = vectorSource.getFeatureById('submission')
+    const extent = feature?.getGeometry()?.getExtent()
+
+    if (extent) {
+      flyTo(ol.getView(), extent, 2000)
+    }
+  }
+
+  export function flyToWarpedMap() {
+    const submissionZoom = getSubmissionZoom()
+
+    const durationPerZoomLevel = 200
+    const duration = Math.abs(warpedMapZoom - submissionZoom) * durationPerZoomLevel
+
+    flyTo(ol.getView(), getGeoMaskExtent(), duration)
+  }
+
+  function getSubmittedGeoMask() {
+    const submittedGeoMaskPolygon = new Polygon([
+      [...svgCoordinates, svgCoordinates[0]].map((coordinate) =>
+        ol.getCoordinateFromPixel(coordinate)
+      )
+    ])
+
+    return new GeoJSON().writeGeometryObject(submittedGeoMaskPolygon, {
+      dataProjection: 'EPSG:4326',
+      featureProjection: 'EPSG:3857'
+    })
+  }
   export function getSubmission(): Submission {
     const warpedMapZoom = getWarpedMapZoom()
     const submissionZoom = getSubmissionZoom()
@@ -109,12 +138,6 @@
     const submissionCenter = getSubmissionCenter()
 
     return {
-      area: getArea(
-        new GeoJSON().readGeometry(geoMask, {
-          dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857'
-        })
-      ),
       zoom: {
         warpedMap: warpedMapZoom,
         submission: submissionZoom
@@ -123,7 +146,8 @@
         warpedMap: warpedMapCenter,
         submission: submissionCenter
       },
-      distance: getDistance(warpedMapCenter, submissionCenter)
+      distance: getDistance(warpedMapCenter, submissionCenter),
+      geoMask: getSubmittedGeoMask() as GeoJsonPolygon
     }
   }
 
@@ -131,27 +155,14 @@
     if (state.event.type === 'SUBMIT') {
       submitted = true
 
-      const geoCoordinates = svgCoordinates.map((coordinate) =>
-        ol.getCoordinateFromPixel(coordinate)
-      )
-
       const feature = new Feature({
-        geometry: new Polygon([geoCoordinates])
-      })
-
-      feature.setId('submission')
-
-      vectorSource.addFeature(feature)
-
-      // TODO: rename!!!
-      const f2 = new Feature(
-        new GeoJSON().readGeometry(geoMask, {
+        geometry: new GeoJSON().readGeometry(getSubmittedGeoMask(), {
           dataProjection: 'EPSG:4326',
           featureProjection: 'EPSG:3857'
         })
-      )
+      })
 
-      vectorSource.addFeature(f2)
+      vectorSource.addFeature(feature)
 
       const warpedMapZoom = getWarpedMapZoom()
       const submissionZoom = getSubmissionZoom()
@@ -159,13 +170,9 @@
       const durationPerZoomLevel = 200
       const duration = Math.abs(warpedMapZoom - submissionZoom) * durationPerZoomLevel
 
-      ol.getView().fit(getGeoMaskExtent(), {
-        maxZoom: Math.max(warpedMapZoom - 1, submissionZoom),
-        padding: PADDING,
-        duration
-      })
+      flyTo(ol.getView(), getGeoMaskExtent(), duration)
 
-      ol.getInteractions().clear()
+      // ol.getInteractions().clear()
     }
   })
 
@@ -194,11 +201,8 @@
 
     strokeColor = $currentRound.colors.color
 
-    const transformer = new GcpTransformer($currentRound.map.gcps)
-    geoMask = transformer.transformToGeoAsGeojson([$currentRound.map.resourceMask])
-
     const baseLayer = new VectorTile({ declutter: true, maxZoom: 20 })
-    applyStyle(baseLayer, style)
+    applyStyle(baseLayer, protomapsStyle)
 
     const warpedMapSource = new WarpedMapSource()
     const warpedMapLayer = new WarpedMapLayer({
@@ -206,25 +210,14 @@
     })
     warpedMapLayer.setOpacity(0)
 
-    warpedMapSource.addMap($currentRound.map)
+    warpedMapSource.addGeoreferencedMap($currentRound.map)
 
     vectorSource = new VectorSource()
     vectorLayer = new VectorLayer({
       source: vectorSource,
-      style: (feature) => {
-        const isSubmission = feature.getId() === 'submission'
-
-        return new Style({
-          stroke: new Stroke({
-            color: strokeColor,
-            lineDash: isSubmission ? [40, 40] : undefined,
-            width: 10
-          })
-          // fill: new Fill({
-          //   color: 'rgba(255, 255, 255, 0.0)'
-          // })
-        })
-      }
+      style: maskStyle(strokeColor),
+      updateWhileAnimating: true,
+      updateWhileInteracting: true
     })
 
     ol = new OLMap({
@@ -236,6 +229,7 @@
         center: [0, 0],
         maxZoom: 24,
         zoom: 2,
+        padding: PADDING,
         enableRotation: false
       }),
       keyboardEventTarget: element
@@ -246,7 +240,6 @@
       ol
     })
 
-    warpedMapCenter = getWarpedMapCenter()
     warpedMapZoom = getWarpedMapZoom()
 
     const fraction = warpedMapZoom % 1
@@ -311,7 +304,6 @@
             console.log('PERFECT SCORE')
 
             ol.getView().fit(getGeoMaskExtent(), {
-              padding: PADDING,
               duration: 200,
               callback: handleSubmit
             })
@@ -319,10 +311,7 @@
         }
       }
 
-      return () => {
-        warpedMapLayer.dispose()
-        warpedMapSource.dispose()
-      }
+      resetLastInteraction()
     })
 
     contentBoxSize = { inlineSize: element.clientWidth, blockSize: element.clientHeight }
@@ -336,13 +325,15 @@
     })
 
     resizeObserver.observe(element)
-  })
 
-  // stroke-linejoin="round"
-  // stroke-linecap="round"
+    return () => {
+      warpedMapLayer.dispose()
+      warpedMapSource.dispose()
+    }
+  })
 </script>
 
-<div class="relative w-full h-full">
+<div class="relative w-full h-full bg-[#e0e0e0]">
   <div bind:this={element} id="ol-map" class="w-full h-full ring-0" tabindex="-1" />
   {#if geoMask && contentBoxSize && !$gameService.matches('round.progress.submitted')}
     <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
@@ -363,10 +354,10 @@
 <style>
   #geo-mask {
     /* animation-duration: var(--animation-duration); */
-    animation-name: pulsate;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-timing-function: linear;
+    /* animation-name: pulsate; */
+    /* animation-iteration-count: infinite; */
+    /* animation-direction: alternate; */
+    /* animation-timing-function: linear; */
   }
 
   @keyframes pulsate {

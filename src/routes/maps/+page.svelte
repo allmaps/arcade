@@ -1,8 +1,8 @@
-<!-- <script lang="ts">
+<script lang="ts">
   import { parseAnnotation } from '@allmaps/annotation'
   import { fetchJson, fetchImageInfo } from '@allmaps/stdlib'
 
-  import { annotationUrls } from '$lib/shared/stores/annotations.js'
+  import { environment } from '$lib/shared/stores/environment.js'
 
   import Thumbnail from '$lib/components/Thumbnail.svelte'
 
@@ -27,56 +27,59 @@
 </script>
 
 <ul class="images">
-  {#each $annotationUrls as annotationUrl}
-    <li class="relative">
-      {#await fetchJson(annotationUrl)}
-        <div>Loading</div>
-      {:then annotation}
-        {#await parseAnnotation(annotation) then maps}
-          {#await fetchImageInfo(maps[0].resource.id)}
-            <div>Loading</div>
-          {:then imageInfo}
-            <Thumbnail {imageInfo} width={400} height={400} />
+  {#await $environment.getAnnotationUrls() then annotationUrls}
+    {#each annotationUrls as annotationUrl}
+      <li class="relative">
+        {#await fetchJson(annotationUrl)}
+          <div>Loading</div>
+        {:then annotation}
+          {#await parseAnnotation(annotation) then maps}
+            {#await fetchImageInfo(maps[0].resource.id)}
+              <div>Loading</div>
+            {:then imageInfo}
+              <Thumbnail {imageInfo} width={400} height={400} />
 
-            <div class="absolute top-0 p-2 text-sm">
-              <ol class="list-none">
-                <li>
-                  Map ID: <a class="underline" href={annotationUrl}
-                    ><strong>{getMapId(annotationUrl)}</strong></a
-                  >
-                </li>
-                <li>
-                  Image ID: <a class="underline" href={maps[0].resource.id}
-                    ><strong>{getImageId(maps[0].resource.id)}</strong></a
-                  >
-                </li>
+              <div class="absolute top-0 p-2 text-sm">
+                <ol class="list-none">
+                  <li>
+                    Map ID: <a class="underline" href={annotationUrl}
+                      ><strong>{getMapId(annotationUrl)}</strong></a
+                    >
+                  </li>
+                  <li>
+                    Image ID: <a class="underline" href={maps[0].resource.id}
+                      ><strong>{getImageId(maps[0].resource.id)}</strong></a
+                    >
+                  </li>
 
-                {#await fetchJson(getApiAnnotationUrl(annotationUrl)) then apiAnnotation}
-                  {#await parseAnnotation(apiAnnotation) then apiMaps}
-                    <li>Domain: <strong>{getDomain(apiMaps[0].resource.id)}</strong></li>
-                    <li>
-                      <a
-                        class="underline"
-                        href="https://viewer.allmaps.org/?url={getApiAnnotationUrl(annotationUrl)}"
-                        >Open in Allmaps Viewer</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        class="underline"
-                        href="https://editor.allmaps.org/#/collection?url={apiMaps[0].resource
-                          .id}/info.json">Open in Allmaps Editor</a
-                      >
-                    </li>
+                  {#await fetchJson(getApiAnnotationUrl(annotationUrl)) then apiAnnotation}
+                    {#await parseAnnotation(apiAnnotation) then apiMaps}
+                      <li>Domain: <strong>{getDomain(apiMaps[0].resource.id)}</strong></li>
+                      <li>
+                        <a
+                          class="underline"
+                          href="https://viewer.allmaps.org/?url={getApiAnnotationUrl(
+                            annotationUrl
+                          )}">Open in Allmaps Viewer</a
+                        >
+                      </li>
+                      <li>
+                        <a
+                          class="underline"
+                          href="https://editor.allmaps.org/#/collection?url={apiMaps[0].resource
+                            .id}/info.json">Open in Allmaps Editor</a
+                        >
+                      </li>
+                    {/await}
                   {/await}
-                {/await}
-              </ol>
-            </div>
+                </ol>
+              </div>
+            {/await}
           {/await}
         {/await}
-      {/await}
-    </li>
-  {/each}
+      </li>
+    {/each}
+  {/await}
 </ul>
 
 <style scoped>
@@ -111,4 +114,4 @@
     border-radius: 5px;
     overflow: hidden;
   }
-</style> -->
+</style>

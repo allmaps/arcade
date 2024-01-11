@@ -31,7 +31,7 @@
   }
 </script>
 
-<div class="w-16">
+<div class="w-16 rounded-full shadow-lg">
   <svg xmlns="http://www.w3.org/2000/svg" style="--rotation: {rotation}deg;" viewBox="0 0 800 800">
     <circle class="fill-white" cx="400" cy="400.1" r="400" />
 

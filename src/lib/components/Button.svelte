@@ -7,7 +7,9 @@
 
   export let timeout = 0
   export let disabled = false
-  export let shortcutKey: string | undefined = undefined
+  export let keyCode: string | undefined = undefined
+
+  let active = false
 
   let timeoutId: number
 
@@ -16,13 +18,15 @@
   let touch = false
 
   function handleKeypress(event: KeyboardEvent) {
-    if (event.key === shortcutKey && !event.repeat) {
+    if (event.code === keyCode && !event.repeat) {
       dispatch('click')
     }
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === shortcutKey && !event.repeat) {
+    if (event.code === keyCode && !event.repeat) {
+      active = true
+
       button.dispatchEvent(new Event('mousedown'))
       button.dispatchEvent(
         new MouseEvent('mousedown', {
@@ -39,7 +43,9 @@
   }
 
   function handleKeyup(event: KeyboardEvent) {
-    if (event.key === shortcutKey && !event.repeat) {
+    if (event.code === keyCode && !event.repeat) {
+      active = false
+
       button.dispatchEvent(new Event('mouseup'))
       // touch ? dispatch('touchend') : dispatch('mouseup')
     }
@@ -54,7 +60,7 @@
       }, timeout)
     }
 
-    if (shortcutKey) {
+    if (keyCode) {
       document.addEventListener('keypress', handleKeypress)
       document.addEventListener('keydown', handleKeydown)
       document.addEventListener('keyup', handleKeyup)
@@ -65,7 +71,7 @@
         clearTimeout(timeoutId)
       }
 
-      if (shortcutKey) {
+      if (keyCode) {
         document.removeEventListener('keypress', handleKeypress)
         document.removeEventListener('keydown', handleKeydown)
         document.removeEventListener('keyup', handleKeyup)
@@ -82,23 +88,29 @@
   on:touchend
   {disabled}
   type="button"
-  class="group relative h-min w-fit text-white bg-purple-300 disabled:bg-gray-400 font-medium rounded-full px-8 py-4 mr-2 focus:outline-none pointer-events-auto overflow-hidden"
+  class="group relative h-min w-fit text-white bg-pink-300 disabled:bg-gray-400 font-medium rounded-full px-8 py-4 mr-2 pointer-events-auto overflow-hidden focus:outline-none"
   on:click
 >
   <div
     id="button-background"
     style="--transition-duration: {timeout}ms;"
-    class="absolute bg-purple w-full h-full top-0 left-0 transition-all group-active:bg-darkblue"
+    class="absolute w-full h-full top-0 left-0 transition-all group-active:bg-pink-400 {active
+      ? 'bg-pink-400'
+      : 'bg-pink'}"
   />
   <div class="relative"><slot /></div></button
 >
 
-<style>
+<style scoped>
   #button-background {
     animation-duration: var(--transition-duration);
     animation-name: timeout;
     animation-timing-function: linear;
     animation-iteration-count: 1;
+  }
+
+  #button-background:active {
+    transform: scale(1.1);
   }
 
   @keyframes timeout {

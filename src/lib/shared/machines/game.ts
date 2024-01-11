@@ -1,24 +1,29 @@
-import { get } from 'svelte/store'
+import { get, derived } from 'svelte/store'
 import { createMachine, assign, interpret, type EventObject } from 'xstate'
 import { useSelector } from '@xstate/svelte'
+
+import { getArea } from 'ol/sphere.js'
+import GeoJSON from 'ol/format/GeoJSON.js'
 
 import { fetchImageInfo } from '@allmaps/stdlib'
 import { GcpTransformer } from '@allmaps/transform'
 
 import { fetchMap } from '$lib/shared/maps.js'
-import { computeScore } from '$lib/shared/score.js'
+import { computeScoreRatios, computeMaxScore, computeScore } from '$lib/shared/score.js'
 import { colorForRounds } from '$lib/shared/colors.js'
 
 import {
-  getRandomAnnotationUrl,
   failedAnnotationUrls,
   addFailedAnnotationUrl,
   resetFailedAnnotationUrls
-} from '$lib/shared/stores/annotations.js'
+} from '$lib/shared/stores/failed-annotation-urls.js'
+
+import { environment } from '$lib/shared/stores/environment'
 
 import type { Map } from '@allmaps/annotation'
 
 import type OLMap from 'ol/Map.js'
+import type { Polygon as GeoJsonPolygon } from 'geojson'
 
 import type { Round, LoadedRound, SubmittedRound, Rounds, Submission } from '$lib/shared/types.js'
 
@@ -40,7 +45,7 @@ type GameEvent =
   | { type: 'SHOW_IMAGE' }
   | { type: 'SHOW_MAP' }
   | { type: 'SUBMIT'; endTime: number; submission: Submission }
-  | { type: 'TICK' }
+  | { type: 'TIMEOUT' }
 
 function getTime() {
   const date = new Date()
@@ -71,24 +76,29 @@ export const machine = createMachine(
       rounds: [],
       error: undefined
     },
-    initial: 'start',
+    initial: 'title',
+    on: {
+      TIMEOUT: {
+        target: 'title'
+      }
+    },
     states: {
       error: {
         on: {
           NEXT: {
-            target: 'start',
-            actions: 'resetRounds'
+            target: 'title'
           }
         }
       },
-      start: {
+      title: {
+        entry: 'resetRounds',
         on: {
           NEXT: {
-            target: 'gameIntro'
+            target: 'explain'
           }
         }
       },
-      gameIntro: {
+      explain: {
         on: {
           NEXT: {
             target: 'round'
@@ -145,7 +155,7 @@ export const machine = createMachine(
                       target: 'loading'
                     },
                     {
-                      target: '#game.summary'
+                      target: '#game.results'
                     }
                   ]
                 }
@@ -181,18 +191,10 @@ export const machine = createMachine(
           }
         }
       },
-      summary: {
+      results: {
         on: {
           NEXT: {
-            target: 'highscores'
-          }
-        }
-      },
-      highscores: {
-        on: {
-          NEXT: {
-            target: 'start',
-            actions: 'resetRounds'
+            target: 'title'
           }
         }
       }
@@ -205,6 +207,8 @@ export const machine = createMachine(
       createRound: assign({
         rounds: (context) =>
           context.rounds.concat({
+            index: context.rounds.length,
+            number: context.rounds.length + 1,
             loaded: false,
             submitted: false,
             score: 0,
@@ -227,11 +231,13 @@ export const machine = createMachine(
       }),
       computeScore: assignLastRound((round, event) => {
         if (round.loaded && event.type === 'SUBMIT') {
+          const scoreRatios = computeScoreRatios(round.startTime, event.endTime, event.submission)
           return {
             ...round,
-            endTime: event.endTime,
+            endTime: Math.max(round.startTime, event.endTime),
             submission: event.submission,
-            score: computeScore(round.startTime, event.endTime, event.submission),
+            score: computeScore(round.area, scoreRatios),
+            scoreRatios,
             submitted: true
           }
         }
@@ -251,10 +257,15 @@ export const machine = createMachine(
         let map: Map | undefined
         let transformer: GcpTransformer | undefined
         let imageInfo: unknown | undefined
+        let geoMask: GeoJsonPolygon | undefined
+        let area: number | undefined
+        let maxScore: number | undefined
 
         const maxTries = 5
         let tries = 0
         let success = false
+
+        const $environment = get(environment)
 
         while (!success && tries < maxTries) {
           const previousAnnotationUrls = [
@@ -264,13 +275,24 @@ export const machine = createMachine(
             ...get(failedAnnotationUrls)
           ].filter((url) => url)
 
-          annotationUrl = getRandomAnnotationUrl(previousAnnotationUrls)
+          annotationUrl = await $environment.getRandomAnnotationUrl(previousAnnotationUrls)
 
           if (annotationUrl) {
             try {
               map = await fetchMap(annotationUrl)
               transformer = new GcpTransformer(map.gcps)
               imageInfo = await fetchImageInfo(map.resource.id)
+
+              geoMask = transformer.transformToGeoAsGeojson([map.resourceMask])
+              area = getArea(
+                new GeoJSON().readGeometry(geoMask, {
+                  dataProjection: 'EPSG:4326',
+                  featureProjection: 'EPSG:3857'
+                })
+              )
+
+              maxScore = computeMaxScore(area)
+
               success = true
             } catch (err) {
               console.warn('Failed to load annotation', annotationUrl)
@@ -288,7 +310,10 @@ export const machine = createMachine(
             annotationUrl,
             map,
             transformer,
-            imageInfo
+            imageInfo,
+            geoMask,
+            area,
+            maxScore
           }
         } else {
           // TODO: handle error
@@ -296,7 +321,9 @@ export const machine = createMachine(
         }
       }
     },
-    guards: { playing: (context) => context.rounds.length < NUMBER_OF_ROUNDS },
+    guards: {
+      playing: (context) => context.rounds.length < NUMBER_OF_ROUNDS
+    },
     delays: {}
   }
 )
@@ -307,19 +334,15 @@ export const rounds = useSelector(gameService, (state) => state.context.rounds)
 
 export const error = useSelector(gameService, (state) => state.context.error)
 
-export const currentRoundIndex = useSelector(gameService, (state) =>
-  state.context.rounds.length >= 0 ? state.context.rounds.length - 1 : undefined
-)
-
-export const currentRoundNumber = useSelector(gameService, (state) =>
-  state.context.rounds.length > 0 ? state.context.rounds.length : undefined
-)
-
 export const currentRound = useSelector(gameService, (state) => {
   if (state.context.rounds.length > 0) {
     return state.context.rounds[state.context.rounds.length - 1]
   }
 })
+
+export const currentRoundIndex = derived(currentRound, ($currentRound) => $currentRound?.index)
+
+export const currentRoundNumber = derived(currentRound, ($currentRound) => $currentRound?.number)
 
 export const isLastRound = useSelector(
   gameService,
