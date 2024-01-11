@@ -107,6 +107,13 @@
       keyboardEventTarget: element
     })
 
+    gameService.send({
+      type: 'SET_OL_MAP',
+      ol
+    })
+
+    element.focus()
+
     const view = ol.getView()
 
     return () => {

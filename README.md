@@ -5,6 +5,7 @@ https://arcade.allmaps.org
 TODO:
 
 - Improve title screen
+- Transitions between all views
 - Warped map should show directly after returning from toggled submission (update @allmaps/render?)
 - Improve `flyTo` function
 - Make sure perfect score always is in the middle of the viewport
@@ -14,12 +15,13 @@ TODO:
   - Map bounds
   - Initial lat/lon + zoom
   - Min./max. area
-- Focus map in Results view (make sure arrows and zoom in/out work)
 - Show convex hulls of submission and warped map in Results view
 - Only show _Show submission_ button after first zoomed in to warped map
 - Show score in the middle of screen after submit
 - Improve buttons style + placing
 - Add modal game time progress bar
+- Show total score in Results view
+- In Results view, perfect score now twice, how to improve?
 
 ## Running locally
 

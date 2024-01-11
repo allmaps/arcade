@@ -162,6 +162,8 @@
         })
       })
 
+      feature.setId('submission')
+
       vectorSource.addFeature(feature)
 
       const warpedMapZoom = getWarpedMapZoom()

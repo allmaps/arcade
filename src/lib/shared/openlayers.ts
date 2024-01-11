@@ -1,4 +1,4 @@
-import { Stroke, Fill, Style } from 'ol/style'
+import { Stroke, Style } from 'ol/style'
 
 import type OLMap from 'ol/Map.js'
 import type View from 'ol/View.js'

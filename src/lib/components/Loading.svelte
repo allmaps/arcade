@@ -22,9 +22,9 @@
 
 <h1 class="text-xl font-bold">Round {$currentRoundNumber}</h1>
 
-<!-- min 2 sec -->
 <!-- TODO: Show max points, show area -->
 <!-- TODO: animate mask! -->
-<!-- TODO: bright background color -->
+<!-- TODO: gap between lines -->
+<!-- TODO: make text also readable on dark background -->
 
 <h2>Get ready!</h2>

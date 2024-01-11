@@ -193,6 +193,9 @@ export const machine = createMachine(
       },
       results: {
         on: {
+          SET_OL_MAP: {
+            actions: ['setOlMap']
+          },
           NEXT: {
             target: 'title'
           }
@@ -360,7 +363,8 @@ export const olTarget = useSelector(gameService, (state) => {
 
   if (state.matches('round.display.image')) {
     target = state.context.olImage?.getTarget()
-  } else if (state.matches('round.display.map')) {
+  } else {
+    // in states 'round.display.map' and 'results'
     target = state.context.olMap?.getTarget()
   }
 
