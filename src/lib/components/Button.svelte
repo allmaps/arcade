@@ -88,12 +88,13 @@
   on:touchend
   {disabled}
   type="button"
-  class="group relative shadow-md h-min w-fit text-white bg-pink-300 disabled:bg-gray-400 font-medium rounded-full px-8 py-4 mr-2 pointer-events-auto overflow-hidden focus:outline-none"
+  class:active
+  class="group relative transition-all duration-75 top-0 shadow-md h-min w-fit text-white bg-pink-300 disabled:bg-gray-400 font-medium rounded-full px-8 py-4 mr-2 pointer-events-auto overflow-hidden focus:outline-none"
   on:click
 >
   <div
     id="button-background"
-    style="--transition-duration: {timeout}ms;"
+    style="--timeout-duration: {timeout}ms;"
     class="absolute w-full h-full top-0 left-0 transition-all group-active:bg-pink-400 {active
       ? 'bg-pink-400'
       : 'bg-pink'}"
@@ -101,16 +102,17 @@
   <div class="relative"><slot /></div></button
 >
 
-<style scoped>
+<style scoped lang="postcss">
   #button-background {
-    animation-duration: var(--transition-duration);
+    animation-duration: var(--timeout-duration);
     animation-name: timeout;
     animation-timing-function: linear;
     animation-iteration-count: 1;
   }
 
-  #button-background:active {
-    transform: scale(1.1);
+  .active,
+  button:active {
+    @apply shadow-sm top-[1px];
   }
 
   @keyframes timeout {
