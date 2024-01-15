@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
+
   import { Logo } from '@allmaps/ui'
 
   import { gameService } from '$lib/shared/machines/game.js'
@@ -9,6 +11,12 @@
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
   import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
+
+  // import LoadingAnimation from '$lib/animations/allmaps-loading.lottie'
+
+  onMount(async () => {
+    await import('@dotlottie/player-component')
+  })
 </script>
 
 <div class="relative contents">
@@ -25,6 +33,10 @@
     </h2>
   </div>
 
+  <!-- <div class="bg-white w-20">
+    <dotlottie-player src={LoadingAnimation} autoplay loop />
+  </div> -->
+
   <div class="absolute -z-10 top-0 left-0 w-full h-full overflow-hidden bg-yellow">
     <!-- <Masks /> -->
     <Diamonds />
@@ -33,6 +45,6 @@
 
 <Footer>
   <Button keyCode={$environment.getButton(0).keyCode} on:click={() => gameService.send('NEXT')}
-    >Start <ArcadeButtonIcon button={$environment.getButton(0)} /></Button
+    >Press <ArcadeButtonIcon button={$environment.getButton(0)} /> to start</Button
   >
 </Footer>

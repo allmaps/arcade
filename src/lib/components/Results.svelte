@@ -107,14 +107,14 @@
       keyboardEventTarget: element
     })
 
+    ol.getView().fit(vectorSource.getExtent())
+
     gameService.send({
       type: 'SET_OL_MAP',
       ol
     })
 
     element.focus()
-
-    const view = ol.getView()
 
     return () => {
       warpedMapLayer.dispose()
@@ -143,7 +143,7 @@
         Show rounds <ArcadeButtonIcon button={$environment.getButton(0)} />
       </Button>
     </div>
-    <div>
+    <div class="flex justify-center">
       <Button keyCode={$environment.getButton(3).keyCode} on:click={() => gameService.send('NEXT')}
         >Press <ArcadeButtonIcon button={$environment.getButton(3)} /> for new game
       </Button>

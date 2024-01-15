@@ -20,15 +20,14 @@ import {
 
 import { environment } from '$lib/shared/stores/environment'
 
+import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
+
 import type { Map } from '@allmaps/annotation'
 
 import type OLMap from 'ol/Map.js'
 import type { Polygon as GeoJsonPolygon } from 'geojson'
 
 import type { Round, LoadedRound, SubmittedRound, Rounds, Submission } from '$lib/shared/types.js'
-
-const NUMBER_OF_ROUNDS = 5
-// const DELAY_MS = 6000
 
 type Context = {
   olImage?: OLMap

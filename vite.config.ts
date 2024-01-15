@@ -6,5 +6,6 @@ export default defineConfig({
   envPrefix: 'ARCADE_',
   build: {
     target: 'esnext'
-  }
+  },
+  assetsInclude: ['**/*.lottie']
 })

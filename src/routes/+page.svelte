@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { crossfade } from 'svelte/transition'
+  import { quintOut } from 'svelte/easing'
 
   import Error from '$lib/components/Error.svelte'
   import Header from '$lib/components/Header.svelte'
@@ -15,6 +17,13 @@
   import { isCabinet } from '$lib/shared/cabinet.js'
 
   import 'ol/ol.css'
+
+  const key = 'crossfade'
+
+  const [send, receive] = crossfade({
+    duration: 750,
+    easing: quintOut
+  })
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.code === $environment.getButton(1).keyCode) {
@@ -55,14 +64,38 @@
   {#if $gameService.matches('error')}
     <Error />
   {:else if $gameService.matches('title')}
-    <Title />
+    <div
+      in:send={{ key }}
+      out:receive={{ key }}
+      class="absolute w-full h-full flex flex-col items-center justify-center"
+    >
+      <Title />
+    </div>
   {:else if $gameService.matches('explain')}
-    <Explain />
+    <div
+      in:send={{ key }}
+      out:receive={{ key }}
+      class="absolute w-full h-full flex flex-col items-center justify-center"
+    >
+      <Explain />
+    </div>
   {:else if $gameService.matches('round')}
-    {#key $currentRoundNumber}
-      <Round />
-    {/key}
+    <div
+      in:send={{ key }}
+      out:receive={{ key }}
+      class="absolute w-full h-full flex flex-col items-center justify-center"
+    >
+      {#key $currentRoundNumber}
+        <Round />
+      {/key}
+    </div>
   {:else if $gameService.matches('results')}
-    <Results />
+    <div
+      in:send={{ key }}
+      out:receive={{ key }}
+      class="absolute w-full h-full flex flex-col items-center justify-center"
+    >
+      <Results />
+    </div>
   {/if}
 </main>

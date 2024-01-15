@@ -9,14 +9,16 @@
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
 </script>
 
-<ol>
-  <li>Explain game here!</li>
-  <li>5 rounds</li>
-  <li>You can always view the image</li>
-  <li>Faster & closer = better!</li>
-  <li>Score, large scale maps more points</li>
-  <li>Keyboard shortcuts!</li>
-</ol>
+<div class="absolute w-full h-full flex flex-col items-center justify-center bg-green">
+  <ol>
+    <li>Explain game here!</li>
+    <li>5 rounds</li>
+    <li>You can always view the image</li>
+    <li>Faster & closer = better!</li>
+    <li>Score, large scale maps more points</li>
+    <li>Keyboard shortcuts!</li>
+  </ol>
+</div>
 
 <Footer>
   <Button

@@ -10,7 +10,13 @@
   import Map from '$lib/components/Map.svelte'
   import NorthArrow from '$lib/components/NorthArrow.svelte'
 
-  import { gameService, currentRound, isLastRound, olTarget } from '$lib/shared/machines/game.js'
+  import {
+    gameService,
+    currentRound,
+    isLastRound,
+    olTarget,
+    currentRoundNumber
+  } from '$lib/shared/machines/game.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { environment } from '$lib/shared/stores/environment.js'
 
@@ -34,7 +40,7 @@
   $: annotationReady = !$gameService.matches('round.progress.loading')
 
   let submitted = false
-  $: submitted = $gameService.matches('round.progress.submitted')
+  $: submitted = $currentRound?.submitted === true
 
   function focusOlContainer(container: HTMLElement) {
     if (!container) {
@@ -135,12 +141,8 @@
       </div>
     {/if}
 
-    <!-- {#if $gameService.matches('round.progress.loading') || !imageReady} -->
     {#if !ready}
-      <div
-        out:fade={{ duration: 300 }}
-        class="absolute w-full h-full top-0 flex flex-col items-center justify-center {bgClass}"
-      >
+      <div out:fade={{ duration: 300 }} class="absolute w-full h-full top-0 {bgClass}">
         <Loading
           annotationLoading={!annotationReady}
           imageLoading={!imageReady}

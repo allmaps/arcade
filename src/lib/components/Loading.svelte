@@ -20,11 +20,13 @@
   }
 </script>
 
-<h1 class="text-xl font-bold">Round {$currentRoundNumber}</h1>
+<div class="w-full h-full flex flex-col items-center justify-center gap-4">
+  <h1 class="text-xl font-bold">Round {$currentRoundNumber}</h1>
 
-<!-- TODO: Show max points, show area -->
-<!-- TODO: animate mask! -->
-<!-- TODO: gap between lines -->
-<!-- TODO: make text also readable on dark background -->
+  <!-- TODO: Show max points, show area -->
+  <!-- TODO: animate mask! -->
+  <!-- TODO: gap between lines -->
+  <!-- TODO: make text also readable on dark background -->
 
-<h2>Get ready!</h2>
+  <h2>Get ready!</h2>
+</div>

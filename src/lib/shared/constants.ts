@@ -1,5 +1,7 @@
 import type { Padding } from './types.js'
 
+export const NUMBER_OF_ROUNDS = 5
+
 export const AUTO_ADVANCE_MS = 6 * 1_000
 
 export const GAME_TIMEOUT_MS = 5 * 60 * 1_000

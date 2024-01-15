@@ -2,6 +2,8 @@
   import { gameService, currentRound, score } from '$lib/shared/machines/game.js'
   import { formatScore } from '$lib/shared/format.js'
 
+  import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
+
   import Timer from '$lib/components/Timer.svelte'
   import Score from '$lib/components/Score.svelte'
 </script>
@@ -10,9 +12,11 @@
   <div>
     {#if $gameService.matches('round')}
       <div
-        class="font-bold bg-white px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
+        class="shadow-md font-bold bg-white px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
       >
-        Round <span class="[letter-spacing:theme(spacing.1)]">{$currentRound?.number}/5</span>
+        Round <span class="[letter-spacing:theme(spacing.1)]"
+          >{$currentRound?.number}/{NUMBER_OF_ROUNDS}</span
+        >
       </div>
     {/if}
   </div>
@@ -28,7 +32,7 @@
   <div>
     {#if $gameService.matches('round')}
       <div
-        class="font-bold bg-white px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
+        class="shadow-md font-bold bg-white px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
       >
         {formatScore($score)} Points
       </div>

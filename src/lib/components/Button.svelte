@@ -88,7 +88,7 @@
   on:touchend
   {disabled}
   type="button"
-  class="group relative h-min w-fit text-white bg-pink-300 disabled:bg-gray-400 font-medium rounded-full px-8 py-4 mr-2 pointer-events-auto overflow-hidden focus:outline-none"
+  class="group relative shadow-md h-min w-fit text-white bg-pink-300 disabled:bg-gray-400 font-medium rounded-full px-8 py-4 mr-2 pointer-events-auto overflow-hidden focus:outline-none"
   on:click
 >
   <div

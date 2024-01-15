@@ -5,7 +5,10 @@ https://arcade.allmaps.org
 TODO:
 
 - Improve title screen
-- Transitions between all views
+- Transition border-width for Score component
+- Score less dependent on timer
+- Calculate single 3D distance, instead of zoom difference + 2D distance
+- Transitions between all views, also inside Round
 - Warped map should show directly after returning from toggled submission (update @allmaps/render?)
 - Improve `flyTo` function
 - Make sure perfect score always is in the middle of the viewport
