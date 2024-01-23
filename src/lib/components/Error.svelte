@@ -9,14 +9,16 @@
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
 </script>
 
-<div>Error!</div>
-<div>{$error && $error.message}</div>
+<div class="w-full h-full flex flex-col items-center justify-center gap-4 bg-red">
+  <h1 class="text-xl font-bold">Error!</h1>
+  <div>{$error && $error.message}</div>
+</div>
 
 <Footer>
   <Button
     timeout={AUTO_ADVANCE_MS}
-    keyCode={$environment.getButton(0).keyCode}
+    button={$environment.getButton('submit')}
     on:click={() => gameService.send('NEXT')}
-    >Reset <ArcadeButtonIcon button={$environment.getButton(0)} /></Button
+    >Reset <ArcadeButtonIcon button={$environment.getButton('submit')} /></Button
   >
 </Footer>

@@ -24,15 +24,18 @@
   import { rounds } from '$lib/shared/machines/game.js'
   import { style as protomapsStyle } from '$lib/shared/protomaps.js'
   import { flyTo } from '$lib/shared/openlayers.js'
-  import { maskStyle, getGeoMaskExtent } from '$lib/shared/openlayers.js'
+  import { maskStyle, convexHullStyle, getGeoMaskExtent } from '$lib/shared/openlayers.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
   import { PADDING } from '$lib/shared/constants.js'
 
   let ol: OLMap
 
-  let vectorSource: VectorSource
-  let vectorLayer: VectorLayer<VectorSource>
+  let submissionVectorSource: VectorSource
+  let submissionVectorLayer: VectorLayer<VectorSource>
+
+  let convexHullVectorSource: VectorSource
+  let convexHullVectorLayer: VectorLayer<VectorSource>
 
   let element: HTMLElement
 
@@ -66,11 +69,18 @@
       source: warpedMapSource
     })
 
-    vectorSource = new VectorSource()
-    vectorLayer = new VectorLayer({
-      source: vectorSource,
+    submissionVectorSource = new VectorSource()
+    submissionVectorLayer = new VectorLayer({
+      source: submissionVectorSource,
       style: (feature) => maskStyle(feature.get('color')),
+      updateWhileAnimating: true,
+      updateWhileInteracting: true
+    })
 
+    convexHullVectorSource = new VectorSource()
+    convexHullVectorLayer = new VectorLayer({
+      source: convexHullVectorSource,
+      style: (feature) => convexHullStyle(feature.get('color')),
       updateWhileAnimating: true,
       updateWhileInteracting: true
     })
@@ -79,23 +89,32 @@
       if (round.submitted) {
         warpedMapSource.addGeoreferencedMap(round.map)
 
-        const feature = new Feature({
+        const submissionFeature = new Feature({
           geometry: new GeoJSON().readGeometry(round.submission.geoMask, {
             dataProjection: 'EPSG:4326',
             featureProjection: 'EPSG:3857'
           })
         })
 
-        feature.set('color', round.colors.color)
+        const convexHullFeature = new Feature({
+          geometry: new GeoJSON().readGeometry(round.submission.convexHull, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857'
+          })
+        })
 
-        vectorSource.addFeature(feature)
+        submissionFeature.set('color', round.colors.color)
+        convexHullFeature.set('color', round.colors.convexHullColor)
+
+        submissionVectorSource.addFeature(submissionFeature)
+        convexHullVectorSource.addFeature(convexHullFeature)
       }
     }
 
     ol = new OLMap({
       target: element,
       // @ts-ignore
-      layers: [baseLayer, warpedMapLayer, vectorLayer],
+      layers: [baseLayer, convexHullVectorLayer, warpedMapLayer, submissionVectorLayer],
       controls: [],
       view: new View({
         center: [0, 0],
@@ -107,7 +126,7 @@
       keyboardEventTarget: element
     })
 
-    ol.getView().fit(vectorSource.getExtent())
+    ol.getView().fit(convexHullVectorSource.getExtent())
 
     gameService.send({
       type: 'SET_OL_MAP',
@@ -139,13 +158,13 @@
 <Footer
   ><div class="w-full flex flex-row items-end [&>*]:w-1/3">
     <div>
-      <Button keyCode={$environment.getButton(0).keyCode} on:click={handleShowRounds}>
-        Show rounds <ArcadeButtonIcon button={$environment.getButton(0)} />
+      <Button button={$environment.getButton('toggle')} on:click={handleShowRounds}>
+        Show rounds <ArcadeButtonIcon button={$environment.getButton('toggle')} />
       </Button>
     </div>
     <div class="flex justify-center">
-      <Button keyCode={$environment.getButton(3).keyCode} on:click={() => gameService.send('NEXT')}
-        >Press <ArcadeButtonIcon button={$environment.getButton(3)} /> for new game
+      <Button button={$environment.getButton('submit')} on:click={() => gameService.send('NEXT')}
+        >Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> for new game
       </Button>
     </div>
     <div />

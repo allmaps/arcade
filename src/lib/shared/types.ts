@@ -1,7 +1,32 @@
+import type { z } from 'zod'
+import type OLMap from 'ol/Map.js'
+
 import type { Map } from '@allmaps/annotation'
 import type { GcpTransformer } from '@allmaps/transform'
 
 import type { Polygon as GeoJsonPolygon } from 'geojson'
+
+import type { ConfigurationSchema } from '$lib/shared/schemas.js'
+
+export type Configuration = z.infer<typeof ConfigurationSchema>
+
+export type Context = {
+  rounds: Rounds
+  configuration: Configuration
+  olImage?: OLMap
+  olMap?: OLMap
+  error?: Error
+}
+
+export type GameEvent =
+  | { type: 'NEXT' }
+  | { type: 'START' }
+  | { type: 'SET_OL_IMAGE'; ol: OLMap }
+  | { type: 'SET_OL_MAP'; ol: OLMap }
+  | { type: 'SHOW_IMAGE' }
+  | { type: 'SHOW_MAP' }
+  | { type: 'SUBMIT'; endTime: number; submission: Submission }
+  | { type: 'TIMEOUT' }
 
 type BaseRound = {
   index: number
@@ -12,7 +37,9 @@ type BaseRound = {
   colors: {
     bgClass: string
     bgClassFaded: string
+    textColor: string
     color: string
+    convexHullColor: string
   }
 }
 
@@ -55,6 +82,8 @@ export type Submission = {
   }
   distance: number
   geoMask: GeoJsonPolygon
+  area: number
+  convexHull?: GeoJsonPolygon
 }
 
 export type Ratios = {
@@ -70,20 +99,26 @@ export type Size = [number, number]
 
 export type Padding = [number, number, number, number]
 
+export type ButtonType = 'toggle' | 'zoomOut' | 'zoomIn' | 'submit'
+
 export type Button = {
   keyCode: string
   keyLabel?: string
   bgClass?: string
 }
 
-export type Buttons = [Button, Button, Button, Button]
+export type Buttons = { [T in ButtonType]: Button }
 
 export interface ArcadeEnvironment {
-  getButtons(): Buttons
-  getButton(index: number): Button
+  buttons: Buttons
 
-  getAnnotationUrls(): Promise<string[]>
-  getRandomAnnotationUrl(previousAnnotationUrls: string[]): Promise<string>
+  getButton(type: ButtonType): Button
+
+  getAnnotationUrls(configuration: Configuration): Promise<string[]>
+  getRandomAnnotationUrl(
+    configuration: Configuration,
+    previousAnnotationUrls: string[]
+  ): Promise<string>
 
   // getHighscores(): Promise<Highscore>[]
   // saveHighscore(): void

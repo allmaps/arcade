@@ -3,6 +3,7 @@
   import { formatScore } from '$lib/shared/format.js'
 
   import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
+  import { configuration } from '$lib/shared/machines/game.js'
 
   import Timer from '$lib/components/Timer.svelte'
   import Score from '$lib/components/Score.svelte'
@@ -34,7 +35,7 @@
       <div
         class="shadow-md font-bold bg-white px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
       >
-        {formatScore($score)} Points
+        {formatScore($configuration, $score)} Points
       </div>
     {/if}
   </div>

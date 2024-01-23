@@ -1,7 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
 
-  import { currentRoundNumber } from '$lib/shared/machines/game.js'
+  import { formatScore } from '$lib/shared/format.js'
+  import { configuration, currentRound, currentRoundNumber } from '$lib/shared/machines/game.js'
   import { MIN_LOADING_MS } from '$lib/shared/constants.js'
 
   export let annotationLoading: boolean
@@ -20,13 +21,15 @@
   }
 </script>
 
-<div class="w-full h-full flex flex-col items-center justify-center gap-4">
+<div
+  class="w-full h-full flex flex-col items-center justify-center gap-4 {$currentRound?.colors
+    .textColor}"
+>
   <h1 class="text-xl font-bold">Round {$currentRoundNumber}</h1>
 
-  <!-- TODO: Show max points, show area -->
-  <!-- TODO: animate mask! -->
-  <!-- TODO: gap between lines -->
-  <!-- TODO: make text also readable on dark background -->
-
   <h2>Get ready!</h2>
+
+  {#if $currentRound && $currentRound.loaded}
+    <div>{$currentRound.area}, {formatScore($configuration, $currentRound.maxScore)}</div>
+  {/if}
 </div>

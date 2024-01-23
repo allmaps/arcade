@@ -3,7 +3,7 @@
   import { createEventDispatcher } from 'svelte'
 
   import OLMap from 'ol/Map.js'
-
+  import View from 'ol/View.js'
   import TileLayer from 'ol/layer/Tile.js'
   import IIIFSource from 'ol/source/IIIF.js'
   import IIIFInfo from 'ol/format/IIIFInfo.js'
@@ -61,6 +61,10 @@
           target: element,
           controls: [],
           layers: [tileLayer, vectorLayer],
+          view: new View({
+            padding: PADDING,
+            enableRotation: false
+          }),
           keyboardEventTarget: element
         })
 
@@ -73,7 +77,7 @@
         }
 
         ol.getView().fit(extent, {
-          padding: PADDING
+          // padding: PADDING
         })
 
         ol.on('rendercomplete', () => dispatch('ready'))

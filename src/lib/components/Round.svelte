@@ -4,21 +4,17 @@
 
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
-  import Loading from '$lib/components/Loading.svelte'
+  import RoundLoading from '$lib/components/RoundLoading.svelte'
   import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
   import Image from '$lib/components/Image.svelte'
   import Map from '$lib/components/Map.svelte'
   import NorthArrow from '$lib/components/NorthArrow.svelte'
 
-  import {
-    gameService,
-    currentRound,
-    isLastRound,
-    olTarget,
-    currentRoundNumber
-  } from '$lib/shared/machines/game.js'
+  import { gameService, currentRound, isLastRound, olTarget } from '$lib/shared/machines/game.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { environment } from '$lib/shared/stores/environment.js'
+  import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
+  import { zoomIn, zoomOut } from '$lib/shared/openlayers.js'
 
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
 
@@ -49,7 +45,7 @@
 
     // This is a hack to ensure sure $olTarget's container
     // is visible before focusing
-    container.classList.remove('invisible')
+    container.classList.remove('fade-to-invisible')
     $olTarget?.focus()
   }
 
@@ -104,8 +100,15 @@
     })
   }
 
+  function handleZoomIn() {
+    zoomIn($olTarget)
+  }
+
+  function handleZoomOut() {
+    zoomOut($olTarget)
+  }
+
   function stopTimer() {
-    // $endTime = 0
     clearInterval(intervalId)
   }
 
@@ -118,10 +121,12 @@
   }
 
   function handleToggleSubmissionStart() {
+    resetLastInteraction()
     map.flyToSubmission()
   }
 
   function handleToggleSubmissionEnd() {
+    resetLastInteraction()
     map.flyToWarpedMap()
   }
 
@@ -135,71 +140,78 @@
 
 <div class="w-full h-full flex flex-col items-center justify-center {bgClass}">
   {#if $gameService.matches('round.progress.loading') || $gameService.matches('round.progress.intro')}
-    {#if $gameService.matches('round.progress.intro')}
-      <div bind:this={containerImage} class="absolute w-full h-full left-0 top-0">
-        <Image bind:this={image} on:ready={handleImageReady} />
-      </div>
-    {/if}
+    <div class="w-full h-full">
+      {#if $gameService.matches('round.progress.intro')}
+        <div bind:this={containerImage} class="absolute w-full h-full left-0 top-0">
+          <Image bind:this={image} on:ready={handleImageReady} />
+        </div>
+      {/if}
 
-    {#if !ready}
-      <div out:fade={{ duration: 300 }} class="absolute w-full h-full top-0 {bgClass}">
-        <Loading
-          annotationLoading={!annotationReady}
-          imageLoading={!imageReady}
-          on:ready={handleLoadingReady}
-        />
-      </div>
-    {:else}
-      <Footer>
-        <Button
-          timeout={AUTO_ADVANCE_MS}
-          keyCode={$environment.getButton(0).keyCode}
-          on:click={() => gameService.send('START')}
-          >Start <ArcadeButtonIcon button={$environment.getButton(0)} /></Button
-        >
-      </Footer>
-    {/if}
+      {#if !ready}
+        <div out:fade={{ duration: 300 }} class="absolute w-full h-full top-0 {bgClass}">
+          <RoundLoading
+            annotationLoading={!annotationReady}
+            imageLoading={!imageReady}
+            on:ready={handleLoadingReady}
+          />
+        </div>
+      {:else}
+        <Footer>
+          <Button
+            timeout={AUTO_ADVANCE_MS}
+            button={$environment.getButton('submit')}
+            on:click={() => gameService.send('START')}
+            >Start <ArcadeButtonIcon button={$environment.getButton('submit')} /></Button
+          >
+        </Footer>
+      {/if}
+    </div>
   {:else}
-    <div
-      bind:this={containerImage}
-      class="absolute w-full h-full left-0 top-0"
-      class:invisible={!displayImage}
-    >
-      <Image bind:this={image} />
+    <div class="w-full h-full">
+      <div
+        bind:this={containerImage}
+        class="absolute w-full h-full left-0 top-0"
+        class:fade-to-visible={displayImage}
+        class:fade-to-invisible={!displayImage}
+      >
+        <Image bind:this={image} />
+      </div>
+      <div
+        bind:this={containerMap}
+        class="absolute w-full h-full left-0 top-0"
+        class:fade-to-visible={displayMap}
+        class:fade-to-invisible={!displayMap}
+      >
+        <Map bind:this={map} />
+      </div>
     </div>
-    <div
-      bind:this={containerMap}
-      class="absolute w-full h-full left-0 top-0"
-      class:invisible={!displayMap}
-    >
-      <Map bind:this={map} />
-    </div>
-
     {#if submitted}
       <Footer>
         <div class="w-full flex flex-row items-end [&>*]:w-1/3">
           <div>
             <Button
-              keyCode={$environment.getButton(0).keyCode}
+              button={$environment.getButton('toggle')}
               on:mousedown={handleToggleSubmissionStart}
               on:touchstart={handleToggleSubmissionStart}
               on:mouseup={handleToggleSubmissionEnd}
               on:touchend={handleToggleSubmissionEnd}
-              >Show submission <ArcadeButtonIcon button={$environment.getButton(0)} /></Button
+              >Show submission <ArcadeButtonIcon
+                button={$environment.getButton('toggle')}
+              /></Button
             >
           </div>
           <div class="flex justify-center">
             {#if $isLastRound}
               <Button
-                keyCode={$environment.getButton(3).keyCode}
+                button={$environment.getButton('submit')}
                 on:click={() => gameService.send('NEXT')}
-                >Press <ArcadeButtonIcon button={$environment.getButton(3)} /> for results</Button
+                >Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> for results</Button
               >
             {:else}
               <Button
-                keyCode={$environment.getButton(3).keyCode}
+                button={$environment.getButton('submit')}
                 on:click={() => gameService.send('NEXT')}
-                >Press <ArcadeButtonIcon button={$environment.getButton(3)} /> for next round</Button
+                >Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> for next round</Button
               >
             {/if}
           </div>
@@ -208,23 +220,29 @@
       </Footer>
     {:else}
       <Footer>
-        <div class="w-full flex flex-row items-end [&>*]:w-1/3">
-          <div>
+        <div class="w-full grid grid-cols-[1fr_max-content_1fr] gap-2">
+          <div class="w-full grid grid-flow-col">
             <Button
-              keyCode={$environment.getButton(0).keyCode}
+              button={$environment.getButton('toggle')}
               on:mousedown={handleToggleImageStart}
               on:touchstart={handleToggleImageStart}
               on:mouseup={handleToggleImageEnd}
               on:touchend={handleToggleImageEnd}
-              >Show image <ArcadeButtonIcon button={$environment.getButton(0)} /></Button
+              >Show image <ArcadeButtonIcon button={$environment.getButton('toggle')} /></Button
+            >
+            <Button button={$environment.getButton('zoomOut')} on:click={handleZoomOut}
+              >- <ArcadeButtonIcon button={$environment.getButton('zoomOut')} /></Button
+            >
+            <Button button={$environment.getButton('zoomIn')} on:click={handleZoomIn}
+              >+ <ArcadeButtonIcon button={$environment.getButton('zoomIn')} /></Button
             >
           </div>
-          <div class="flex justify-center">
-            <Button keyCode={$environment.getButton(3).keyCode} on:click={handleSubmit}
-              >Submit <ArcadeButtonIcon button={$environment.getButton(3)} /></Button
+          <div>
+            <Button button={$environment.getButton('submit')} on:click={handleSubmit}
+              >Submit <ArcadeButtonIcon button={$environment.getButton('submit')} /></Button
             >
           </div>
-          <div class="flex justify-end">
+          <div class="place-self-end">
             <NorthArrow />
           </div>
         </div>

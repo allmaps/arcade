@@ -11,17 +11,17 @@
   import Feature from 'ol/Feature.js'
   import Polygon from 'ol/geom/Polygon.js'
   import { toLonLat } from 'ol/proj'
-  import { getDistance } from 'ol/sphere.js'
+  import { getDistance, getArea } from 'ol/sphere.js'
 
   import { applyStyle } from 'ol-mapbox-style'
 
   import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
 
-  import { geometryToPixels, coordinatesToSvgPoints } from '$lib/shared/geometry.js'
+  import { geometryToPixels, coordinatesToSvgPoints, getConvexHull } from '$lib/shared/geometry.js'
 
   import { gameService, currentRound, currentRoundIndex } from '$lib/shared/machines/game.js'
   import { style as protomapsStyle } from '$lib/shared/protomaps.js'
-  import { maskStyle, getZoomForExtent, flyTo } from '$lib/shared/openlayers.js'
+  import { maskStyle, convexHullStyle, getZoomForExtent, flyTo } from '$lib/shared/openlayers.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
@@ -33,8 +33,11 @@
 
   let ol: OLMap
 
-  let vectorSource: VectorSource
-  let vectorLayer: VectorLayer<VectorSource>
+  let submissionVectorSource: VectorSource
+  let submissionVectorLayer: VectorLayer<VectorSource>
+
+  let convexHullVectorSource: VectorSource
+  let convexHullVectorLayer: VectorLayer<VectorSource>
 
   let element: HTMLElement
   let svgPolygon: SVGPathElement | undefined
@@ -43,8 +46,6 @@
   let strokeColor: string
 
   let contentBoxSize: ResizeObserverSize | undefined
-
-  let pulsateDuration = 0.5
 
   let warpedMapZoom: number
 
@@ -101,7 +102,7 @@
   }
 
   export function flyToSubmission() {
-    const feature = vectorSource.getFeatureById('submission')
+    const feature = submissionVectorSource.getFeatureById('submission')
     const extent = feature?.getGeometry()?.getExtent()
 
     if (extent) {
@@ -118,24 +119,39 @@
     flyTo(ol.getView(), getGeoMaskExtent(), duration)
   }
 
-  function getSubmittedGeoMask() {
+  function getSubmittedGeoMask(): GeoJsonPolygon {
     const submittedGeoMaskPolygon = new Polygon([
       [...svgCoordinates, svgCoordinates[0]].map((coordinate) =>
         ol.getCoordinateFromPixel(coordinate)
       )
     ])
 
-    return new GeoJSON().writeGeometryObject(submittedGeoMaskPolygon, {
+    const submittedGeoMask = new GeoJSON().writeGeometryObject(submittedGeoMaskPolygon, {
       dataProjection: 'EPSG:4326',
       featureProjection: 'EPSG:3857'
     })
+
+    if (submittedGeoMask.type !== 'Polygon') {
+      throw new Error('Submitted geoMask is not a polygon')
+    }
+
+    return submittedGeoMask
   }
+
   export function getSubmission(): Submission {
     const warpedMapZoom = getWarpedMapZoom()
     const submissionZoom = getSubmissionZoom()
 
     const warpedMapCenter = getWarpedMapCenter()
     const submissionCenter = getSubmissionCenter()
+
+    const submittedGeoMask = getSubmittedGeoMask()
+    const area = getArea(
+      new GeoJSON().readGeometry(submittedGeoMask, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: 'EPSG:3857'
+      })
+    )
 
     return {
       zoom: {
@@ -147,7 +163,9 @@
         submission: submissionCenter
       },
       distance: getDistance(warpedMapCenter, submissionCenter),
-      geoMask: getSubmittedGeoMask() as GeoJsonPolygon
+      geoMask: submittedGeoMask,
+      area,
+      convexHull: getConvexHull(geoMask, submittedGeoMask)
     }
   }
 
@@ -155,16 +173,29 @@
     if (state.event.type === 'SUBMIT') {
       submitted = true
 
-      const feature = new Feature({
-        geometry: new GeoJSON().readGeometry(getSubmittedGeoMask(), {
+      // Add submittedGeoMask to map
+      const submittedGeoMask = getSubmittedGeoMask()
+      const submittedGeoMaskFeature = new Feature({
+        geometry: new GeoJSON().readGeometry(submittedGeoMask, {
           dataProjection: 'EPSG:4326',
           featureProjection: 'EPSG:3857'
         })
       })
 
-      feature.setId('submission')
+      submittedGeoMaskFeature.setId('submission')
+      submissionVectorSource.addFeature(submittedGeoMaskFeature)
 
-      vectorSource.addFeature(feature)
+      // Add convex hull of geoMask and submittedGeoMask to map
+      const convexHull = getConvexHull(geoMask, submittedGeoMask)
+      const convexHullFeature = new Feature({
+        geometry: new GeoJSON().readGeometry(convexHull, {
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857'
+        })
+      })
+
+      convexHullFeature.setId('convexhull')
+      convexHullVectorSource.addFeature(convexHullFeature)
 
       const warpedMapZoom = getWarpedMapZoom()
       const submissionZoom = getSubmissionZoom()
@@ -214,10 +245,18 @@
 
     warpedMapSource.addGeoreferencedMap($currentRound.map)
 
-    vectorSource = new VectorSource()
-    vectorLayer = new VectorLayer({
-      source: vectorSource,
+    submissionVectorSource = new VectorSource()
+    submissionVectorLayer = new VectorLayer({
+      source: submissionVectorSource,
       style: maskStyle(strokeColor),
+      updateWhileAnimating: true,
+      updateWhileInteracting: true
+    })
+
+    convexHullVectorSource = new VectorSource()
+    convexHullVectorLayer = new VectorLayer({
+      source: convexHullVectorSource,
+      style: convexHullStyle($currentRound.colors.convexHullColor),
       updateWhileAnimating: true,
       updateWhileInteracting: true
     })
@@ -225,7 +264,7 @@
     ol = new OLMap({
       target: element,
       // @ts-ignore
-      layers: [baseLayer, warpedMapLayer, vectorLayer],
+      layers: [baseLayer, convexHullVectorLayer, warpedMapLayer, submissionVectorLayer],
       controls: [],
       view: new View({
         center: [0, 0],
@@ -233,6 +272,8 @@
         zoom: 2,
         padding: PADDING,
         enableRotation: false
+
+        // extent: [-572513.341856, 5211017.966314, 916327.095083, 6636950.728974],
       }),
       keyboardEventTarget: element
     })
@@ -276,11 +317,6 @@
         const opacity = 1 - zoomDiff / zoomDiffVisible
         warpedMapLayer.setOpacity(opacity)
       }
-
-      // pulsateDuration = 1 / (distanceRatio * areaRatio * 8)
-      // const mapSize = ol.getSize()
-      // const mapPixelCenter = [mapSize[0] / 2, mapSize[1] / 2]
-      // const warpedMapPixelCenter = ol.getPixelFromCoordinate(getCenter(getGeoMaskExtent()))
     })
 
     ol.on('moveend', () => {
@@ -341,8 +377,6 @@
     <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
       <svg viewBox={`0 0 ${contentBoxSize.inlineSize} ${contentBoxSize.blockSize}`}>
         <polygon
-          id="geo-mask"
-          style="--animation-duration: {pulsateDuration}s;"
           bind:this={svgPolygon}
           class="fill-none stroke-[10px]"
           stroke={strokeColor}
@@ -352,23 +386,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  #geo-mask {
-    /* animation-duration: var(--animation-duration); */
-    /* animation-name: pulsate; */
-    /* animation-iteration-count: infinite; */
-    /* animation-direction: alternate; */
-    /* animation-timing-function: linear; */
-  }
-
-  @keyframes pulsate {
-    from {
-      scale: 0.9;
-    }
-
-    to {
-      scale: 1;
-    }
-  }
-</style>

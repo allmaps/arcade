@@ -1,3 +1,64 @@
+/* Tailwind initialization */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom styles */
+
+@keyframes timeout {
+  from {
+    width: 0%;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.timeout {
+  animation-duration: 1000ms;
+  animation-name: timeout;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes fade-to-visible {
+  0% {
+    opacity: 0;
+    visibility: visible;
+  }
+
+  100% {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@keyframes fade-to-invisible {
+  99% {
+    opacity: 0;
+    visibility: visible;
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.fade-to-visible,
+.fade-to-invisible {
+  animation-duration: 75ms;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+.fade-to-visible {
+  animation-name: fade-to-visible;
+}
+
+.fade-to-invisible {
+  animation-name: fade-to-invisible;
+}

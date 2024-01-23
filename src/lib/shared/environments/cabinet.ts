@@ -1,23 +1,21 @@
-import type { ArcadeEnvironment, Buttons } from '$lib/shared/types.js'
+import type { ArcadeEnvironment, ButtonType, Configuration } from '$lib/shared/types.js'
 
 export default class CabinetEnvironment implements ArcadeEnvironment {
   annotationUrls: string[] = []
   fetched = false
 
-  getButtons(): Buttons {
-    return [
-      { keyCode: 'KeyZ', bgClass: 'bg-white' },
-      { keyCode: 'KeyX', bgClass: 'bg-yellow' },
-      { keyCode: 'KeyC', bgClass: 'bg-yellow' },
-      { keyCode: 'KeyV', bgClass: 'bg-green' }
-    ]
+  buttons = {
+    toggle: { keyCode: 'KeyZ', bgClass: 'bg-white' },
+    zoomOut: { keyCode: 'KeyX', bgClass: 'bg-yellow' },
+    zoomIn: { keyCode: 'KeyC', bgClass: 'bg-yellow' },
+    submit: { keyCode: 'KeyV', bgClass: 'bg-green' }
   }
 
-  getButton(index: number) {
-    return this.getButtons()[index]
+  getButton(type: ButtonType) {
+    return this.buttons[type]
   }
 
-  async getAnnotationUrls() {
+  async getAnnotationUrls(configuration: Configuration) {
     if (import.meta.env.ARCADE_ANNOTATIONS_DIR) {
       // Fetch JSON directory list from Caddy server
       this.annotationUrls = await fetch(import.meta.env.ARCADE_ANNOTATIONS_DIR, {
@@ -41,9 +39,9 @@ export default class CabinetEnvironment implements ArcadeEnvironment {
     }
   }
 
-  async getRandomAnnotationUrl(previousAnnotationUrls: string[]) {
+  async getRandomAnnotationUrl(configuration: Configuration, previousAnnotationUrls: string[]) {
     if (!this.fetched) {
-      await this.getAnnotationUrls()
+      await this.getAnnotationUrls(configuration)
     }
 
     const filteredAnnotationUrls = this.annotationUrls.filter(

@@ -1,7 +1,8 @@
 import turfRewind from '@turf/rewind'
+import turfConvex from '@turf/convex'
 import { geoProjection, geoPath } from 'd3-geo'
 
-import type { Polygon } from 'geojson'
+import type { Polygon as GeoJsonPolygon } from 'geojson'
 
 import type { Size, Padding } from './types.js'
 
@@ -9,7 +10,7 @@ const mercator = geoProjection((x, y) => [x, Math.log(Math.tan(Math.PI / 4 + y /
 
 const path = geoPath().projection(mercator)
 
-export function geometryToPixels(polygon: Polygon, size: Size, padding: Padding) {
+export function geometryToPixels(polygon: GeoJsonPolygon, size: Size, padding: Padding) {
   turfRewind(polygon, { mutate: true, reverse: true })
 
   mercator.scale(1).translate([0, 0])
@@ -43,4 +44,29 @@ export function geometryToPixels(polygon: Polygon, size: Size, padding: Padding)
 
 export function coordinatesToSvgPoints(coordinates: [number, number][]) {
   return coordinates.map((coordinate) => coordinate.join(',')).join(' ')
+}
+
+export function getConvexHull(
+  polygon1: GeoJsonPolygon,
+  polygon2: GeoJsonPolygon
+): GeoJsonPolygon | undefined {
+  const convexFeature = turfConvex({
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        geometry: polygon1,
+        properties: {}
+      },
+      {
+        type: 'Feature',
+        geometry: polygon2,
+        properties: {}
+      }
+    ]
+  })
+
+  if (convexFeature) {
+    return convexFeature.geometry
+  }
 }

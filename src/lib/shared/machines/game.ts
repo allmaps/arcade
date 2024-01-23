@@ -8,9 +8,11 @@ import GeoJSON from 'ol/format/GeoJSON.js'
 import { fetchImageInfo } from '@allmaps/stdlib'
 import { GcpTransformer } from '@allmaps/transform'
 
+import { getConfiguration } from '$lib/shared/config.js'
 import { fetchMap } from '$lib/shared/maps.js'
 import { computeScoreRatios, computeMaxScore, computeScore } from '$lib/shared/score.js'
 import { colorForRounds } from '$lib/shared/colors.js'
+import defaultConfig from '$lib/shared/default-config.js'
 
 import {
   failedAnnotationUrls,
@@ -19,44 +21,36 @@ import {
 } from '$lib/shared/stores/failed-annotation-urls.js'
 
 import { environment } from '$lib/shared/stores/environment'
+import { startGameTimeout, stopGameTimeout } from '$lib/shared/stores/game-timeout.js'
 
 import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
 
 import type { Map } from '@allmaps/annotation'
 
-import type OLMap from 'ol/Map.js'
 import type { Polygon as GeoJsonPolygon } from 'geojson'
 
-import type { Round, LoadedRound, SubmittedRound, Rounds, Submission } from '$lib/shared/types.js'
-
-type Context = {
-  olImage?: OLMap
-  olMap?: OLMap
-  rounds: Rounds
-  error?: Error
-}
-
-type GameEvent =
-  | { type: 'NEXT' }
-  | { type: 'START' }
-  | { type: 'SET_OL_IMAGE'; ol: OLMap }
-  | { type: 'SET_OL_MAP'; ol: OLMap }
-  | { type: 'SHOW_IMAGE' }
-  | { type: 'SHOW_MAP' }
-  | { type: 'SUBMIT'; endTime: number; submission: Submission }
-  | { type: 'TIMEOUT' }
+import type {
+  Context,
+  GameEvent,
+  Round,
+  LoadedRound,
+  SubmittedRound,
+  Configuration
+} from '$lib/shared/types.js'
 
 function getTime() {
   const date = new Date()
   return date.getTime()
 }
 
-function assignLastRound<T extends EventObject>(updateFn: (round: Round, event: T) => Round) {
+function assignLastRound<T extends EventObject>(
+  updateFn: (round: Round, event: T, context: Context) => Round
+) {
   return assign({
     rounds: (context: Context, event: T) => {
       const lastRoundIndex = context.rounds.length - 1
       let lastRound = context.rounds[context.rounds.length - 1]
-      lastRound = updateFn(lastRound, event)
+      lastRound = updateFn(lastRound, event, context)
       context.rounds[lastRoundIndex] = lastRound
       return context.rounds
     }
@@ -65,7 +59,7 @@ function assignLastRound<T extends EventObject>(updateFn: (round: Round, event: 
 
 export const machine = createMachine(
   {
-    /** @xstate-layout N4IgpgJg5mDOIC5RQIYFswDpYBcUCccBiAOQFEANAFQG0AGAXUVAAcB7WASx07YDtmIAB6IATAE4ALJlEAOcXQmTRougEZxANgA0IAJ6IAzJoCsmcQHZTFqYtN1DAX0e7UGTG7ABJPjnxtSSlpGQXYuHn5BEQQ1WTM6E0lNWTlDLVErC10DGLoFGSS1TVE1ZWNDNWdXdCx-AFc+CEwWfyh8OFhMABs2FAhOPigiCH4sAYA3NgBrLE9Mesbm1vbYTp6+gagECbYAYxQIvnoGY9CObl4BJGFEExtMC0VLSRtZZKtsxFkHcys78SkaiBciqIDmCyaLTYbQ6mAGfgC5Gop2uYQukWu0VkVkwhlUokMhkkeU0UhMnwQKTMkhMFWMok0NhUThcYJq8zYDSa-VgLC6KD0RAAymQqAB9ADyABkxV4ALIAQQA4mQUaxzocoohkoZMEDHlZVIlJHEKUC6LJMMTNBVZIYTAlJEDQeDOYseXyBcLRZKZYqAApqkBozWY7X5Co2wwWUTEpKMs3qNTmWlqCwWfXE8Qs6ruCGYD38vRwtAoGDCgASEoA6mKA0GQ5ctQgkpa0nbs4S0xlTfpEKV1HqaeI5GmLBUii72fnCwKS2WwMKAKoAITlXmCTFRGqbYYQGctpTtpMkyjydB0fZiZUwFs0DnveXtdAsU7zbu5nF5RcwpZYlZrWVFRVBsdwxUBohpXUAXEbE1AZIpxDUQwzRpZNNGHIlkPgkxkjfWoPwLL9PWLP9lzXDdQPCXcIMQKDzABOCENJZCzQycRcRMKRTDSHsTXw7A6jQUt8EFJFNzOajwJuGIbQeO5vg7bCCVkClZGTB06C0kxviQ-VX1ZOYAAtOCgIzYF2NgVkCZEQm3KSrlohATFECkiV1LStP1G0EgM1k+DYCA4EETxJPRRyZIAWkvHJooE3ACBwMLQyco1MBtDJJEsCpRAdbE3M0TQrT+BRswZWRTwEzwfARZKaJku5E3yCxCgyEwXIQgSITq6Toly0RMFpeQbCfFJNFYq9xukKC1BcgFxtkeQusIqEYVWHqIuiQwtMGwxhtKvaEJQq9HmTcRUx075aS0zRlq5JZoRWNZen6QYNubIlLSGywDrGiacgseQrVTDCpqdAk7sWVanrhXx-HevdActO07ha0pYjytTcpTCp1EZQHVEqQzpxW5ZYRIzYEacn7MG+GkJEKvbszUxRgbpLQMwdcRIchMnVkEgAjNBuBwSAqZkw69XOo92qJXKKopEc6BxoE9osWl00kHmiO-AVxa2hJdv20ajrNDRkziMlzuPcdtdnYtOFLGB9e1DRabGsbCSQqRUKSQbinGkw02G9S7eIn8-xdhB7V1b6RuzP7jpyUonRkR4pABaMUliMPdeLWA6iFkWxfs8Lm0WgatGxO57VbdRUOjdKaWGmxAfOkx4qEkScnVBzm2ULHb08tMvdKHSidzLATLMiyrOC0uUpkhkLAKEo6CSGkg7yNSzpg3K8kW8cIecRwgA */
+    /** @xstate-layout N4IgpgJg5mDOIC5RQIYFswGIAqBJAsgKIDyAqtgNoAMAuoqAA4D2sAlgC6tMB29IAHogAsAJgA0IAJ6IAjDIDMANgB0ATioiAHEKHyhMzVQCsMgL6mJqDMoA2TFBFbcomCDzDKnANyYBrD1Yedg5OUAjeTADGKJw81DTxfMxssbxIArKG8soiBgDsmvJ6mpoi8poS0gglqjlGqooyQoqqTZp5eeaW6B5gAE59TH2YAHKEABqUtEksHFxpoIIIMoqKIspCRvIyRop5q0aaqnmViKWaynlKMh3yqodrnRYggcqc7DZYY5OJ6clzPD4SyM4ikshBVGUu3uVDy6iUq0UXRePWUYH4DBsKCcowmUzof1mqSBiBBp2qMg2qmpV1UR3KQn2yNegwArtwIMoGIMoH04LBbPZHM5XO5PNwfP5lCymOzOdymLz+YKQs5whKojF5vFfowifMSQh5FtlCshLCOgVFIVmuT2pDVEJjiICiIQXD5MzUWyOVyeXzYALgsKXP1Bn0uVj2AAzIZoaXe2W+hVKwMqkPqnzRVI66aElIG9JLBSKIRqbTml2GKjyWF22F1BoyamaZutoxe6w++X+5VOdiDTAAZWwAEEAEr4mYFwFFxCl2q6PImRRURR3GsyO2qdaiNaaEF3FbGTsebt+xUBgWYlCSULD0gAIXwuCn+YBCwyCAaeVNNxEVBHPUVpbmC1QtBsTp5GUhhwjIZSnso54pleyiwKyABGaAcOwkC4j8eZ6jOn5LD+f7QYB9zHJojTknkQgXHs+6qEoWwgkIiHIb2aboVhOF4d8lAyASREfoaJZlnSOgaAUVA1nWYHLioy4NCIZQyMYB4iJxSaco4sA3pIw6ENgAD6xAADKmQQo4AOKELqID-MSc4IIoRhliYNzyGpVD6OU8jkkov5qdszSiK0IjwjpcrKPphnGWZlmmfgo4AAqOc5haLPOjSXBpjolDcLTHOSLqQh0clukBZSNJ6zwyrF8VYpInhoCgMDDgAEsQADqKXpZl+qzjlCBqUYOTuWs8hXCIOj1IFYGHIx+xVma+RmA1iZNawBktco7UMN1fXWal9lDcRhrjZNuxlLN80seSWwXMVWh+TucGcXArI2OwsCJeZVmpRlhFOcNJGyFcKiltoHQlLkMPkqs2TGO5VAKCU9QGF96G-f9gkXWJrneZCNHQXNHRGFTax0aWyhyapzZqQxzTmM83BMBAcB8IE05E6NAC0LrkgLSJbdYwahHzLmjTsexqDNh4mNoiNgSUv5QzcRhrtB9SIWGQzS9lX47NBCvLmUyvhRUatRTk1y3PcNFaIh7yfEbI1fgBIgqPB2tRf+rZ+XRRga-UjS7LociOvrGJYk4HsQ8sVMbNo5RUOohT7OSTQZxsGjaABChF-V3RdrpidXaBVQGNkPs0lobqAVoHbi2eukXqm8DvjLX4tEjeWvcuhRUzaMXJtxQZClLPfG8WNx2iaO5rNSJhRx0489pefbcAOTCV65uyUvcYU7Nr1KMtu6zLy3ZStKurdl+3sUocqhkz6JvdLPslI+7sdzI3qGSNWEE9xaFKOjYwJ425IQ7q-HimFsLsFwhAA+ssVi-mLjaOE1IM4hxCuHUKGlDgmE3nFXahk0FfnouSTYkImI+xaOuDQzZS4onLjtPat42odTAFQ4sakno6EbHVXQhhapkOatww6-DEBHlNCzGarR6L+SEcpcOCgxEaCUDjH6f1ZHLFXOsKKLQ1wmDhDTRSdNz5rCZnNFWbNTBAA */
     id: 'game',
     schema: {
       context: {} as Context,
@@ -73,15 +67,27 @@ export const machine = createMachine(
     },
     context: {
       rounds: [],
+      configuration: defaultConfig,
       error: undefined
     },
-    initial: 'title',
+    initial: 'loading',
     on: {
       TIMEOUT: {
         target: 'title'
       }
     },
     states: {
+      loading: {
+        invoke: {
+          src: 'getConfiguration',
+          onDone: {
+            target: 'title',
+            actions: assign({
+              configuration: (_, event) => event.data
+            })
+          }
+        }
+      },
       error: {
         on: {
           NEXT: {
@@ -90,7 +96,8 @@ export const machine = createMachine(
         }
       },
       title: {
-        entry: 'resetRounds',
+        entry: ['resetRounds', 'stopGameTimeout'],
+        exit: ['startGameTimeout'],
         on: {
           NEXT: {
             target: 'explain'
@@ -224,6 +231,8 @@ export const machine = createMachine(
           return []
         }
       }),
+      startGameTimeout: () => startGameTimeout(),
+      stopGameTimeout: () => stopGameTimeout(),
       setStartTime: assignLastRound((round) => {
         if (round.loaded) {
           round.startTime = getTime()
@@ -231,14 +240,20 @@ export const machine = createMachine(
 
         return round
       }),
-      computeScore: assignLastRound((round, event) => {
+      computeScore: assignLastRound((round, event, context) => {
         if (round.loaded && event.type === 'SUBMIT') {
-          const scoreRatios = computeScoreRatios(round.startTime, event.endTime, event.submission)
+          const scoreRatios = computeScoreRatios(
+            context.configuration,
+            round.startTime,
+            event.endTime,
+            round.area,
+            event.submission
+          )
           return {
             ...round,
             endTime: Math.max(round.startTime, event.endTime),
             submission: event.submission,
-            score: computeScore(round.area, scoreRatios),
+            score: computeScore(context.configuration, round.area, scoreRatios),
             scoreRatios,
             submitted: true
           }
@@ -254,6 +269,7 @@ export const machine = createMachine(
       })
     },
     services: {
+      getConfiguration: async (): Promise<Configuration> => getConfiguration(),
       fetchRoundData: async (context): Promise<Partial<LoadedRound>> => {
         let annotationUrl: string | undefined
         let map: Map | undefined
@@ -277,7 +293,10 @@ export const machine = createMachine(
             ...get(failedAnnotationUrls)
           ].filter((url) => url)
 
-          annotationUrl = await $environment.getRandomAnnotationUrl(previousAnnotationUrls)
+          annotationUrl = await $environment.getRandomAnnotationUrl(
+            context.configuration,
+            previousAnnotationUrls
+          )
 
           if (annotationUrl) {
             try {
@@ -293,7 +312,7 @@ export const machine = createMachine(
                 })
               )
 
-              maxScore = computeMaxScore(area)
+              maxScore = computeMaxScore(context.configuration, area)
 
               success = true
             } catch (err) {
@@ -331,6 +350,8 @@ export const machine = createMachine(
 )
 
 export const gameService = interpret(machine).start()
+
+export const configuration = useSelector(gameService, (state) => state.context.configuration)
 
 export const rounds = useSelector(gameService, (state) => state.context.rounds)
 

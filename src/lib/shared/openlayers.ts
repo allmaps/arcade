@@ -1,4 +1,4 @@
-import { Stroke, Style } from 'ol/style'
+import { Stroke, Style, Fill } from 'ol/style'
 
 import type OLMap from 'ol/Map.js'
 import type View from 'ol/View.js'
@@ -9,7 +9,7 @@ import type { Polygon as GeoJsonPolygon } from 'geojson'
 
 import type { BBox, Padding } from '$lib/shared/types.js'
 
-//TODO: import from stdlib or types modyle
+//TODO: import from stdlib or types module
 
 export function maskToPolygon(resourceMask: [number, number][]) {
   return [
@@ -27,9 +27,14 @@ export function maskStyle(color: string) {
       width: 10,
       lineCap: 'square'
     })
-    // fill: new Fill({
-    //   color: 'rgba(255, 255, 255, 0.0)'
-    // })
+  })
+}
+
+export function convexHullStyle(color: string) {
+  return new Style({
+    fill: new Fill({
+      color
+    })
   })
 }
 
@@ -118,5 +123,21 @@ export function flyTo(
       duration: duration / 2
     },
     callback
+  )
+}
+
+export function zoomIn(olTarget: HTMLElement | undefined) {
+  olTarget?.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key: '+'
+    })
+  )
+}
+
+export function zoomOut(olTarget: HTMLElement | undefined) {
+  olTarget?.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key: '-'
+    })
   )
 }

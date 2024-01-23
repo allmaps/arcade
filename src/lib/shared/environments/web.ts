@@ -1,27 +1,23 @@
-import annotationrUrls from '$lib/annotations.json'
-
-import type { ArcadeEnvironment, Buttons } from '$lib/shared/types.js'
+import type { ArcadeEnvironment, ButtonType, Buttons, Configuration } from '$lib/shared/types.js'
 
 export default class WebEnvironment implements ArcadeEnvironment {
-  getButtons(): Buttons {
-    return [
-      { keyCode: 'Space', keyLabel: 'Space' },
-      { keyCode: 'ShiftLeft' },
-      { keyCode: 'ShiftRight' },
-      { keyCode: 'Enter', keyLabel: 'Enter' }
-    ]
+  buttons = {
+    toggle: { keyCode: 'Space', keyLabel: 'Space' },
+    zoomOut: { keyCode: 'ShiftLeft', keyLabel: 'Left Shift' },
+    zoomIn: { keyCode: 'ShiftRight', keyLabel: 'Right Shift' },
+    submit: { keyCode: 'Enter', keyLabel: 'Enter' }
   }
 
-  getButton(index: number) {
-    return this.getButtons()[index]
+  getButton(type: ButtonType) {
+    return this.buttons[type]
   }
 
-  async getAnnotationUrls() {
-    return annotationrUrls
+  async getAnnotationUrls(configuration: Configuration) {
+    return configuration.annotationUrls
   }
 
-  async getRandomAnnotationUrl(previousAnnotationUrls: string[]) {
-    const filteredAnnotationUrls = (await this.getAnnotationUrls()).filter(
+  async getRandomAnnotationUrl(configuration: Configuration, previousAnnotationUrls: string[]) {
+    const filteredAnnotationUrls = (await this.getAnnotationUrls(configuration)).filter(
       (annotationUrl) => !previousAnnotationUrls.includes(annotationUrl)
     )
     return filteredAnnotationUrls[Math.floor(Math.random() * filteredAnnotationUrls.length)]

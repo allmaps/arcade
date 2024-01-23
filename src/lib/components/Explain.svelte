@@ -11,20 +11,33 @@
 
 <div class="absolute w-full h-full flex flex-col items-center justify-center bg-green">
   <ol>
-    <li>Explain game here!</li>
+    <li>Welcome to Allmaps Arcade!</li>
     <li>5 rounds</li>
-    <li>You can always view the image</li>
-    <li>Faster & closer = better!</li>
+    <li>
+      You can always view the image again by pressing <ArcadeButtonIcon
+        button={$environment.getButton('toggle')}
+      />
+    </li>
+    <li>
+      Zoom in and out with <ArcadeButtonIcon button={$environment.getButton('zoomIn')} /> and <ArcadeButtonIcon
+        button={$environment.getButton('zoomOut')}
+      />
+    </li>
+    <li>
+      Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> if you have found the right
+      location. The faster & closer you are, the more points you'll earn.
+    </li>
     <li>Score, large scale maps more points</li>
     <li>Keyboard shortcuts!</li>
+    <li>Visit allmaps.org</li>
   </ol>
 </div>
 
 <Footer>
   <Button
     timeout={AUTO_ADVANCE_MS}
-    keyCode={$environment.getButton(0).keyCode}
+    button={$environment.getButton('submit')}
     on:click={() => gameService.send('NEXT')}
-    >Start <ArcadeButtonIcon button={$environment.getButton(0)} /></Button
+    >Start <ArcadeButtonIcon button={$environment.getButton('submit')} /></Button
   >
 </Footer>
