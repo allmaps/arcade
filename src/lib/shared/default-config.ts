@@ -1,9 +1,11 @@
 import type { Configuration } from '$lib/shared/types.js'
 
+// TODO: parse default config from YAML?
 export default {
   map: {
     center: [0, 0],
     zoom: 2,
+    minZoom: 2,
     maxZoom: 24
   },
   score: {
@@ -18,7 +20,7 @@ export default {
       max: 25_000 * 1_000 * 1_000
     },
     time: {
-      min: 5,
+      min: 8,
       max: 5 * 60
     },
     maxWarpedMapDistance: 50,

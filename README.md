@@ -31,6 +31,8 @@ TODO:
   - small OL map behind text
   - small warped map behind text
 - Only allow submit if map has moved
+- Update to latest sveltekit
+- Keyboard shortcuts in tooltip, using bits-ui
 
 ## Running locally
 
