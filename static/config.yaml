@@ -8,7 +8,7 @@ map:
   zoom: 2
   # Minimum zoom level of the map
   # Default is 2
-  minZoom: ~
+  minZoom: 2
   # Maximum zoom level of the map
   # Default is 24
   maxZoom: 24
