@@ -1,0 +1,75 @@
+# Metadata
+meta:
+  name: City Atlas
+  description: Selection of map sheets of Amsterdam for the Berlage City Atlas exhibition
+  affiliation: The Berlage Center for Advanced Studies in Architecture and Urban Design, TU Delft
+# Map configuration
+map:
+  # Initial center of the map, as [longitude, latitude]
+  # Amsterdam
+  center: [4.916724, 52.357103983046784]
+  # Initial zoom level of the map
+  # Default is 2
+  zoom: 12
+  # Minimum zoom level of the map
+  # Default is 2
+  minZoom: 2
+  # Maximum zoom level of the map
+  # Default is 24
+  maxZoom: 12
+  # Restrict map to bounds, as [[longitude, latitude], [longitude, latitude]]
+  # Default is null
+  maxBounds: [[4.806266, 52.296147], [5.027182, 52.417977]]
+
+# Score configuration
+score:
+  maxScore:
+    # Smallest maximum score, for the smallest-scale warped maps (e.g. small countries)
+    # Default is 10
+    min: 10
+    # Largest maximum score, for the largest-scale warped maps (e.g. city blocks)
+    # Default is 100
+    max: 100
+
+  area:
+    # Size of warped map in square meters to get the largest maximum score
+    # Default is the size of an average city block in square meters
+    min: 10000
+    # Size of warped map in square meters to get the smallest maximum score
+    # Default is the size of small country in square meters
+    max: 25000000000
+
+  time:
+    # Time in seconds before timer starts to make maximum round score smaller.
+    # Default is 5 seconds
+    min: 8
+    # Maximum duration of a round, in seconds.
+    # Players get 0 points if they don't make a guess within this time.
+    # Default is 300 seconds (5 minutes)
+    max: 300
+
+  # Maximum distance between center of submission and center of warped map,
+  # measured in the square root of the area of the warped map.
+  # 1 means max. 1 distance away, 50 means max. 50 distances away.
+  # Default is 50
+  maxWarpedMapDistance: 50
+
+  # Default is 4
+  maxZoomDifference: 4
+  # Score multiplier for displaying scores. 100 turns a score of 10 into 1000 points.
+  # Default is 100
+  displayScoreMultiplier: 100
+
+# List of annotations used by Allmaps Arcade
+# The list can contain single Annotations as well as AnnotationPages
+annotationUrls:
+  # Student work 1:1000
+  - https://cityatlas.theberlage.nl/data/03-argumentation/00-overview/annotations/1to1000-combined.json
+  # Loman atlas (Amsterdam City Archive)
+  - https://annotations.allmaps.org/manifests/af012d4792961902
+  # Publieke werken 1909 (Amsterdam City Archive)
+  # - https://sammeltassen.nl/iiif-manifests/allmaps/publieke-werken-1909.json
+  # Publieke werken 1943 (Amsterdam City Archive)
+  - https://sammeltassen.nl/iiif-manifests/allmaps/publieke-werken-1943.json
+  # Publieke werken 1985 (Amsterdam City Archive)
+  # - https://sammeltassen.nl/iiif-manifests/allmaps/publieke-werken-1985.json
