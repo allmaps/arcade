@@ -9,11 +9,13 @@
   import Score from '$lib/components/Score.svelte'
 </script>
 
-<header class="absolute p-6 z-10 flex flex-row w-full justify-between pointer-events-none">
+<header
+  class="absolute p-2 md:p-4 lg:p-6 z-10 flex flex-row w-full justify-between pointer-events-none"
+>
   <div>
     {#if $gameService.matches('round')}
       <div
-        class="shadow-md font-bold bg-white px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
+        class="shadow-md font-bold bg-white/50 px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
       >
         Round <span class="[letter-spacing:theme(spacing.1)]"
           >{$currentRound?.number}/{NUMBER_OF_ROUNDS}</span
@@ -33,10 +35,17 @@
   <div>
     {#if $gameService.matches('round')}
       <div
-        class="shadow-md font-bold bg-white px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
+        class="shadow-sm font-bold bg-white/50 px-4 py-1.5 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
       >
         {formatScore($configuration, $score)} Points
       </div>
     {/if}
   </div>
 </header>
+
+<style scoped lang="postcss">
+  .active,
+  button:active {
+    @apply shadow-sm top-[1px];
+  }
+</style>

@@ -19,12 +19,11 @@
   import Score from './Score.svelte'
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
-  import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
 
   import { rounds } from '$lib/shared/machines/game.js'
   import { style as protomapsStyle } from '$lib/shared/protomaps.js'
   import { flyTo } from '$lib/shared/openlayers.js'
-  import { maskStyle, convexHullStyle, getGeoMaskExtent } from '$lib/shared/openlayers.js'
+  import { maskStyle, convexHullStyle, getExtent } from '$lib/shared/openlayers.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
   import { PADDING } from '$lib/shared/constants.js'
@@ -53,8 +52,11 @@
     const round = $rounds[selectedRoundIndex]
 
     if (round.submitted) {
-      const geoMask = showSubmission ? round.submission.geoMask : round.geoMask
-      flyTo(ol.getView(), getGeoMaskExtent(geoMask))
+      if (showSubmission) {
+        flyTo(ol.getView(), [getExtent(round.submission.geoMask)])
+      } else {
+        flyTo(ol.getView(), [getExtent(round.submission.convexHull), getExtent(round.geoMask)])
+      }
     }
 
     showSubmission = !showSubmission
@@ -158,13 +160,21 @@
 <Footer
   ><div class="w-full flex flex-row items-end [&>*]:w-1/3">
     <div>
-      <Button button={$environment.getButton('toggle')} on:click={handleShowRounds}>
-        Show rounds <ArcadeButtonIcon button={$environment.getButton('toggle')} />
+      <Button
+        button={$environment.getButton('toggle')}
+        verb="show rounds"
+        on:click={handleShowRounds}
+      >
+        Show rounds
       </Button>
     </div>
     <div class="flex justify-center">
-      <Button button={$environment.getButton('submit')} on:click={() => gameService.send('NEXT')}
-        >Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> for new game
+      <Button
+        button={$environment.getButton('submit')}
+        verb="start new game"
+        on:click={() => gameService.send('NEXT')}
+      >
+        Start new game
       </Button>
     </div>
     <div />

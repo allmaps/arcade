@@ -5,7 +5,6 @@
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
   import RoundLoading from '$lib/components/RoundLoading.svelte'
-  import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
   import Image from '$lib/components/Image.svelte'
   import Map from '$lib/components/Map.svelte'
   import NorthArrow from '$lib/components/NorthArrow.svelte'
@@ -17,6 +16,9 @@
   import { zoomIn, zoomOut } from '$lib/shared/openlayers.js'
 
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
+
+  import zoomInImage from '$lib/images/plus.svg'
+  import zoomOutImage from '$lib/images/minus.svg'
 
   let containerImage: HTMLElement
   let containerMap: HTMLElement
@@ -159,9 +161,9 @@
         <Footer>
           <Button
             timeout={AUTO_ADVANCE_MS}
+            verb="show map"
             button={$environment.getButton('submit')}
-            on:click={() => gameService.send('START')}
-            >Start <ArcadeButtonIcon button={$environment.getButton('submit')} /></Button
+            on:click={() => gameService.send('START')}>Show map</Button
           >
         </Footer>
       {/if}
@@ -191,27 +193,25 @@
           <div>
             <Button
               button={$environment.getButton('toggle')}
+              verb="show submission"
               on:mousedown={handleToggleSubmissionStart}
               on:touchstart={handleToggleSubmissionStart}
               on:mouseup={handleToggleSubmissionEnd}
-              on:touchend={handleToggleSubmissionEnd}
-              >Show submission <ArcadeButtonIcon
-                button={$environment.getButton('toggle')}
-              /></Button
+              on:touchend={handleToggleSubmissionEnd}>Show submission</Button
             >
           </div>
           <div class="flex justify-center">
             {#if $isLastRound}
               <Button
                 button={$environment.getButton('submit')}
-                on:click={() => gameService.send('NEXT')}
-                >Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> for results</Button
+                verb="show results"
+                on:click={() => gameService.send('NEXT')}>Show results</Button
               >
             {:else}
               <Button
                 button={$environment.getButton('submit')}
-                on:click={() => gameService.send('NEXT')}
-                >Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> for next round</Button
+                verb="go to next round"
+                on:click={() => gameService.send('NEXT')}>Next round</Button
               >
             {/if}
           </div>
@@ -220,26 +220,28 @@
       </Footer>
     {:else}
       <Footer>
-        <div class="w-full grid grid-cols-[1fr_max-content_1fr] gap-2">
+        <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
           <div class="w-full grid grid-flow-col">
             <Button
               button={$environment.getButton('toggle')}
+              verb="toggle image"
               on:mousedown={handleToggleImageStart}
               on:touchstart={handleToggleImageStart}
               on:mouseup={handleToggleImageEnd}
-              on:touchend={handleToggleImageEnd}
-              >Show image <ArcadeButtonIcon button={$environment.getButton('toggle')} /></Button
+              on:touchend={handleToggleImageEnd}>Toggle image</Button
             >
-            <Button button={$environment.getButton('zoomOut')} on:click={handleZoomOut}
-              >- <ArcadeButtonIcon button={$environment.getButton('zoomOut')} /></Button
+            <Button
+              button={$environment.getButton('zoomOut')}
+              verb="zoom out"
+              on:click={handleZoomOut}>-</Button
             >
-            <Button button={$environment.getButton('zoomIn')} on:click={handleZoomIn}
-              >+ <ArcadeButtonIcon button={$environment.getButton('zoomIn')} /></Button
+            <Button button={$environment.getButton('zoomIn')} verb="zoom in" on:click={handleZoomIn}
+              ><img class="w-4" src={zoomInImage} alt="Zoom in" /></Button
             >
           </div>
           <div>
-            <Button button={$environment.getButton('submit')} on:click={handleSubmit}
-              >Submit <ArcadeButtonIcon button={$environment.getButton('submit')} /></Button
+            <Button button={$environment.getButton('submit')} verb="submit" on:click={handleSubmit}
+              >Submit</Button
             >
           </div>
           <div class="place-self-end">

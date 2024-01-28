@@ -10,18 +10,33 @@
   import { getCenter } from 'ol/extent.js'
   import Feature from 'ol/Feature.js'
   import Polygon from 'ol/geom/Polygon.js'
-  import { toLonLat } from 'ol/proj'
+  import { fromLonLat, toLonLat } from 'ol/proj'
   import { getDistance, getArea } from 'ol/sphere.js'
 
   import { applyStyle } from 'ol-mapbox-style'
 
   import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
 
-  import { geometryToPixels, coordinatesToSvgPoints, getConvexHull } from '$lib/shared/geometry.js'
-
-  import { gameService, currentRound, currentRoundIndex } from '$lib/shared/machines/game.js'
+  import {
+    geometryToPixels,
+    coordinatesToSvgPoints,
+    getConvexHull,
+    extentFromMaxBounds
+  } from '$lib/shared/geometry.js'
+  import {
+    gameService,
+    currentRound,
+    currentRoundIndex,
+    configuration
+  } from '$lib/shared/machines/game.js'
   import { style as protomapsStyle } from '$lib/shared/protomaps.js'
-  import { maskStyle, convexHullStyle, getZoomForExtent, flyTo } from '$lib/shared/openlayers.js'
+  import {
+    maskStyle,
+    convexHullStyle,
+    getExtent,
+    getZoomForExtent,
+    flyTo
+  } from '$lib/shared/openlayers.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
@@ -53,17 +68,11 @@
 
   const geoMask = ($currentRound as LoadedRound).geoMask
 
-  function getGeoMaskExtent() {
-    const warpedMapGeoMask = new GeoJSON().readGeometry(geoMask, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: 'EPSG:3857'
-    })
-
-    return warpedMapGeoMask.getExtent()
-  }
+  let convexHull: GeoJsonPolygon | undefined
+  let submittedGeoMask: GeoJsonPolygon | undefined
 
   function getWarpedMapCenter() {
-    return toLonLat(getCenter(getGeoMaskExtent()))
+    return toLonLat(getCenter(getExtent(geoMask)))
   }
 
   function getSubmissionCenter() {
@@ -77,7 +86,7 @@
   }
 
   function getWarpedMapPixelCenter() {
-    return ol.getPixelFromCoordinate(getCenter(getGeoMaskExtent()))
+    return ol.getPixelFromCoordinate(getCenter(getExtent(geoMask)))
   }
 
   function getSubmissionPixelCenter() {
@@ -93,7 +102,7 @@
   }
 
   function getWarpedMapZoom() {
-    return getZoomForExtent(ol, getGeoMaskExtent(), PADDING) || 0
+    return getZoomForExtent(ol, getExtent(geoMask), PADDING) || 0
   }
 
   function getSubmissionZoom() {
@@ -102,21 +111,15 @@
   }
 
   export function flyToSubmission() {
-    const feature = submissionVectorSource.getFeatureById('submission')
-    const extent = feature?.getGeometry()?.getExtent()
-
-    if (extent) {
-      flyTo(ol.getView(), extent, 2000)
+    if (convexHull && submittedGeoMask) {
+      flyTo(ol.getView(), [getExtent(convexHull), getExtent(submittedGeoMask)])
     }
   }
 
   export function flyToWarpedMap() {
-    const submissionZoom = getSubmissionZoom()
-
-    const durationPerZoomLevel = 200
-    const duration = Math.abs(warpedMapZoom - submissionZoom) * durationPerZoomLevel
-
-    flyTo(ol.getView(), getGeoMaskExtent(), duration)
+    if (convexHull && geoMask) {
+      flyTo(ol.getView(), [getExtent(convexHull), getExtent(geoMask)])
+    }
   }
 
   function getSubmittedGeoMask(): GeoJsonPolygon {
@@ -145,13 +148,19 @@
     const warpedMapCenter = getWarpedMapCenter()
     const submissionCenter = getSubmissionCenter()
 
-    const submittedGeoMask = getSubmittedGeoMask()
+    submittedGeoMask = getSubmittedGeoMask()
     const area = getArea(
       new GeoJSON().readGeometry(submittedGeoMask, {
         dataProjection: 'EPSG:4326',
         featureProjection: 'EPSG:3857'
       })
     )
+
+    convexHull = getConvexHull(geoMask, submittedGeoMask)
+
+    if (!convexHull) {
+      throw new Error('No convexHull')
+    }
 
     return {
       zoom: {
@@ -165,7 +174,7 @@
       distance: getDistance(warpedMapCenter, submissionCenter),
       geoMask: submittedGeoMask,
       area,
-      convexHull: getConvexHull(geoMask, submittedGeoMask)
+      convexHull
     }
   }
 
@@ -174,7 +183,12 @@
       submitted = true
 
       // Add submittedGeoMask to map
-      const submittedGeoMask = getSubmittedGeoMask()
+
+      // submittedGeoMask should already been set. Throw error otherwise
+      if (!submittedGeoMask || !convexHull) {
+        throw new Error('No submittedGeoMask or no convexHull')
+      }
+
       const submittedGeoMaskFeature = new Feature({
         geometry: new GeoJSON().readGeometry(submittedGeoMask, {
           dataProjection: 'EPSG:4326',
@@ -182,11 +196,9 @@
         })
       })
 
-      submittedGeoMaskFeature.setId('submission')
       submissionVectorSource.addFeature(submittedGeoMaskFeature)
 
       // Add convex hull of geoMask and submittedGeoMask to map
-      const convexHull = getConvexHull(geoMask, submittedGeoMask)
       const convexHullFeature = new Feature({
         geometry: new GeoJSON().readGeometry(convexHull, {
           dataProjection: 'EPSG:4326',
@@ -194,16 +206,11 @@
         })
       })
 
-      convexHullFeature.setId('convexhull')
       convexHullVectorSource.addFeature(convexHullFeature)
 
-      const warpedMapZoom = getWarpedMapZoom()
-      const submissionZoom = getSubmissionZoom()
-
-      const durationPerZoomLevel = 200
-      const duration = Math.abs(warpedMapZoom - submissionZoom) * durationPerZoomLevel
-
-      flyTo(ol.getView(), getGeoMaskExtent(), duration)
+      if (convexHull && geoMask) {
+        flyTo(ol.getView(), [getExtent(convexHull), getExtent(geoMask)])
+      }
 
       // ol.getInteractions().clear()
     }
@@ -267,13 +274,13 @@
       layers: [baseLayer, convexHullVectorLayer, warpedMapLayer, submissionVectorLayer],
       controls: [],
       view: new View({
-        center: [0, 0],
-        maxZoom: 24,
-        zoom: 2,
+        center: fromLonLat($configuration.map.center),
+        minZoom: $configuration.map.minZoom,
+        maxZoom: $configuration.map.maxZoom,
+        zoom: $configuration.map.zoom,
         padding: PADDING,
-        enableRotation: false
-
-        // extent: [-572513.341856, 5211017.966314, 916327.095083, 6636950.728974],
+        enableRotation: false,
+        extent: extentFromMaxBounds($configuration.map.maxBounds)
       }),
       keyboardEventTarget: element
     })
@@ -341,7 +348,7 @@
           if (distanceX < distanceThreshold && distanceY < distanceThreshold) {
             console.log('PERFECT SCORE')
 
-            ol.getView().fit(getGeoMaskExtent(), {
+            ol.getView().fit(getExtent(geoMask), {
               duration: 200,
               callback: handleSubmit
             })

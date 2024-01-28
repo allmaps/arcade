@@ -1,28 +1,39 @@
-import { computeBbox } from '@allmaps/stdlib'
+import turfRewind from '@turf/rewind'
+import { geoProjection, geoPath } from 'd3-geo'
 
-export function pointsToPath(points: [number, number][], size: [number, number]) {
-  const [width, height] = size
-  const [minX, minY, maxX, maxY] = computeBbox(points)
+import type { Polygon as GeoJsonPolygon } from 'geojson'
 
-  const scaleAndTranslateX = (x: number) => {
-    const scaleX = width / (maxX - minX)
-    const translateX = -minX * scaleX
-    return x * scaleX + translateX
+const mercator = geoProjection((x, y) => [x, Math.log(Math.tan(Math.PI / 4 + y / 2))])
+
+const path = geoPath().projection(mercator)
+
+export function geometryToPath(polygon: GeoJsonPolygon) {
+  turfRewind(polygon, { mutate: true, reverse: true })
+
+  const width = 100
+  const height = 100
+
+  mercator.scale(1).translate([0, 0])
+
+  const bounds = path.bounds(polygon)
+
+  const scale =
+    0.95 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height)
+
+  const translate: [number, number] = [
+    (width - scale * (bounds[1][0] + bounds[0][0])) / 2,
+    (height - scale * (bounds[1][1] + bounds[0][1])) / 2
+  ]
+
+  mercator.scale(scale).translate(translate)
+
+  const d = path(polygon)
+
+  const containsNaN = d && d.indexOf('NaN') > -1
+
+  if (!containsNaN) {
+    return d
+  } else {
+    return
   }
-
-  const scaleAndTranslateY = (y: number) => {
-    const scaleY = height / (maxY - minY)
-    const translateY = -minY * scaleY
-    return y * scaleY + translateY
-  }
-
-  return points
-    .map(([x, y]) => [scaleAndTranslateX(x), scaleAndTranslateY(y)])
-    .map((point, index) => [
-      index === 0 ? 'M' : 'L',
-      ...point,
-      index === points.length - 1 ? 'Z' : ''
-    ])
-    .flat()
-    .join(' ')
 }

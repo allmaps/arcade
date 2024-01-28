@@ -83,7 +83,7 @@ export type Submission = {
   distance: number
   geoMask: GeoJsonPolygon
   area: number
-  convexHull?: GeoJsonPolygon
+  convexHull: GeoJsonPolygon
 }
 
 export type Ratios = {

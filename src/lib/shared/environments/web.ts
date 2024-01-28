@@ -1,4 +1,4 @@
-import type { ArcadeEnvironment, ButtonType, Buttons, Configuration } from '$lib/shared/types.js'
+import type { ArcadeEnvironment, ButtonType, Configuration } from '$lib/shared/types.js'
 
 export default class WebEnvironment implements ArcadeEnvironment {
   buttons = {

@@ -1,7 +1,6 @@
 <script lang="ts">
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
-  import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
 
   import { gameService, error } from '$lib/shared/machines/game.js'
   import { environment } from '$lib/shared/stores/environment.js'
@@ -17,8 +16,9 @@
 <Footer>
   <Button
     timeout={AUTO_ADVANCE_MS}
+    verb="reset"
     button={$environment.getButton('submit')}
     on:click={() => gameService.send('NEXT')}
-    >Reset <ArcadeButtonIcon button={$environment.getButton('submit')} /></Button
-  >
+    >Reset
+  </Button>
 </Footer>

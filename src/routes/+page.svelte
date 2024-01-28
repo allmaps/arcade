@@ -28,12 +28,12 @@
   })
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.code === $environment.getButton('zoomOut').keyCode) {
-      // Zoom out!
-      zoomOut($olTarget)
-    } else if (event.code === $environment.getButton('zoomIn').keyCode) {
+    if (event.code === $environment.getButton('zoomIn').keyCode) {
       // Zoom in!
       zoomIn($olTarget)
+    } else if (event.code === $environment.getButton('zoomOut').keyCode) {
+      // Zoom out!
+      zoomOut($olTarget)
     }
   }
 

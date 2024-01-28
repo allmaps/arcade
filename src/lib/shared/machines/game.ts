@@ -337,7 +337,7 @@ export const machine = createMachine(
             maxScore
           }
         } else {
-          // TODO: handle error
+          // TODO: handle error. Maybe load new annotation?
           throw new Error('Failed to load annotation')
         }
       }

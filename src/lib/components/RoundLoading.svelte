@@ -29,7 +29,7 @@
 
   <h2>Get ready!</h2>
 
-  {#if $currentRound && $currentRound.loaded}
+  <!-- {#if $currentRound && $currentRound.loaded}
     <div>{$currentRound.area}, {formatScore($configuration, $currentRound.maxScore)}</div>
-  {/if}
+  {/if} -->
 </div>

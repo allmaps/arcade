@@ -2,7 +2,7 @@ import { Stroke, Style, Fill } from 'ol/style'
 
 import type OLMap from 'ol/Map.js'
 import type View from 'ol/View.js'
-import { getCenter } from 'ol/extent'
+import { getCenter, type Extent } from 'ol/extent'
 import GeoJSON from 'ol/format/GeoJSON.js'
 
 import type { Polygon as GeoJsonPolygon } from 'geojson'
@@ -51,9 +51,9 @@ export function getZoomForExtent(map: OLMap, bounds: BBox, padding: Padding) {
     .getZoomForResolution(map.getView().getResolutionForExtent(bounds, paddedSize))
 }
 
-export function getGeoMaskExtent(geoMask: GeoJsonPolygon) {
+export function getExtent(polygon: GeoJsonPolygon) {
   return new GeoJSON()
-    .readGeometry(geoMask, {
+    .readGeometry(polygon, {
       dataProjection: 'EPSG:4326',
       featureProjection: 'EPSG:3857'
     })
@@ -62,8 +62,8 @@ export function getGeoMaskExtent(geoMask: GeoJsonPolygon) {
 
 export function flyTo(
   view: View,
-  extent: number[],
-  duration = 1000,
+  extents: Extent[],
+  duration = 2000,
   done?: (complete: boolean) => void
 ) {
   view.cancelAnimations()
@@ -77,20 +77,20 @@ export function flyTo(
 
   const currentZoom = view.getZoom()
 
-  const resolution = view.getResolutionForExtent(extent)
-  const newZoom = view.getZoomForResolution(resolution)
-  const center = getCenter(extent)
+  const resolutions = extents.map((extent) => view.getResolutionForExtent(extent))
+  const zooms = resolutions.map((resolution) => view.getZoomForResolution(resolution))
+  const lastExtentCenter = getCenter(extents[extents.length - 1])
 
-  if (!currentZoom || !newZoom) {
+  if (!currentZoom || zooms.includes(undefined)) {
     if (done) {
       done(false)
     }
     return
   }
 
-  const halfwayZoom = Math.min(currentZoom, newZoom) - 1
+  // const halfwayZoom = Math.min(currentZoom, newZoom) - 1
 
-  let parts = 2
+  let parts = extents.length
   let called = false
 
   function callback(complete: boolean) {
@@ -108,20 +108,24 @@ export function flyTo(
 
   view.animate(
     {
-      center,
+      center: lastExtentCenter,
       duration: duration
     },
     callback
   )
   view.animate(
-    {
-      zoom: halfwayZoom,
-      duration: duration / 2
-    },
-    {
-      zoom: newZoom,
-      duration: duration / 2
-    },
+    // {
+    //   zoom: halfwayZoom,
+    //   duration: duration / extents.length
+    // },
+    // {
+    //   zoom: newZoom,
+    //   duration: duration/ extents.length
+    // },
+    ...zooms.map((zoom) => ({
+      zoom,
+      duration: duration / extents.length
+    })),
     callback
   )
 }
