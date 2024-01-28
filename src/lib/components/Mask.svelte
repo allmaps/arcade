@@ -54,9 +54,10 @@
 
 <div class="w-full h-full transition-all duration-500">
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+    <!-- translate3d(0px, 0px, 1px) is needed to make sure scale transition works in Firefox -->
     <path
       vector-effect="non-scaling-stroke"
-      transform="scale({scale * 0.55})"
+      style="transform: translate3d(0px, 0px, 1px) scale({scale * 0.55});"
       transform-origin="50 50"
       stroke-width="20"
       class="transition-all duration-300 fill-none z-0 {strokeClass}"
