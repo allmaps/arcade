@@ -11,9 +11,6 @@ map:
   # Initial zoom level of the map
   # Default is 2
   initialZoom: 11
-  # Restrict map to bounds, as [[longitude, latitude], [longitude, latitude]]
-  # Default is null
-  maxBounds: [[4.806266, 52.296147], [5.027182, 52.417977]]
 
 # Score configuration
 score:

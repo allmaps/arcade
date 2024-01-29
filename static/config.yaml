@@ -7,9 +7,6 @@ map:
   # The minimum and maximum zoom levels are set automatically, depending on the annotation
   # Default is 2
   initialZoom: 2
-  # Restrict map to bounds, as [[longitude, latitude], [longitude, latitude]]
-  # Default is null
-  maxBounds: ~
 
 # Score configuration
 score:
