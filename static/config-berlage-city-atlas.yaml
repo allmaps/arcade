@@ -7,16 +7,10 @@ meta:
 map:
   # Initial center of the map, as [longitude, latitude]
   # Amsterdam
-  center: [4.916724, 52.357103983046784]
+  center: [4.8972, 52.3727]
   # Initial zoom level of the map
   # Default is 2
-  zoom: 12
-  # Minimum zoom level of the map
-  # Default is 2
-  minZoom: 2
-  # Maximum zoom level of the map
-  # Default is 24
-  maxZoom: 12
+  initialZoom: 11
   # Restrict map to bounds, as [[longitude, latitude], [longitude, latitude]]
   # Default is null
   maxBounds: [[4.806266, 52.296147], [5.027182, 52.417977]]

@@ -11,9 +11,7 @@ export const ConfigurationSchema = z.object({
     .nullable(),
   map: z.object({
     center: z.array(z.number()).length(2),
-    zoom: z.number(),
-    minZoom: z.number(),
-    maxZoom: z.number(),
+    initialZoom: z.number(),
     maxBounds: z.array(z.array(z.number()).length(2)).length(2).nullable().optional()
   }),
   score: z.object({

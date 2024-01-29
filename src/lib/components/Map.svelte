@@ -275,9 +275,6 @@
       controls: [],
       view: new View({
         center: fromLonLat($configuration.map.center),
-        minZoom: $configuration.map.minZoom,
-        maxZoom: $configuration.map.maxZoom,
-        zoom: $configuration.map.zoom,
         padding: PADDING,
         enableRotation: false,
         extent: extentFromMaxBounds($configuration.map.maxBounds)
@@ -298,7 +295,7 @@
 
     const view = ol.getView()
 
-    const minZoom = 3 + fraction
+    const minZoom = $configuration.map.initialZoom + fraction
     const maxZoom = warpedMapZoom + 4
 
     view.setMinZoom(minZoom)
