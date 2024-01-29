@@ -38,7 +38,7 @@
     }
   }
 
-  function handleTransition(state: typeof gameService.state) {
+  function handleTransition() {
     resetLastInteraction()
   }
 
