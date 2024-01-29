@@ -22,16 +22,17 @@
 
   onMount(() => {
     intervalId = setInterval(() => {
-      step += 1
+      step = (step + 1) % 4
+      // step += 1
     }, 2000)
 
     return () => clearInterval(intervalId)
   })
 </script>
 
-<div class="absolute w-full h-full p-4 bg-pink flex justify-center">
+<div class="absolute w-full h-full p-4 lg:p-8 bg-pink text-white flex justify-center">
   <div
-    class="max-w-6xl grid grid-cols-[1fr_minmax(200px,_1fr)] grid-rows-3 md:grid-cols-3 md:grid-rows-[1fr_minmax(200px,_1fr)] items-stretch md:items-center gap-4"
+    class="max-w-6xl grid grid-cols-[1fr_minmax(200px,_1fr)] grid-rows-3 md:grid-cols-3 md:grid-rows-[1fr_minmax(200px,_1fr)] items-stretch md:items-center gap-4 lg:gap-8"
   >
     <div
       class="grid col-span-2 grid-cols-subgrid md:grid-cols-none md:grid-rows-subgrid md:col-auto md:row-span-2"
@@ -46,8 +47,10 @@
         ></div>
         <div class="p-2">
           <span
-            class="w-10 h-10 inline-block text-center font-bold text-xl leading-10 relative bg-white rounded-full"
-            >1</span
+            class="w-10 h-10 inline-block text-center font-bold text-xl leading-10 relative transition-all duration-300 {step >=
+            1
+              ? 'bg-white'
+              : 'bg-white/0'} text-pink rounded-full">1</span
           >
         </div>
       </div>
@@ -70,19 +73,18 @@
           style="background-image: url({protomapsAmsterdam});"
         ></div>
 
-        <div class="absolute top-o w-full h-full p-4">
+        <div class="absolute top-o w-full h-full p-2">
           <svg
             class="w-full h-full top-0"
             width="100%"
             height="100%"
             viewBox="0 0 100 100"
-            preserveAspectRatio="xMidYMid slice"
+            preserveAspectRatio="xMidYMid meet"
           >
             <path
               vector-effect="non-scaling-stroke"
               transform-origin="50 50"
-              stroke-width="12"
-              class="transition-all duration-300 fill-none z-0 stroke-pink"
+              class="transition-all duration-300 fill-none z-0 stroke-pink stroke-[8] md:stroke-[12]"
               d={geometryToPath(lomanBuurtQQGeoMask)}
             />
           </svg>
@@ -90,8 +92,10 @@
 
         <div class="p-2">
           <span
-            class="w-10 h-10 inline-block text-center font-bold text-xl leading-10 relative bg-white rounded-full"
-            >2</span
+            class="w-10 h-10 inline-block text-center font-bold text-xl leading-10 relative transition-all duration-300 {step >=
+            2
+              ? 'bg-white'
+              : 'bg-white/0'} text-pink rounded-full">2</span
           >
         </div>
       </div>
@@ -122,8 +126,10 @@
         ></div>
         <div class="p-2">
           <span
-            class="w-10 h-10 inline-block text-center font-bold text-xl leading-10 relative bg-white rounded-full"
-            >3</span
+            class="w-10 h-10 inline-block text-center font-bold text-xl leading-10 relative transition-all duration-300 {step >=
+            3
+              ? 'bg-white'
+              : 'bg-white/0'} text-pink rounded-full">3</span
           >
         </div>
       </div>
