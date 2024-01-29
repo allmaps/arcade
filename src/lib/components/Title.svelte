@@ -15,7 +15,7 @@
 
 <div class="relative contents">
   <div
-    class="absolute p-4 top-0 left-0 w-full h-full flex flex-col gap-8 justify-center items-center overflow-hidden"
+    class="absolute p-4 lg:p-8 top-0 left-0 w-full h-full flex flex-col gap-8 justify-center items-center overflow-hidden"
   >
     <h1 class="text-white text-7xl lg:text-8xl font-bold text-center drop-shadow-md leading-tight">
       Allmaps <span class="font-normal">Arcade</span>
