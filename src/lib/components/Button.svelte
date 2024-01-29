@@ -23,6 +23,18 @@
 
   let touch = false
 
+  const bgClass = button.bgClass || 'bg-green'
+  const textClass = button.textClass || 'text-white'
+  const type = button.type || 'secondary'
+  const icon = button.icon || false
+
+  let typeClasses =
+    type === 'primary' ? 'px-6 py-3 lg:px-8 lg:py-4 text-lg' : 'px-4 py-2 lg:px-6 lg:py-3 text-base'
+
+  if (icon) {
+    typeClasses = 'w-12 h-12 p-3'
+  }
+
   function handleKeypress(event: KeyboardEvent) {
     if (event.code === button.keyCode && !event.repeat) {
       dispatch('click')
@@ -82,16 +94,17 @@
       on:touchend
       type="button"
       class:active
-      class="px-6 py-3 lg:px-8 lg:py-4 group relative transition-all duration-75 top-0 shadow-md h-min w-fit text-white bg-pink-300 font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none"
+      class="{bgClass} {typeClasses} group relative transition-all duration-75 top-0 shadow-md font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none"
       on:click
     >
+      <div class="absolute w-full h-full top-0 left-0 bg-white/20"></div>
       <div
         style="animation-duration: {timeout}ms;"
-        class="timeout absolute w-full h-full top-0 left-0 transition-all group-active:bg-pink-400 {active
-          ? 'bg-pink-400'
-          : 'bg-green'}"
+        class="timeout absolute w-full h-full top-0 left-0 transition-all group-active:bg-white/20 {active
+          ? 'bg-none'
+          : bgClass}"
       />
-      <div class="relative"><slot /></div></button
+      <div class="relative {textClass}"><slot /></div></button
     >
   </Tooltip.Trigger>
   <Tooltip.Content
@@ -105,7 +118,7 @@
     <div
       class="flex items-center justify-center rounded-lg bg-white px-4 py-3 text-black text-sm shadow-lg outline-none"
     >
-      Press <ArcadeButtonIcon {button} /> to {verb}
+      Press <span class="mx-1"><ArcadeButtonIcon {button} /></span> to {verb}
     </div>
   </Tooltip.Content>
 </Tooltip.Root>

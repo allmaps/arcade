@@ -7,6 +7,7 @@
   import RoundLoading from '$lib/components/RoundLoading.svelte'
   import Image from '$lib/components/Image.svelte'
   import Map from '$lib/components/Map.svelte'
+  import Zoom from '$lib/components/Zoom.svelte'
   import NorthArrow from '$lib/components/NorthArrow.svelte'
 
   import { gameService, currentRound, isLastRound, olTarget } from '$lib/shared/machines/game.js'
@@ -164,12 +165,20 @@
         </div>
       {:else}
         <Footer>
-          <Button
-            timeout={AUTO_ADVANCE_MS}
-            verb="show map"
-            button={$environment.getButton('submit')}
-            on:click={() => gameService.send('START')}>Show map</Button
-          >
+          <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
+            <div class="grid grid-flow-col gap-2 self-center">
+              <Zoom />
+            </div>
+            <div>
+              <Button
+                timeout={AUTO_ADVANCE_MS}
+                verb="show map"
+                button={$environment.getButton('submit')}
+                on:click={() => gameService.send('START')}>Show map</Button
+              >
+            </div>
+            <div />
+          </div>
         </Footer>
       {/if}
     </div>
@@ -194,8 +203,8 @@
     </div>
     {#if submitted}
       <Footer>
-        <div class="w-full flex flex-row items-end [&>*]:w-1/3">
-          <div>
+        <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
+          <div class="grid grid-flow-col gap-2 self-center">
             <Button
               button={$environment.getButton('toggle')}
               verb="show submission"
@@ -204,8 +213,9 @@
               on:mouseup={handleToggleSubmissionEnd}
               on:touchend={handleToggleSubmissionEnd}>Show submission</Button
             >
+            <Zoom />
           </div>
-          <div class="flex justify-center">
+          <div>
             {#if $isLastRound}
               <Button
                 button={$environment.getButton('submit')}
@@ -226,7 +236,7 @@
     {:else}
       <Footer>
         <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
-          <div class="w-full grid grid-flow-col">
+          <div class="grid grid-flow-col gap-2 self-center">
             <Button
               button={$environment.getButton('toggle')}
               verb="toggle image"
@@ -235,14 +245,7 @@
               on:mouseup={handleToggleImageEnd}
               on:touchend={handleToggleImageEnd}>Toggle image</Button
             >
-            <Button
-              button={$environment.getButton('zoomOut')}
-              verb="zoom out"
-              on:click={handleZoomOut}>-</Button
-            >
-            <Button button={$environment.getButton('zoomIn')} verb="zoom in" on:click={handleZoomIn}
-              ><img class="w-4" src={zoomInImage} alt="Zoom in" /></Button
-            >
+            <Zoom />
           </div>
           <div>
             <Button button={$environment.getButton('submit')} verb="submit" on:click={handleSubmit}

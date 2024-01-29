@@ -35,7 +35,9 @@
   })
 </script>
 
-<div class="absolute w-full h-full p-4 lg:p-8 bg-darkblue text-white flex justify-center">
+<div
+  class="absolute w-full h-full p-4 lg:p-8 bg-darkblue text-white flex justify-center lg:text-lg"
+>
   <div
     class="max-w-6xl grid grid-cols-[1fr_minmax(200px,_1fr)] grid-rows-3 md:grid-cols-3 md:grid-rows-[1fr_minmax(200px,_1fr)] items-stretch md:items-center gap-4 lg:gap-8"
   >
@@ -60,9 +62,12 @@
         </div>
       </div>
       <div>
-        Welcome! Historic map. While playing, you can always view the image again by pressing <ArcadeButtonIcon
-          button={$environment.getButton('toggle')}
-        />.
+        Look at the historic map for clues about the location it depicts — place names, street
+        names, the legend or other text on the map. <strong
+          >While playing, you can always view the image again by pressing <ArcadeButtonIcon
+            button={$environment.getButton('toggle')}
+          /></strong
+        >.
       </div>
     </div>
 
@@ -105,26 +110,24 @@
         </div>
       </div>
       <div>
-        Move mask on map. Move the map with the {isCabinet ? 'joystick' : 'arrow keys'}, zoom in and
-        out with {#if isCabinet}
+        Find the right location by moving the map with the {isCabinet ? 'joystick' : 'arrow keys'} and
+        zooming in and out with {#if isCabinet}
           the <ArcadeButtonIcon button={$environment.getButton('zoomIn')} /> buttons.
         {:else}
           <ArcadeButtonIcon button={$environment.getButton('zoomIn')} /> and <ArcadeButtonIcon
             button={$environment.getButton('zoomOut')}
           />.
-        {/if} Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> if you have found
-        the right location.
-        <!-- Or joystick! -->
+        {/if}
+        <strong
+          >Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> if you have found the
+          right location.</strong
+        >
       </div>
     </div>
 
     <div
       class="grid col-span-2 grid-cols-subgrid md:grid-cols-none md:grid-rows-subgrid md:col-auto md:row-span-2"
     >
-      <!-- <div
-        class="p-4 md:aspect-square rounded-md bg-orange bg-cover bg-center shadow-inner"
-        style="background-image: url({lomanBuurtQQWarped});"
-      ></div> -->
       <div class="md:aspect-square relative rounded-md md:self-end shadow-inner overflow-hidden">
         <div
           class="w-full h-full absolute top-0 bg-cover bg-center transition-transform duration-300 {step >=
@@ -144,8 +147,11 @@
       </div>
 
       <div>
-        Found! The faster & closer you are, the more points you'll earn. Score, large scale maps
-        more points
+        <strong
+          >The quicker you are and the closer to the correct location your guess is, the more points
+          you'll earn</strong
+        >. Maps of small areas (like neighbourhood maps) are worth more points than maps of larger
+        areas.
       </div>
     </div>
   </div>

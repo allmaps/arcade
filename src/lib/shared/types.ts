@@ -105,6 +105,9 @@ export type Button = {
   keyCode: string
   keyLabel?: string
   bgClass?: string
+  textClass?: string
+  type?: 'primary' | 'secondary'
+  icon?: boolean
 }
 
 export type Buttons = { [T in ButtonType]: Button }

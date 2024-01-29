@@ -5,10 +5,10 @@ export default class CabinetEnvironment implements ArcadeEnvironment {
   fetched = false
 
   buttons = {
-    toggle: { keyCode: 'KeyZ', bgClass: 'bg-white' },
-    zoomOut: { keyCode: 'KeyX', bgClass: 'bg-yellow' },
-    zoomIn: { keyCode: 'KeyC', bgClass: 'bg-yellow' },
-    submit: { keyCode: 'KeyV', bgClass: 'bg-green' }
+    toggle: { keyCode: 'KeyZ', bgClass: 'bg-white', textClass: 'text-black' },
+    zoomOut: { keyCode: 'KeyX', bgClass: 'bg-yellow', icon: true },
+    zoomIn: { keyCode: 'KeyC', bgClass: 'bg-yellow', icon: true },
+    submit: { keyCode: 'KeyV', bgClass: 'bg-green', type: 'primary' as const }
   }
 
   getButton(type: ButtonType) {

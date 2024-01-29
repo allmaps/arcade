@@ -2,10 +2,10 @@ import type { ArcadeEnvironment, ButtonType, Configuration } from '$lib/shared/t
 
 export default class WebEnvironment implements ArcadeEnvironment {
   buttons = {
-    toggle: { keyCode: 'Space', keyLabel: 'Space' },
-    zoomOut: { keyCode: 'ShiftLeft', keyLabel: 'Left Shift' },
-    zoomIn: { keyCode: 'ShiftRight', keyLabel: 'Right Shift' },
-    submit: { keyCode: 'Enter', keyLabel: 'Enter' }
+    toggle: { keyCode: 'Space', keyLabel: 'Space', bgClass: 'bg-white', textClass: 'text-black' },
+    zoomOut: { keyCode: 'ShiftLeft', keyLabel: 'Left Shift', bgClass: 'bg-yellow', icon: true },
+    zoomIn: { keyCode: 'ShiftRight', keyLabel: 'Right Shift', bgClass: 'bg-yellow', icon: true },
+    submit: { keyCode: 'Enter', keyLabel: 'Enter', bgClass: 'bg-green', type: 'primary' as const }
   }
 
   getButton(type: ButtonType) {
