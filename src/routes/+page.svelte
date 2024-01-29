@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { crossfade } from 'svelte/transition'
   import { quintOut } from 'svelte/easing'
 
@@ -37,8 +38,16 @@
     }
   }
 
-  gameService.onTransition(() => {
+  function handleTransition(state: typeof gameService.state) {
     resetLastInteraction()
+  }
+
+  onMount(() => {
+    gameService.onTransition(handleTransition)
+
+    return () => {
+      gameService.off(handleTransition)
+    }
   })
 </script>
 

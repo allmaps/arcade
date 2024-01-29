@@ -65,7 +65,7 @@
     }
   }
 
-  gameService.onTransition((state) => {
+  function handleTransition(state: typeof gameService.state) {
     if (state.event.type === 'START') {
       gameService.send('SHOW_MAP')
     } else if (state.event.type === 'SUBMIT') {
@@ -75,7 +75,7 @@
     }
 
     bgClass = $currentRound?.colors.bgClass
-  })
+  }
 
   function getTime() {
     const date = new Date()
@@ -136,7 +136,12 @@
     startTime = getTime()
     intervalId = setInterval(updateTimer, 1000)
 
-    return () => stopTimer()
+    gameService.onTransition(handleTransition)
+
+    return () => {
+      stopTimer()
+      gameService.off(handleTransition)
+    }
   })
 </script>
 

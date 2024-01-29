@@ -178,7 +178,7 @@
     }
   }
 
-  gameService.onTransition((state) => {
+  function handleTransition(state: typeof gameService.state) {
     if (state.event.type === 'SUBMIT') {
       submitted = true
 
@@ -209,12 +209,12 @@
       convexHullVectorSource.addFeature(convexHullFeature)
 
       if (convexHull && geoMask) {
-        flyTo(ol.getView(), [getExtent(convexHull), getExtent(geoMask)])
+        flyToWarpedMap()
       }
 
       // ol.getInteractions().clear()
     }
-  })
+  }
 
   $: {
     if (contentBoxSize) {
@@ -290,6 +290,8 @@
       ol
     })
 
+    gameService.onTransition(handleTransition)
+
     warpedMapZoom = getWarpedMapZoom()
 
     const fraction = warpedMapZoom % 1
@@ -297,7 +299,7 @@
     const view = ol.getView()
 
     const minZoom = 3 + fraction
-    const maxZoom = warpedMapZoom + 2
+    const maxZoom = warpedMapZoom + 4
 
     view.setMinZoom(minZoom)
     view.setMaxZoom(maxZoom)
@@ -374,6 +376,8 @@
     return () => {
       warpedMapLayer.dispose()
       warpedMapSource.dispose()
+
+      gameService.off(handleTransition)
     }
   })
 </script>
