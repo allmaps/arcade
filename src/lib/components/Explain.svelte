@@ -7,6 +7,7 @@
 
   import { gameService } from '$lib/shared/machines/game.js'
   import { environment } from '$lib/shared/stores/environment.js'
+  import { isCabinet } from '$lib/shared/cabinet.js'
 
   import { geometryToPath } from '$lib/shared/svg.js'
 
@@ -104,11 +105,15 @@
         </div>
       </div>
       <div>
-        Move mask on map. Move the map with the arrow keys, zoom in and out with <ArcadeButtonIcon
-          button={$environment.getButton('zoomIn')}
-        /> and <ArcadeButtonIcon button={$environment.getButton('zoomOut')} />. Press <ArcadeButtonIcon
-          button={$environment.getButton('submit')}
-        /> if you have found the right location.
+        Move mask on map. Move the map with the {isCabinet ? 'joystick' : 'arrow keys'}, zoom in and
+        out with {#if isCabinet}
+          <ArcadeButtonIcon button={$environment.getButton('zoomIn')} />
+        {:else}
+          <ArcadeButtonIcon button={$environment.getButton('zoomIn')} /> and <ArcadeButtonIcon
+            button={$environment.getButton('zoomOut')}
+          />
+        {/if}. Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> if you have found
+        the right location.
         <!-- Or joystick! -->
       </div>
     </div>
