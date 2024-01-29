@@ -25,7 +25,8 @@ export function maskStyle(color: string) {
     stroke: new Stroke({
       color,
       width: 10,
-      lineCap: 'square'
+      lineCap: 'square',
+      lineJoin: 'miter'
     })
   })
 }
