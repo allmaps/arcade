@@ -107,12 +107,12 @@
       <div>
         Move mask on map. Move the map with the {isCabinet ? 'joystick' : 'arrow keys'}, zoom in and
         out with {#if isCabinet}
-          <ArcadeButtonIcon button={$environment.getButton('zoomIn')} />
+          the <ArcadeButtonIcon button={$environment.getButton('zoomIn')} /> buttons.
         {:else}
           <ArcadeButtonIcon button={$environment.getButton('zoomIn')} /> and <ArcadeButtonIcon
             button={$environment.getButton('zoomOut')}
-          />
-        {/if}. Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> if you have found
+          />.
+        {/if} Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> if you have found
         the right location.
         <!-- Or joystick! -->
       </div>
