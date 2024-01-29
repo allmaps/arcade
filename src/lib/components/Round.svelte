@@ -38,8 +38,10 @@
   let annotationReady = false
   $: annotationReady = !$gameService.matches('round.progress.loading')
 
+  // When SUBMIT event is received, submitted is set to true
+  // Using $gameService.matches('round.display.submitted') caused
+  // strange race-condition bugs with svelte/transition
   let submitted = false
-  $: submitted = $currentRound?.submitted === true
 
   function focusOlContainer(container: HTMLElement) {
     if (!container) {
@@ -71,6 +73,7 @@
       gameService.send('SHOW_MAP')
     } else if (state.event.type === 'SUBMIT') {
       stopTimer()
+      submitted = true
     } else if (state.event.type === 'NEXT') {
       gameService.send('SHOW_IMAGE')
     }
@@ -209,9 +212,7 @@
               button={$environment.getButton('toggle')}
               verb="show submission"
               on:mousedown={handleToggleSubmissionStart}
-              on:touchstart={handleToggleSubmissionStart}
-              on:mouseup={handleToggleSubmissionEnd}
-              on:touchend={handleToggleSubmissionEnd}>Show submission</Button
+              on:mouseup={handleToggleSubmissionEnd}>Show submission</Button
             >
             <Zoom />
           </div>
@@ -241,9 +242,7 @@
               button={$environment.getButton('toggle')}
               verb="toggle image"
               on:mousedown={handleToggleImageStart}
-              on:touchstart={handleToggleImageStart}
-              on:mouseup={handleToggleImageEnd}
-              on:touchend={handleToggleImageEnd}>Toggle image</Button
+              on:mouseup={handleToggleImageEnd}>Toggle image</Button
             >
             <Zoom />
           </div>

@@ -46,17 +46,6 @@
       active = true
 
       element.dispatchEvent(new Event('mousedown'))
-      element.dispatchEvent(
-        new MouseEvent('mousedown', {
-          view: window,
-          bubbles: true,
-          cancelable: true,
-          clientX: 1200,
-          clientY: 100,
-          button: 0
-        })
-      )
-      // touch ? dispatch('touchstart') : dispatch('mousedown')
     }
   }
 
