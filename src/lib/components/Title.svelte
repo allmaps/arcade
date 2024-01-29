@@ -17,8 +17,8 @@
   <div
     class="absolute p-4 top-0 left-0 w-full h-full flex flex-col gap-8 justify-center items-center overflow-hidden"
   >
-    <h1 class="text-white text-5xl lg:text-6xl font-bold text-center drop-shadow-md">
-      Allmaps <br /><span class="font-normal text-7xl lg:text-9xl">Arcade</span>
+    <h1 class="text-white text-7xl lg:text-8xl font-bold text-center drop-shadow-md leading-tight">
+      Allmaps <span class="font-normal">Arcade</span>
     </h1>
     <h2
       class="text-white text-xl sm:text-2xl lg:text-4xl text-center font-bold max-w-2xl drop-shadow-sm"

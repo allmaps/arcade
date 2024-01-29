@@ -72,7 +72,7 @@
 
 <svelte:document on:keypress={handleKeypress} on:keydown={handleKeydown} on:keyup={handleKeyup} />
 
-<Tooltip.Root openDelay={1000}>
+<Tooltip.Root openDelay={2000}>
   <Tooltip.Trigger>
     <button
       bind:this={element}
@@ -82,7 +82,7 @@
       on:touchend
       type="button"
       class:active
-      class="px-4 py-2 md:px-6 md:py-3 lg:px-8 lg:py-4 group relative transition-all duration-75 top-0 shadow-md h-min w-fit text-white bg-pink-300 font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none"
+      class="px-6 py-3 lg:px-8 lg:py-4 group relative transition-all duration-75 top-0 shadow-md h-min w-fit text-white bg-pink-300 font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none"
       on:click
     >
       <div
@@ -103,7 +103,7 @@
       <Tooltip.Arrow class="rounded-[2px]" />
     </div>
     <div
-      class="flex items-center justify-center rounded-lg bg-white px-3 py-1 text-black text-sm shadow-lg outline-none"
+      class="flex items-center justify-center rounded-lg bg-white px-4 py-3 text-black text-sm shadow-lg outline-none"
     >
       Press <ArcadeButtonIcon {button} /> to {verb}
     </div>
