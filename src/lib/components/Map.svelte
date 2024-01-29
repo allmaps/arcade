@@ -276,8 +276,7 @@
       view: new View({
         center: fromLonLat($configuration.map.center),
         padding: PADDING,
-        enableRotation: false,
-        extent: extentFromMaxBounds($configuration.map.maxBounds)
+        enableRotation: false
       }),
       keyboardEventTarget: element
     })
