@@ -14,12 +14,8 @@
   import { endTime } from '$lib/shared/stores/timer.js'
   import { environment } from '$lib/shared/stores/environment.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
-  import { zoomIn, zoomOut } from '$lib/shared/openlayers.js'
 
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
-
-  import zoomInImage from '$lib/images/plus.svg'
-  import zoomOutImage from '$lib/images/minus.svg'
 
   let containerImage: HTMLElement
   let containerMap: HTMLElement
@@ -104,14 +100,6 @@
       endTime: $endTime,
       submission: map.getSubmission()
     })
-  }
-
-  function handleZoomIn() {
-    zoomIn($olTarget)
-  }
-
-  function handleZoomOut() {
-    zoomOut($olTarget)
   }
 
   function stopTimer() {
