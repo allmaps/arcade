@@ -10,10 +10,14 @@
 
   import { geometryToPath } from '$lib/shared/svg.js'
 
+  import type { Polygon as GeoJsonPolygon } from 'geojson'
+
   import lomanBuurtQQ from '$lib/explain/loman-buurt-qq.jpg'
   import lomanBuurtQQWarped from '$lib/explain/loman-buurt-qq-warped.jpg'
   import protomapsAmsterdam from '$lib/explain/protomaps-amsterdam.jpg'
-  import lomanBuurtQQGeoMask from '$lib/explain/loman-buurt-qq.json'
+  import lomanBuurtQQGeoMaskImported from '$lib/explain/loman-buurt-qq.json'
+
+  const lomanBuurtQQGeoMask = lomanBuurtQQGeoMaskImported as GeoJsonPolygon
 
   let intervalId: number | undefined
   let step = 0
@@ -30,7 +34,7 @@
   })
 </script>
 
-<div class="absolute w-full h-full p-4 lg:p-8 bg-pink text-white flex justify-center">
+<div class="absolute w-full h-full p-4 lg:p-8 bg-darkblue text-white flex justify-center">
   <div
     class="max-w-6xl grid grid-cols-[1fr_minmax(200px,_1fr)] grid-rows-3 md:grid-cols-3 md:grid-rows-[1fr_minmax(200px,_1fr)] items-stretch md:items-center gap-4 lg:gap-8"
   >
@@ -50,7 +54,7 @@
             class="w-10 h-10 inline-block text-center font-bold text-xl leading-10 relative transition-all duration-300 {step >=
             1
               ? 'bg-white'
-              : 'bg-white/0'} text-pink rounded-full">1</span
+              : 'bg-white/0'} text-darkblue rounded-full">1</span
           >
         </div>
       </div>
@@ -84,7 +88,7 @@
             <path
               vector-effect="non-scaling-stroke"
               transform-origin="50 50"
-              class="transition-all duration-300 fill-none z-0 stroke-pink stroke-[8] md:stroke-[12]"
+              class="transition-all duration-300 fill-none z-0 stroke-darkblue stroke-[8] md:stroke-[12]"
               d={geometryToPath(lomanBuurtQQGeoMask)}
             />
           </svg>
@@ -95,7 +99,7 @@
             class="w-10 h-10 inline-block text-center font-bold text-xl leading-10 relative transition-all duration-300 {step >=
             2
               ? 'bg-white'
-              : 'bg-white/0'} text-pink rounded-full">2</span
+              : 'bg-white/0'} text-darkblue rounded-full">2</span
           >
         </div>
       </div>
@@ -129,7 +133,7 @@
             class="w-10 h-10 inline-block text-center font-bold text-xl leading-10 relative transition-all duration-300 {step >=
             3
               ? 'bg-white'
-              : 'bg-white/0'} text-pink rounded-full">3</span
+              : 'bg-white/0'} text-darkblue rounded-full">3</span
           >
         </div>
       </div>
