@@ -3,15 +3,10 @@ map:
   # Initial center of the map, as [longitude, latitude]
   # Default is Null Island
   center: [0, 0]
-  # Initial zoom level of the map
+  # Initial zoom level of the map.
+  # The minimum and maximum zoom levels are set automatically, depending on the annotation
   # Default is 2
-  zoom: 2
-  # Minimum zoom level of the map
-  # Default is 2
-  minZoom: 2
-  # Maximum zoom level of the map
-  # Default is 24
-  maxZoom: 24
+  initialZoom: 2
   # Restrict map to bounds, as [[longitude, latitude], [longitude, latitude]]
   # Default is null
   maxBounds: ~
