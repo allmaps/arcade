@@ -5,9 +5,6 @@ https://arcade.allmaps.org
 - _Explode_ mask animation on perfect score
 - Add heading text to ScoreLarge
 - In Results view, perfect score now twice, how to improve? add property to submission: found: boolean
-
-==== LATER ==========================================
-
 - Show round score in header when no longer showing in center
 - Improve `flyTo` function
 - Improve `<kbd>` styling
