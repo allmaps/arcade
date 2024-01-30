@@ -77,11 +77,7 @@
       <Explain />
     </div>
   {:else if $gameService.matches('round')}
-    <div
-      in:send={{ key }}
-      out:receive={{ key }}
-      class="absolute w-full h-full flex flex-col items-center justify-center"
-    >
+    <div class="absolute w-full h-full flex flex-col items-center justify-center">
       {#key $currentRoundNumber}
         <Round />
       {/key}
