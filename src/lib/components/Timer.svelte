@@ -13,6 +13,8 @@
   }
 </script>
 
-<div class="shadow-sm font-bold bg-white/50 px-6 py-2 rounded-full pointer-events-auto">
+<div
+  class="shadow-sm font-bold bg-white px-3 py-1 sm:px-6 sm:py-2 rounded-full pointer-events-auto"
+>
   <Time milliseconds={diffTime} />
 </div>

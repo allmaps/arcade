@@ -4,6 +4,6 @@
   import { formatScore } from '$lib/shared/format'
 </script>
 
-<div class="rounded-full bg-white text-2xl font-bold px-4 py-2">
-  Total points: {formatScore($configuration, $score)}
+<div class="rounded-full bg-white text-2xl px-8 py-4">
+  Final score: <span class="font-bold">{formatScore($configuration, $score)} points</span>
 </div>

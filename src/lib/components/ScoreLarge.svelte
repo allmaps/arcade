@@ -8,6 +8,13 @@
 
   export let round: SubmittedRound
   export let found = false
+
+  // Add heading text:
+  // 1. maxScore: Perfect Score!
+  // 2. found: Found!
+  // 3. score > 50% maxScore: Well done!
+  // 4. score > 0: Good try!
+  // 5: score = 0: Try again!
 </script>
 
 <div>

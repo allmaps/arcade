@@ -7,7 +7,7 @@ import GeoJSON from 'ol/format/GeoJSON.js'
 
 import type { Polygon as GeoJsonPolygon } from 'geojson'
 
-import type { BBox, Padding } from '$lib/shared/types.js'
+import type { BBox, Padding, DoneFn } from '$lib/shared/types.js'
 
 //TODO: import from stdlib or types module
 
@@ -61,12 +61,7 @@ export function getExtent(polygon: GeoJsonPolygon) {
     .getExtent()
 }
 
-export function flyTo(
-  view: View,
-  extents: Extent[],
-  duration = 2000,
-  done?: (complete: boolean) => void
-) {
+export function flyTo(view: View, extents: Extent[], duration = 2000, done?: DoneFn) {
   view.cancelAnimations()
 
   // TODO: have a look at:

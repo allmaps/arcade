@@ -154,6 +154,24 @@ export const machine = createMachine(
                 }
               },
               submitted: {
+                initial: 'score',
+                states: {
+                  animating: {
+                    on: {
+                      FINISHED: {
+                        target: 'score'
+                      }
+                    }
+                  },
+                  score: {
+                    on: {
+                      MAP_MOVED: {
+                        target: 'review'
+                      }
+                    }
+                  },
+                  review: {}
+                },
                 on: {
                   NEXT: [
                     {

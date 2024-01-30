@@ -18,13 +18,18 @@ export function computeTimeRatio(configuration: Configuration, timeMs: number) {
   const timeMax = configuration.score.time.max
 
   const timeSeconds = timeMs / 1000
+  // TODO: time ratio should not be linear
   return 1 - Math.min(1, Math.max((timeSeconds - timeMin) / (timeMax - timeMin), 0))
 }
 
 export function computeZoomRatio(submission: Pick<Submission, 'zoom'>) {
   const zoomDiff = Math.abs(submission.zoom.warpedMap - submission.zoom.submission)
-  // TODO: turn 1.5 into configuration variable
-  return 1 / (1 + zoomDiff ** 1.5)
+  // TODO: turn constants into configuration variables
+
+  // How higher d, how smaller the influence of zoomDiff on the score
+  // TODO: d should be higher for small-area maps
+  const d = 2
+  return 1 / (1 + (zoomDiff / d) ** 2)
 }
 
 export function computeDistanceRatio(
@@ -33,9 +38,13 @@ export function computeDistanceRatio(
 ) {
   const geoMaskSize = Math.sqrt(geoMaskArea)
   const warpedMapDistance = submission.distance / geoMaskSize
+  // TODO: turn constants into configuration variables
 
-  // TODO: turn 4 into configuration variable
-  return 1 / (1 + warpedMapDistance / 4)
+  // How higher d, how smaller the influence of warpedMapDistance on the score
+  // TODO: d should be high for small-area maps
+  const d = 4
+
+  return 1 / (1 + warpedMapDistance / d)
 }
 
 export function computeScoreRatios(

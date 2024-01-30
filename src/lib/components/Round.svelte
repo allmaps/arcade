@@ -9,7 +9,7 @@
   import Map from '$lib/components/Map.svelte'
   import Zoom from '$lib/components/Zoom.svelte'
   import NorthArrow from '$lib/components/NorthArrow.svelte'
-  import UpDown from '$lib/components/UpDown.svelte'
+  import EyeIcon from '$lib/components/EyeIcon.svelte'
   import ScoreLarge from '$lib/components/ScoreLarge.svelte'
 
   import { gameService, currentRound, isLastRound, olTarget } from '$lib/shared/machines/game.js'
@@ -40,7 +40,10 @@
   // Using $gameService.matches('round.display.submitted') caused
   // strange race-condition bugs with svelte/transition
   let submitted = false
+
   let found = false
+  let animationFinished = false
+  let showScore = true
 
   function focusOlContainer(container: HTMLElement) {
     if (!container) {
@@ -74,6 +77,12 @@
       stopTimer()
       submitted = true
       found = state.event.submission.found
+    } else if (state.event.type === 'FINISHED') {
+      animationFinished = true
+    } else if (state.event.type === 'MAP_MOVED') {
+      if (animationFinished) {
+        showScore = false
+      }
     } else if (state.event.type === 'NEXT') {
       gameService.send('SHOW_IMAGE')
     }
@@ -172,7 +181,9 @@
                 on:click={() => gameService.send('START')}>Show map</Button
               >
             </div>
-            <div />
+            <div class="place-self-end">
+              <NorthArrow />
+            </div>
           </div>
         </Footer>
       {/if}
@@ -197,9 +208,13 @@
       </div>
     </div>
     {#if submitted}
-      {#if $currentRound?.submitted}
-        <div class="absolute w-full h-full top-0 left-0 flex justify-center items-center">
-          <ScoreLarge round={$currentRound} {found} />
+      {#if $currentRound?.submitted && showScore}
+        <div
+          class="absolute w-full h-full top-0 left-0 flex justify-center items-center pointer-events-none"
+        >
+          <div transition:fade={{ duration: 200 }}>
+            <ScoreLarge round={$currentRound} {found} />
+          </div>
         </div>
       {/if}
       <Footer>
@@ -209,7 +224,7 @@
               button={$environment.getButton('toggle')}
               verb="show submission"
               on:mousedown={handleToggleSubmissionStart}
-              on:mouseup={handleToggleSubmissionEnd}><UpDown /></Button
+              on:mouseup={handleToggleSubmissionEnd}><EyeIcon /></Button
             >
             <Zoom />
           </div>
@@ -228,7 +243,9 @@
               >
             {/if}
           </div>
-          <div />
+          <div class="place-self-end">
+            <NorthArrow />
+          </div>
         </div>
       </Footer>
     {:else}
@@ -239,7 +256,7 @@
               button={$environment.getButton('toggle')}
               verb="toggle image"
               on:mousedown={handleToggleImageStart}
-              on:mouseup={handleToggleImageEnd}><UpDown /></Button
+              on:mouseup={handleToggleImageEnd}><EyeIcon /></Button
             >
             <Zoom />
           </div>

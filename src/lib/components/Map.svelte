@@ -40,7 +40,7 @@
 
   import type { Polygon as GeoJsonPolygon } from 'geojson'
 
-  import type { LoadedRound, Submission } from '$lib/shared/types.js'
+  import type { LoadedRound, Submission, DoneFn } from '$lib/shared/types.js'
 
   let ol: OLMap
 
@@ -106,23 +106,17 @@
     return view.getZoom() || 0
   }
 
-  export function flyToSubmission(duration?: number) {
+  export function flyToSubmission(duration?: number, done?: DoneFn) {
     if (convexHull && submittedGeoMask) {
-      flyTo(ol.getView(), [getExtent(convexHull), getExtent(submittedGeoMask)], duration)
+      flyTo(ol.getView(), [getExtent(convexHull), getExtent(submittedGeoMask)], duration, done)
     }
   }
 
-  export function flyToWarpedMap(duration?: number) {
+  export function flyToWarpedMap(duration?: number, done?: DoneFn) {
     if (convexHull && geoMask) {
-      flyTo(ol.getView(), [getExtent(convexHull), getExtent(geoMask)], duration)
+      flyTo(ol.getView(), [getExtent(convexHull), getExtent(geoMask)], duration, done)
     }
   }
-
-  // export function flyToConvexHull() {
-  //   if (convexHull) {
-  //     flyTo(ol.getView(), [getExtent(convexHull)])
-  //   }
-  // }
 
   function getSubmittedGeoMask(): GeoJsonPolygon {
     const submittedGeoMaskPolygon = new Polygon([
@@ -212,7 +206,7 @@
       convexHullVectorSource.addFeature(convexHullFeature)
 
       if (convexHull && geoMask) {
-        flyToWarpedMap(4000)
+        flyToWarpedMap(4000, () => gameService.send('FINISHED'))
       }
 
       // ol.getInteractions().clear()
@@ -341,6 +335,12 @@
         warpedMapLayer.setOpacity(zoomOpacityRatio * distanceOpacityRatio)
       } else {
         warpedMapLayer.setOpacity(0)
+      }
+    })
+
+    ol.on('movestart', () => {
+      if (submitted) {
+        gameService.send('MAP_MOVED')
       }
     })
 

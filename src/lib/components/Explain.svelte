@@ -148,10 +148,8 @@
 
       <div>
         <strong
-          >The quicker you are and the closer to the correct location your guess is, the more points
-          you'll earn</strong
-        >. Maps of small areas (like neighbourhood maps) are worth more points than maps of larger
-        areas.
+          >The quicker you are and the better your guess is, the more points you'll earn</strong
+        >. Maps of small areas are worth more points than maps of large areas.
       </div>
     </div>
   </div>

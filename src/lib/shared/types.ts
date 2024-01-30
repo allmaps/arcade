@@ -21,6 +21,8 @@ export type Context = {
 export type GameEvent =
   | { type: 'NEXT' }
   | { type: 'START' }
+  | { type: 'FINISHED' }
+  | { type: 'MAP_MOVED' }
   | { type: 'SET_OL_IMAGE'; ol: OLMap }
   | { type: 'SET_OL_MAP'; ol: OLMap }
   | { type: 'SHOW_IMAGE' }
@@ -99,6 +101,8 @@ export type BBox = number[]
 export type Size = [number, number]
 
 export type Padding = [number, number, number, number]
+
+export type DoneFn = (complete: boolean) => void
 
 export type ButtonType = 'toggle' | 'zoomOut' | 'zoomIn' | 'submit'
 

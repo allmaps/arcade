@@ -20,7 +20,8 @@
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
   import Zoom from '$lib/components/Zoom.svelte'
-  import UpDown from '$lib/components/UpDown.svelte'
+  import EyeIcon from '$lib/components/EyeIcon.svelte'
+  import NorthArrow from '$lib/components/NorthArrow.svelte'
 
   import { rounds } from '$lib/shared/machines/game.js'
   import { style as protomapsStyle } from '$lib/shared/protomaps.js'
@@ -167,7 +168,7 @@
         verb="toggle rounds"
         on:click={handleShowRounds}
       >
-        <UpDown />
+        <EyeIcon />
       </Button>
       <Zoom />
     </div>
@@ -180,6 +181,8 @@
         Start new game
       </Button>
     </div>
-    <div />
+    <div class="place-self-end">
+      <NorthArrow />
+    </div>
   </div></Footer
 >
