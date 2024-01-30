@@ -7,25 +7,23 @@
   import type { SubmittedRound } from '$lib/shared/types.js'
 
   export let round: SubmittedRound
-  export let border = true
+  export let found = false
 </script>
 
 <div>
   <div
     style="--color: {round.colors.color}"
-    class="score shadow-md transition-all font-bold bg-white pl-2 pr-6 py-2 rounded-full pointer-events-auto {border
-      ? 'outline-8'
-      : 'outline-0'} outline flex gap-4"
+    class="score shadow-md transition-all font-bold bg-white pl-2 pr-6 py-2 rounded-full pointer-events-auto border-8 flex gap-4"
   >
     <div
       class="{round.colors.bgClass} {round.colors
-        .textColor} rounded-full w-12 h-12 text-white aspect-square flex items-center justify-center text-xl"
+        .textColor} rounded-full px-4 text-white flex items-center justify-center text-xl"
     >
-      {round.number}
+      Round {round.number}
     </div>
     <div>
       <div class="text-xl">
-        {formatScore($configuration, round.score)}
+        {formatScore($configuration, round.score)} Points
         <span class="text-base opacity-25">/ {formatScore($configuration, round.maxScore)}</span>
       </div>
       <div class="text-sm">
@@ -37,9 +35,6 @@
 
 <style scoped>
   .score {
-    outline-color: var(--color);
-    /* outline: solid 5px #fc5185; */
-    /* transition: outline 0.6s linear; */
-    /* margin: 0.5em; */
+    border-color: var(--color);
   }
 </style>

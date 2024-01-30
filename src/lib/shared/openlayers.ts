@@ -69,10 +69,6 @@ export function flyTo(
 ) {
   view.cancelAnimations()
 
-  // TODO: compute duration here!
-  // const durationPerZoomLevel = 200
-  // const duration = Math.abs(warpedMapZoom - submissionZoom) * durationPerZoomLevel
-
   // TODO: have a look at:
   // https://github.com/maplibre/maplibre-gl-js/blob/2db2f4e83b48cf44d272fb730df30f5b12d9bd0c/src/ui/camera.ts#L1207
 
@@ -80,7 +76,9 @@ export function flyTo(
 
   const resolutions = extents.map((extent) => view.getResolutionForExtent(extent))
   const zooms = resolutions.map((resolution) => view.getZoomForResolution(resolution))
-  const lastExtentCenter = getCenter(extents[extents.length - 1])
+  const centers = extents.map((extent) => getCenter(extent))
+
+  const lastExtentCenter = centers[centers.length - 1]
 
   if (!currentZoom || zooms.includes(undefined)) {
     if (done) {
@@ -88,8 +86,6 @@ export function flyTo(
     }
     return
   }
-
-  // const halfwayZoom = Math.min(currentZoom, newZoom) - 1
 
   let parts = extents.length
   let called = false
@@ -114,16 +110,10 @@ export function flyTo(
     },
     callback
   )
+
   view.animate(
-    // {
-    //   zoom: halfwayZoom,
-    //   duration: duration / extents.length
-    // },
-    // {
-    //   zoom: newZoom,
-    //   duration: duration/ extents.length
-    // },
-    ...zooms.map((zoom) => ({
+    ...zooms.map((zoom, index) => ({
+      center: centers[index],
       zoom,
       duration: duration / extents.length
     })),

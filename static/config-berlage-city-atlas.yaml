@@ -39,14 +39,6 @@ score:
     # Default is 300 seconds (5 minutes)
     max: 300
 
-  # Maximum distance between center of submission and center of warped map,
-  # measured in the square root of the area of the warped map.
-  # 1 means max. 1 distance away, 50 means max. 50 distances away.
-  # Default is 50
-  maxWarpedMapDistance: 50
-
-  # Default is 4
-  maxZoomDifference: 4
   # Score multiplier for displaying scores. 100 turns a score of 10 into 1000 points.
   # Default is 100
   displayScoreMultiplier: 100

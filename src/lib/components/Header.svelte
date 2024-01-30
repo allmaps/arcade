@@ -7,12 +7,13 @@
 
   import Timer from '$lib/components/Timer.svelte'
   import Score from '$lib/components/Score.svelte'
+  import TotalScore from '$lib/components/TotalScore.svelte'
 </script>
 
 <header
-  class="absolute p-3 md:p-4 lg:p-6 z-10 flex flex-row w-full justify-between pointer-events-none"
+  class="absolute p-3 md:p-4 lg:p-6 z-10 grid grid-cols-3 w-full pointer-events-none place-items-center gap-4"
 >
-  <div>
+  <div class="place-self-start">
     {#if $gameService.matches('round')}
       <div
         class="shadow-sm font-bold bg-white/50 px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
@@ -24,15 +25,17 @@
     {/if}
   </div>
   <div>
-    {#if $gameService.matches('round')}
+    {#if $gameService.matches('results')}
+      <TotalScore />
+    {:else if $gameService.matches('round')}
       {#if $currentRound?.submitted === true}
-        <Score round={$currentRound} />
+        <!-- <Score round={$currentRound} /> -->
       {:else if $gameService.matches('round.progress.playing')}
         <Timer />
       {/if}
     {/if}
   </div>
-  <div>
+  <div class="place-self-end">
     {#if $gameService.matches('round')}
       <div
         class="shadow-sm font-bold bg-white/50 px-6 py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
@@ -42,10 +45,3 @@
     {/if}
   </div>
 </header>
-
-<style scoped lang="postcss">
-  .active,
-  button:active {
-    @apply shadow-sm top-[1px];
-  }
-</style>

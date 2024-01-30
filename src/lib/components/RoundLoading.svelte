@@ -1,8 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
 
-  import { formatScore } from '$lib/shared/format.js'
-  import { configuration, currentRound, currentRoundNumber } from '$lib/shared/machines/game.js'
+  import { currentRound, currentRoundNumber } from '$lib/shared/machines/game.js'
   import { MIN_LOADING_MS } from '$lib/shared/constants.js'
 
   export let annotationLoading: boolean

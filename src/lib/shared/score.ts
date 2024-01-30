@@ -1,22 +1,6 @@
 import type { Configuration, Submission, Ratios } from '$lib/shared/types.js'
 
-// const MAX_SCORE_MIN = 50
-// const MAX_SCORE_MAX = 100
-
-// // Size of city block in square meters
-// const AREA_MIN = 100 * 100
-
-// // Size of small country in square meters
-// const AREA_MAX = 25_000 * 1_000 * 1_000
-
-// const TIME_MIN = 5
-// const TIME_MAX = 5 * 60
-
-// const CIRCUMFERENCE = 2 * Math.PI * DEFAULT_RADIUS
-// const MAX_DISTANCE = CIRCUMFERENCE / 2
-// const MAX_ZOOM_DIFFERENCE = 8
-
-function computeAreaRatio(configuration: Configuration, area: number) {
+export function computeAreaRatio(configuration: Configuration, area: number) {
   const areaMin = configuration.score.area.min
   const areaMax = configuration.score.area.max
 
@@ -29,7 +13,7 @@ function computeAreaRatio(configuration: Configuration, area: number) {
   )
 }
 
-function computeTimeRatio(configuration: Configuration, timeMs: number) {
+export function computeTimeRatio(configuration: Configuration, timeMs: number) {
   const timeMin = configuration.score.time.min
   const timeMax = configuration.score.time.max
 
@@ -37,25 +21,21 @@ function computeTimeRatio(configuration: Configuration, timeMs: number) {
   return 1 - Math.min(1, Math.max((timeSeconds - timeMin) / (timeMax - timeMin), 0))
 }
 
-function computeZoomRatio(configuration: Configuration, submission: Submission) {
-  const maxZoomDifference = configuration.score.maxZoomDifference
-
+export function computeZoomRatio(submission: Pick<Submission, 'zoom'>) {
   const zoomDiff = Math.abs(submission.zoom.warpedMap - submission.zoom.submission)
-  return 1 - Math.min(1, zoomDiff / maxZoomDifference)
+  // TODO: turn 1.5 into configuration variable
+  return 1 / (1 + zoomDiff ** 1.5)
 }
 
-function computeDistanceRatio(
-  configuration: Configuration,
+export function computeDistanceRatio(
   geoMaskArea: number,
-  submission: Submission
+  submission: Pick<Submission, 'distance'>
 ) {
-  const maxWarpedMapDistance = configuration.score.maxWarpedMapDistance
-
   const geoMaskSize = Math.sqrt(geoMaskArea)
   const warpedMapDistance = submission.distance / geoMaskSize
 
-  // TODO: don't make distance ratio linear?
-  return 1 - Math.min(warpedMapDistance / maxWarpedMapDistance, 1)
+  // TODO: turn 4 into configuration variable
+  return 1 / (1 + warpedMapDistance / 4)
 }
 
 export function computeScoreRatios(
@@ -66,8 +46,8 @@ export function computeScoreRatios(
   submission: Submission
 ): Ratios {
   const timeRatio = computeTimeRatio(configuration, endTimeMs - startTimeMs)
-  const zoomRatio = computeZoomRatio(configuration, submission)
-  const distanceRatio = computeDistanceRatio(configuration, geoMaskArea, submission)
+  const zoomRatio = computeZoomRatio(submission)
+  const distanceRatio = computeDistanceRatio(geoMaskArea, submission)
 
   return {
     time: timeRatio,

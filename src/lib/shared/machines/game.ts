@@ -198,6 +198,11 @@ export const machine = createMachine(
         }
       },
       results: {
+        initial: 'score',
+        states: {
+          score: {},
+          review: {}
+        },
         on: {
           SET_OL_MAP: {
             actions: ['setOlMap']

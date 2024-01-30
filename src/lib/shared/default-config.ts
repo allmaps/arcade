@@ -21,8 +21,6 @@ export default {
       min: 8,
       max: 5 * 60
     },
-    maxWarpedMapDistance: 50,
-    maxZoomDifference: 4,
     displayScoreMultiplier: 100
   },
   annotationUrls: []

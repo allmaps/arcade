@@ -9,6 +9,8 @@
   import Map from '$lib/components/Map.svelte'
   import Zoom from '$lib/components/Zoom.svelte'
   import NorthArrow from '$lib/components/NorthArrow.svelte'
+  import UpDown from '$lib/components/UpDown.svelte'
+  import ScoreLarge from '$lib/components/ScoreLarge.svelte'
 
   import { gameService, currentRound, isLastRound, olTarget } from '$lib/shared/machines/game.js'
   import { endTime } from '$lib/shared/stores/timer.js'
@@ -38,6 +40,7 @@
   // Using $gameService.matches('round.display.submitted') caused
   // strange race-condition bugs with svelte/transition
   let submitted = false
+  let found = false
 
   function focusOlContainer(container: HTMLElement) {
     if (!container) {
@@ -70,6 +73,7 @@
     } else if (state.event.type === 'SUBMIT') {
       stopTimer()
       submitted = true
+      found = state.event.submission.found
     } else if (state.event.type === 'NEXT') {
       gameService.send('SHOW_IMAGE')
     }
@@ -193,6 +197,11 @@
       </div>
     </div>
     {#if submitted}
+      {#if $currentRound?.submitted}
+        <div class="absolute w-full h-full top-0 left-0 flex justify-center items-center">
+          <ScoreLarge round={$currentRound} {found} />
+        </div>
+      {/if}
       <Footer>
         <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
           <div class="grid grid-flow-col gap-2 self-center">
@@ -200,7 +209,7 @@
               button={$environment.getButton('toggle')}
               verb="show submission"
               on:mousedown={handleToggleSubmissionStart}
-              on:mouseup={handleToggleSubmissionEnd}>Show submission</Button
+              on:mouseup={handleToggleSubmissionEnd}><UpDown /></Button
             >
             <Zoom />
           </div>
@@ -230,7 +239,7 @@
               button={$environment.getButton('toggle')}
               verb="toggle image"
               on:mousedown={handleToggleImageStart}
-              on:mouseup={handleToggleImageEnd}>Toggle image</Button
+              on:mouseup={handleToggleImageEnd}><UpDown /></Button
             >
             <Zoom />
           </div>

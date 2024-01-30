@@ -84,6 +84,7 @@ export type Submission = {
   geoMask: GeoJsonPolygon
   area: number
   convexHull: GeoJsonPolygon
+  found: boolean
 }
 
 export type Ratios = {

@@ -17,12 +17,7 @@
 
   import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
 
-  import {
-    geometryToPixels,
-    coordinatesToSvgPoints,
-    getConvexHull,
-    extentFromMaxBounds
-  } from '$lib/shared/geometry.js'
+  import { geometryToPixels, coordinatesToSvgPoints, getConvexHull } from '$lib/shared/geometry.js'
   import {
     gameService,
     currentRound,
@@ -39,6 +34,7 @@
   } from '$lib/shared/openlayers.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
+  import { computeZoomRatio, computeDistanceRatio } from '$lib/shared/score.js'
 
   import { PADDING } from '$lib/shared/constants.js'
 
@@ -110,17 +106,23 @@
     return view.getZoom() || 0
   }
 
-  export function flyToSubmission() {
+  export function flyToSubmission(duration?: number) {
     if (convexHull && submittedGeoMask) {
-      flyTo(ol.getView(), [getExtent(convexHull), getExtent(submittedGeoMask)])
+      flyTo(ol.getView(), [getExtent(convexHull), getExtent(submittedGeoMask)], duration)
     }
   }
 
-  export function flyToWarpedMap() {
+  export function flyToWarpedMap(duration?: number) {
     if (convexHull && geoMask) {
-      flyTo(ol.getView(), [getExtent(convexHull), getExtent(geoMask)])
+      flyTo(ol.getView(), [getExtent(convexHull), getExtent(geoMask)], duration)
     }
   }
+
+  // export function flyToConvexHull() {
+  //   if (convexHull) {
+  //     flyTo(ol.getView(), [getExtent(convexHull)])
+  //   }
+  // }
 
   function getSubmittedGeoMask(): GeoJsonPolygon {
     const submittedGeoMaskPolygon = new Polygon([
@@ -141,7 +143,7 @@
     return submittedGeoMask
   }
 
-  export function getSubmission(): Submission {
+  export function getSubmission(found = false): Submission {
     const warpedMapZoom = getWarpedMapZoom()
     const submissionZoom = getSubmissionZoom()
 
@@ -174,7 +176,8 @@
       distance: getDistance(warpedMapCenter, submissionCenter),
       geoMask: submittedGeoMask,
       area,
-      convexHull
+      convexHull,
+      found
     }
   }
 
@@ -209,7 +212,7 @@
       convexHullVectorSource.addFeature(convexHullFeature)
 
       if (convexHull && geoMask) {
-        flyToWarpedMap()
+        flyToWarpedMap(4000)
       }
 
       // ol.getInteractions().clear()
@@ -230,7 +233,7 @@
     gameService.send({
       type: 'SUBMIT',
       endTime: $endTime,
-      submission: getSubmission()
+      submission: getSubmission(true)
     })
   }
 
@@ -295,6 +298,7 @@
     const view = ol.getView()
 
     const minZoom = $configuration.map.initialZoom + fraction
+
     const maxZoom = warpedMapZoom + 4
 
     view.setMinZoom(minZoom)
@@ -308,19 +312,35 @@
         return
       }
 
-      const submissionZoom = getSubmissionZoom()
       const submissionCenter = getSubmissionCenter()
 
-      if (!submissionZoom || !submissionCenter) {
+      if (!submissionCenter || !$currentRound?.loaded) {
         return
       }
 
-      const zoomDiff = Math.abs(submissionZoom - warpedMapZoom)
-      const zoomDiffVisible = 2
+      const zoomRatio = computeZoomRatio({
+        zoom: {
+          warpedMap: getWarpedMapZoom(),
+          submission: getSubmissionZoom()
+        }
+      })
 
-      if (zoomDiff < zoomDiffVisible) {
-        const opacity = 1 - zoomDiff / zoomDiffVisible
-        warpedMapLayer.setOpacity(opacity)
+      const distanceRatio = computeDistanceRatio($currentRound.area, {
+        distance: getDistance(getWarpedMapCenter(), submissionCenter)
+      })
+
+      // TODO: Turn 0.7 into configuration variable
+      const distanceRatioVisible = 0.7
+      const zoomRatioVisible = 0.6
+
+      if (zoomRatio > zoomRatioVisible && distanceRatio > distanceRatioVisible) {
+        const zoomOpacityRatio = (zoomRatio - zoomRatioVisible) / (1 - zoomRatioVisible)
+        const distanceOpacityRatio =
+          (distanceRatio - distanceRatioVisible) / (1 - distanceRatioVisible)
+
+        warpedMapLayer.setOpacity(zoomOpacityRatio * distanceOpacityRatio)
+      } else {
+        warpedMapLayer.setOpacity(0)
       }
     })
 
@@ -344,8 +364,6 @@
           const distanceY = Math.abs(warpedMapPixelCenter[1] - submissionPixelCenter[1])
 
           if (distanceX < distanceThreshold && distanceY < distanceThreshold) {
-            console.log('PERFECT SCORE')
-
             ol.getView().fit(getExtent(geoMask), {
               duration: 200,
               callback: handleSubmit

@@ -19,6 +19,8 @@
   import Score from './Score.svelte'
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
+  import Zoom from '$lib/components/Zoom.svelte'
+  import UpDown from '$lib/components/UpDown.svelte'
 
   import { rounds } from '$lib/shared/machines/game.js'
   import { style as protomapsStyle } from '$lib/shared/protomaps.js'
@@ -158,17 +160,18 @@
 </div>
 
 <Footer
-  ><div class="w-full flex flex-row items-end [&>*]:w-1/3">
-    <div>
+  ><div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
+    <div class="grid grid-flow-col gap-2 self-center">
       <Button
         button={$environment.getButton('toggle')}
-        verb="show rounds"
+        verb="toggle rounds"
         on:click={handleShowRounds}
       >
-        Show rounds
+        <UpDown />
       </Button>
+      <Zoom />
     </div>
-    <div class="flex justify-center">
+    <div>
       <Button
         button={$environment.getButton('submit')}
         verb="start new game"
@@ -178,5 +181,5 @@
       </Button>
     </div>
     <div />
-  </div>
-</Footer>
+  </div></Footer
+>

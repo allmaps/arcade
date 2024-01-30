@@ -26,8 +26,6 @@ export const ConfigurationSchema = z.object({
       min: z.number(),
       max: z.number()
     }),
-    maxWarpedMapDistance: z.number(),
-    maxZoomDifference: z.number(),
     displayScoreMultiplier: z.number()
   }),
   annotationUrls: z.array(z.string().url())
