@@ -14,6 +14,7 @@
   export let button: Button
   export let verb: string
   export let timeout = 0
+  export let disabled = false
 
   let active = false
 
@@ -36,13 +37,13 @@
   }
 
   function handleKeypress(event: KeyboardEvent) {
-    if (event.code === button.keyCode && !event.repeat) {
+    if (event.code === button.keyCode && !event.repeat && !disabled) {
       dispatch('click')
     }
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.code === button.keyCode && !event.repeat) {
+    if (event.code === button.keyCode && !event.repeat && !disabled) {
       active = true
 
       element.dispatchEvent(new Event('mousedown'))
@@ -50,7 +51,7 @@
   }
 
   function handleKeyup(event: KeyboardEvent) {
-    if (event.code === button.keyCode && !event.repeat) {
+    if (event.code === button.keyCode && !event.repeat && !disabled) {
       active = false
 
       element.dispatchEvent(new Event('mouseup'))
@@ -83,6 +84,7 @@
       on:touchend
       type="button"
       class:active
+      {disabled}
       class="{bgClass} {typeClasses} group relative transition-all duration-75 top-0 shadow-md font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none"
       on:click
     >

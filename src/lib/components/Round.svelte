@@ -261,8 +261,11 @@
             <Zoom />
           </div>
           <div>
-            <Button button={$environment.getButton('submit')} verb="submit" on:click={handleSubmit}
-              >Submit</Button
+            <Button
+              button={$environment.getButton('submit')}
+              disabled={!displayMap}
+              verb="submit"
+              on:click={handleSubmit}>Submit</Button
             >
           </div>
           <div class="place-self-end">
