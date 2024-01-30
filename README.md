@@ -2,34 +2,23 @@
 
 https://arcade.allmaps.org
 
-TODO:
-
-- Transition border-width for Score component
-- Improve `flyTo` function
-- Make sure perfect score always is in the middle of the viewport
-  - _Explode_ mask on perfect score
-- Configuration file per environment. Use in map initialization:
-  - Map bounds
-  - Initial lat/lon + zoom
-- Only show _Show submission_ button after first zoomed in to warped map
-- Show score in the middle of screen after submit!!!
-- Improve buttons style + placing
-- Improve `<kbd>` styling
-- Make sure buttons look good on cabinet
-- Show total score in Results view
-- In Results view, perfect score now twice, how to improve?
-- Correct text for cabinet and web: e.g. joystick / arrow keys
-- Improve Explain screen
-  - large text with mask behind text
-  - small OL map behind text
-  - small warped map behind text
-- Finish tooltips
+- _Explode_ mask animation on perfect score
+- Add heading text to ScoreLarge
+- In Results view, perfect score now twice, how to improve? add property to submission: found: boolean
 
 ==== LATER ==========================================
 
-- Create logo for title screen
+- Show round score in header when no longer showing in center
+- Improve `flyTo` function
+- Improve `<kbd>` styling
+- Icons for all buttons (https://phosphoricons.com/ and https://github.com/haruaki07/phosphor-svelte)
+- Titles in explain screen
+- No game timeout on web
+- Fade-in convex hulls
 - Show area overlap in Score.
+- Single Footer in Round.svelte
 - Transitions between all views, also inside Round
+- Fixed max points per game, load 5 annotations before start
 - Loading.svelte:
   - Show max points, show area
   - animate mask!
@@ -42,6 +31,7 @@ TODO:
   - Hard:
 - Use MaplibreGL
 - Add swipe/pinch gestures to Title screen
+- Make sure minZoom/maxZoom/currentZoom is still correct after window resize
 
 ## Running locally
 
