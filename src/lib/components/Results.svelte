@@ -54,6 +54,10 @@
 
     const round = $rounds[selectedRoundIndex]
 
+    if (!round) {
+      return
+    }
+
     if (round.submitted) {
       if (showSubmission) {
         flyTo(ol.getView(), [getExtent(round.submission.geoMask)])
