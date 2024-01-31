@@ -15,6 +15,11 @@ export default class CabinetEnvironment implements ArcadeEnvironment {
     return this.buttons[type]
   }
 
+  onGameEnd() {
+    // This is a hack to fix Chrome memory issues on the Arcade cabinet
+    window.location.reload()
+  }
+
   async getAnnotationUrls(configuration: Configuration) {
     if (import.meta.env.ARCADE_ANNOTATIONS_DIR) {
       // Fetch JSON directory list from Caddy server

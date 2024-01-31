@@ -114,6 +114,7 @@ export const machine = createMachine(
       round: {
         // id: 'round',
         type: 'parallel',
+        entry: 'callGameStart',
         states: {
           progress: {
             initial: 'loading',
@@ -217,6 +218,7 @@ export const machine = createMachine(
       },
       results: {
         initial: 'score',
+        exit: 'callGameEnd',
         states: {
           score: {},
           review: {}
@@ -289,7 +291,19 @@ export const machine = createMachine(
       }),
       setOlMap: assign({
         olMap: (context, event) => (event.type === 'SET_OL_MAP' ? event.ol : undefined)
-      })
+      }),
+      callGameStart: () => {
+        const $environment = get(environment)
+        if ($environment) {
+          $environment.onGameStart?.()
+        }
+      },
+      callGameEnd: () => {
+        const $environment = get(environment)
+        if ($environment) {
+          $environment.onGameEnd?.()
+        }
+      }
     },
     services: {
       getConfiguration: async (): Promise<Configuration> => getConfiguration(),

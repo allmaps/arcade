@@ -122,6 +122,9 @@ export interface ArcadeEnvironment {
 
   getButton(type: ButtonType): Button
 
+  onGameStart?(): void
+  onGameEnd?(): void
+
   getAnnotationUrls(configuration: Configuration): Promise<string[]>
   getRandomAnnotationUrl(
     configuration: Configuration,
