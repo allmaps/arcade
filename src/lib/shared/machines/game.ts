@@ -256,7 +256,12 @@ export const machine = createMachine(
           return []
         }
       }),
-      startGameTimeout: () => startGameTimeout(),
+      startGameTimeout: () => {
+        const $environment = get(environment)
+        if ($environment.timeoutEnabled) {
+          startGameTimeout()
+        }
+      },
       stopGameTimeout: () => stopGameTimeout(),
       setStartTime: assignLastRound((round) => {
         if (round.loaded) {

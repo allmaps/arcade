@@ -119,6 +119,7 @@ export type Buttons = { [T in ButtonType]: Button }
 
 export interface ArcadeEnvironment {
   buttons: Buttons
+  timeoutEnabled: boolean
 
   getButton(type: ButtonType): Button
 

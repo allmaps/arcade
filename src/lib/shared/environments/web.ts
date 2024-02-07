@@ -8,6 +8,8 @@ export default class WebEnvironment implements ArcadeEnvironment {
     submit: { keyCode: 'Enter', keyLabel: 'Enter', bgClass: 'bg-green', type: 'primary' as const }
   }
 
+  timeoutEnabled = false
+
   getButton(type: ButtonType) {
     return this.buttons[type]
   }

@@ -11,6 +11,8 @@ export default class CabinetEnvironment implements ArcadeEnvironment {
     submit: { keyCode: 'KeyV', bgClass: 'bg-green', type: 'primary' as const }
   }
 
+  timeoutEnabled = true
+
   getButton(type: ButtonType) {
     return this.buttons[type]
   }

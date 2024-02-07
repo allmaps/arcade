@@ -14,7 +14,6 @@ https://arcade.allmaps.org
 - Also button with icon in Explain
 - Icons for all buttons (https://phosphoricons.com/ and https://github.com/haruaki07/phosphor-svelte)
 - Titles in explain screen
-- No game timeout on web
 - Fade-in convex hulls
 - Show area overlap in Score.
 - Single Footer in Round.svelte
