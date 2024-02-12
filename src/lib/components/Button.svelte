@@ -85,7 +85,7 @@
       type="button"
       class:active
       {disabled}
-      class="{bgClass} {typeClasses} group relative transition-all duration-75 top-0 shadow-md font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none"
+      class="{bgClass} {typeClasses} group relative transition-all duration-75 top-0 shadow-md font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none select-none"
       on:click
     >
       <div class="absolute w-full h-full top-0 left-0 bg-white/20"></div>
