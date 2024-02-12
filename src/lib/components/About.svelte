@@ -2,7 +2,7 @@
   import Attribution from '$lib/components/Attribution.svelte'
 </script>
 
-<div class="bg-white rounded-lg p-4 lg:p-6 max-w-lg prose lg:prose-xl">
+<div class="bg-white rounded-lg p-4 lg:p-6 max-w-lg prose-sm md:prose">
   <h2 class="text-center">About Allmaps Arcade</h2>
   <p>
     Allmaps Arcade is a game made by Bert Spaan. A part of the development was commissioned by the <a
