@@ -17,9 +17,9 @@
   }
 </script>
 
-<Button button={$environment.getButton('zoomOut')} verb="zoom out" on:click={handleZoomOut}
-  ><img class="w-full" src={zoomOutImage} alt="Zoom out" /></Button
->
+<Button button={$environment.getButton('zoomOut')} verb="zoom out" on:click={handleZoomOut}>
+  <div class="w-full h-full" style="background-image: url({zoomOutImage});" />
+</Button>
 <Button button={$environment.getButton('zoomIn')} verb="zoom in" on:click={handleZoomIn}
-  ><img class="w-full" src={zoomInImage} alt="Zoom in" /></Button
+  ><div class="w-full h-full" style="background-image: url({zoomInImage});" /></Button
 >

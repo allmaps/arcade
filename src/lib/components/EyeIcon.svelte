@@ -2,4 +2,4 @@
   import eyeImage from '$lib/images/eye.svg'
 </script>
 
-<img class="w-full" src={eyeImage} alt="Toggle" />
+<div class="w-full h-full" style="background-image: url({eyeImage});" />

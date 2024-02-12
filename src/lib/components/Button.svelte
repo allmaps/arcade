@@ -117,7 +117,7 @@
       on:click={handleClick}
       class:toggled
       {disabled}
-      class="{bgClass} {typeClasses} group relative transition-all duration-75 top-0 shadow-md font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none select-none"
+      class="{bgClass} {typeClasses} group relative transition-all duration-75 top-0 shadow-md font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none"
     >
       <div class="absolute w-full h-full top-0 left-0 bg-white/20"></div>
       <div
@@ -126,7 +126,7 @@
           ? 'bg-none'
           : bgClass}"
       />
-      <div class="relative {textClass}"><slot /></div></button
+      <div class="relative {textClass} w-full h-full"><slot /></div></button
     >
   </Tooltip.Trigger>
   <Tooltip.Content
