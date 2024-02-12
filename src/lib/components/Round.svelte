@@ -220,8 +220,8 @@
             <Button
               button={$environment.getButton('toggle')}
               verb="show submission"
-              on:mousedown={handleToggleSubmissionStart}
-              on:mouseup={handleToggleSubmissionEnd}><EyeIcon /></Button
+              on:toggleStart={handleToggleSubmissionStart}
+              on:toggleEnd={handleToggleSubmissionEnd}><EyeIcon /></Button
             >
             <Zoom />
           </div>
@@ -252,8 +252,8 @@
             <Button
               button={$environment.getButton('toggle')}
               verb="toggle image"
-              on:mousedown={handleToggleImageStart}
-              on:mouseup={handleToggleImageEnd}><EyeIcon /></Button
+              on:toggleStart={handleToggleImageStart}
+              on:toggleEnd={handleToggleImageEnd}><EyeIcon /></Button
             >
             <Zoom />
           </div>

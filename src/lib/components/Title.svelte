@@ -72,8 +72,8 @@
         <Button
           button={$environment.getButton('toggle')}
           verb="learn more about Allmaps Arcade"
-          on:mousedown={handleToggleAboutStart}
-          on:mouseup={handleToggleAboutEnd}><EyeIcon /></Button
+          on:toggleStart={handleToggleAboutStart}
+          on:toggleEnd={handleToggleAboutEnd}><EyeIcon /></Button
         >
       </div>
       <div>

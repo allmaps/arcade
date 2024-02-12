@@ -2,8 +2,6 @@
 
 https://arcade.allmaps.org
 
-- About page - by using toggle button on title screen?
-- Make toggle work on mobile
 - Fix WebGL context lost / memory issues. Are they caused by Allmaps or by OL + vector tiles?
 - Timeout for loading annotation and IIIF image tiles
 - _Explode_ mask animation on perfect score

@@ -16,13 +16,12 @@
   export let timeout = 0
   export let disabled = false
 
-  let active = false
+  let touch = false
+  let toggled = false
 
   let timeoutId: number
 
   let element: HTMLButtonElement
-
-  let touch = false
 
   const bgClass = button.bgClass || 'bg-green'
   const textClass = button.textClass || 'text-white'
@@ -36,6 +35,16 @@
     typeClasses = 'w-[2.9rem] h-[2.8rem] p-[0.7rem]'
   }
 
+  function toggleStart() {
+    toggled = true
+    dispatch('toggleStart')
+  }
+
+  function toggleEnd() {
+    toggled = false
+    dispatch('toggleEnd')
+  }
+
   function handleKeypress(event: KeyboardEvent) {
     if (event.code === button.keyCode && !event.repeat && !disabled) {
       dispatch('click')
@@ -44,19 +53,43 @@
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.code === button.keyCode && !event.repeat && !disabled) {
-      active = true
-
-      element.dispatchEvent(new Event('mousedown'))
+      toggled = true
+      dispatch('toggleStart')
     }
   }
 
   function handleKeyup(event: KeyboardEvent) {
     if (event.code === button.keyCode && !event.repeat && !disabled) {
-      active = false
+      toggled = false
+      dispatch('toggleEnd')
 
-      element.dispatchEvent(new Event('mouseup'))
+      // element.dispatchEvent(new Event('mouseup'))
       // touch ? dispatch('touchend') : dispatch('mouseup')
     }
+  }
+
+  function handleMousedown() {
+    if (!touch) {
+      toggleStart()
+    }
+  }
+
+  function handleMouseup() {
+    if (!touch) {
+      toggleEnd()
+    }
+  }
+
+  function handleClick() {
+    if (touch) {
+      if (!toggled) {
+        toggleStart()
+      } else {
+        toggleEnd()
+      }
+    }
+
+    dispatch('click')
   }
 
   onMount(() => {
@@ -78,20 +111,18 @@
   <Tooltip.Trigger>
     <button
       bind:this={element}
-      on:mousedown
-      on:mouseup
-      on:touchstart|passive
-      on:touchend
       type="button"
-      class:active
+      on:mousedown={handleMousedown}
+      on:mouseup={handleMouseup}
+      on:click={handleClick}
+      class:toggled
       {disabled}
       class="{bgClass} {typeClasses} group relative transition-all duration-75 top-0 shadow-md font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none select-none"
-      on:click
     >
       <div class="absolute w-full h-full top-0 left-0 bg-white/20"></div>
       <div
         style="animation-duration: {timeout}ms;"
-        class="timeout absolute w-full h-full top-0 left-0 transition-all group-active:bg-white/20 {active
+        class="timeout absolute w-full h-full top-0 left-0 transition-all group-active:bg-white/20 {toggled
           ? 'bg-none'
           : bgClass}"
       />
