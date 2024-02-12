@@ -11,7 +11,7 @@
   import Results from '$lib/components/Results.svelte'
   import Timeout from '$lib/components/Timeout.svelte'
 
-  import { gameService, currentRoundNumber, olTarget } from '$lib/shared/machines/game.js'
+  import { actor, state, currentRoundNumber, olTarget } from '$lib/shared/machines/game.js'
 
   import { environment } from '$lib/shared/stores/environment.js'
   import { resetLastInteraction, showGameTimeoutWarning } from '$lib/shared/stores/game-timeout.js'
@@ -43,10 +43,10 @@
   }
 
   onMount(() => {
-    gameService.onTransition(handleTransition)
+    const subscription = actor.subscribe(handleTransition)
 
     return () => {
-      gameService.off(handleTransition)
+      subscription.unsubscribe()
     }
   })
 </script>
@@ -58,9 +58,9 @@
   class="absolute w-full h-full flex flex-col items-center justify-center"
   class:cursor-none={isCabinet}
 >
-  {#if $gameService.matches('error')}
+  {#if $state.matches('error')}
     <Error />
-  {:else if $gameService.matches('loading') || $gameService.matches('title')}
+  {:else if $state.matches('loading') || $state.matches('title')}
     <div
       in:send={{ key }}
       out:receive={{ key }}
@@ -68,7 +68,7 @@
     >
       <Title />
     </div>
-  {:else if $gameService.matches('explain')}
+  {:else if $state.matches('explain')}
     <div
       in:send={{ key }}
       out:receive={{ key }}
@@ -76,13 +76,13 @@
     >
       <Explain />
     </div>
-  {:else if $gameService.matches('round')}
+  {:else if $state.matches('round')}
     <div class="absolute w-full h-full flex flex-col items-center justify-center">
       {#key $currentRoundNumber}
         <Round />
       {/key}
     </div>
-  {:else if $gameService.matches('results')}
+  {:else if $state.matches('results')}
     <div
       in:send={{ key }}
       out:receive={{ key }}

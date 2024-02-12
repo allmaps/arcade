@@ -5,7 +5,7 @@
   import Button from '$lib/components/Button.svelte'
   import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
 
-  import { gameService } from '$lib/shared/machines/game.js'
+  import { actor } from '$lib/shared/machines/game.js'
   import { environment } from '$lib/shared/stores/environment.js'
   import { isCabinet } from '$lib/shared/cabinet.js'
 
@@ -159,6 +159,6 @@
   <Button
     button={$environment.getButton('submit')}
     verb="start playing"
-    on:click={() => gameService.send('NEXT')}>Start playing</Button
+    on:click={() => actor.send({ type: 'NEXT' })}>Start playing</Button
   >
 </Footer>

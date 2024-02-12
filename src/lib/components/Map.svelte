@@ -19,10 +19,12 @@
 
   import { geometryToPixels, coordinatesToSvgPoints, getConvexHull } from '$lib/shared/geometry.js'
   import {
-    gameService,
+    actor,
+    state,
     currentRound,
     currentRoundIndex,
-    configuration
+    configuration,
+    type Snapshot
   } from '$lib/shared/machines/game.js'
   import { style as protomapsStyle } from '$lib/shared/protomaps.js'
   import {
@@ -60,6 +62,7 @@
 
   let warpedMapZoom: number
 
+  let mapHadFirstInteraction: boolean | undefined
   let submitted = false
 
   const geoMask = ($currentRound as LoadedRound).geoMask
@@ -175,8 +178,8 @@
     }
   }
 
-  function handleTransition(state: typeof gameService.state) {
-    if (state.event.type === 'SUBMIT') {
+  function handleTransition(snapshot: Snapshot) {
+    if (!submitted && snapshot.matches('round.progress.submitted')) {
       submitted = true
 
       // Add submittedGeoMask to map
@@ -206,7 +209,10 @@
       convexHullVectorSource.addFeature(convexHullFeature)
 
       if (convexHull && geoMask) {
-        flyToWarpedMap(4000, () => gameService.send('FINISHED'))
+        flyToWarpedMap(4000, () => {
+          // console.log('BEREN')
+          actor.send({ type: 'FINISHED' })
+        })
       }
 
       // ol.getInteractions().clear()
@@ -224,7 +230,7 @@
   }
 
   function handleSubmit() {
-    gameService.send({
+    actor.send({
       type: 'SUBMIT',
       endTime: $endTime,
       submission: getSubmission(true)
@@ -278,12 +284,12 @@
       keyboardEventTarget: element
     })
 
-    gameService.send({
+    actor.send({
       type: 'SET_OL_MAP',
       ol
     })
 
-    gameService.onTransition(handleTransition)
+    const subscription = actor.subscribe(handleTransition)
 
     warpedMapZoom = getWarpedMapZoom()
 
@@ -299,6 +305,14 @@
     view.setMaxZoom(maxZoom)
 
     view.setZoom(minZoom)
+
+    function handleRendercomplete() {
+      mapHadFirstInteraction = false
+
+      ol.un('rendercomplete', handleRendercomplete)
+    }
+
+    ol.on('rendercomplete', handleRendercomplete)
 
     ol.on('postrender', () => {
       if (submitted) {
@@ -339,8 +353,9 @@
     })
 
     ol.on('movestart', () => {
-      if (submitted) {
-        gameService.send('MAP_MOVED')
+      if (mapHadFirstInteraction === false || submitted) {
+        mapHadFirstInteraction = true
+        actor.send({ type: 'MAP_MOVED' })
       }
     })
 
@@ -349,7 +364,7 @@
 
       const zoomDiff = Math.abs(submissionZoom - warpedMapZoom)
 
-      // en center bijna gelijk aan 128 px
+      // Check if center is within 128 px distance
       // https://github.com/openlayers/openlayers/blob/be95fd71b6edeeb947411db740d839ae9d455dd4/src/ol/interaction/KeyboardPan.js#L75C63-L75C66
 
       const zoomDiffPerfectScore = 0.1
@@ -391,14 +406,14 @@
       warpedMapLayer.dispose()
       warpedMapSource.dispose()
 
-      gameService.off(handleTransition)
+      subscription.unsubscribe()
     }
   })
 </script>
 
 <div class="relative w-full h-full bg-[#e0e0e0]">
   <div bind:this={element} id="ol-map" class="w-full h-full ring-0" tabindex="-1" />
-  {#if geoMask && contentBoxSize && !$gameService.matches('round.progress.submitted')}
+  {#if geoMask && contentBoxSize && !$state.matches('round.progress.submitted')}
     <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
       <svg viewBox={`0 0 ${contentBoxSize.inlineSize} ${contentBoxSize.blockSize}`}>
         <polygon

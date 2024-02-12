@@ -12,7 +12,14 @@
   import EyeIcon from '$lib/components/EyeIcon.svelte'
   import ScoreLarge from '$lib/components/ScoreLarge.svelte'
 
-  import { gameService, currentRound, isLastRound, olTarget } from '$lib/shared/machines/game.js'
+  import {
+    actor,
+    state,
+    currentRound,
+    isLastRound,
+    olTarget,
+    type Snapshot
+  } from '$lib/shared/machines/game.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { environment } from '$lib/shared/stores/environment.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
@@ -22,7 +29,7 @@
   let containerImage: HTMLElement
   let containerMap: HTMLElement
 
-  let bgClass: string | undefined
+  let bgClass: string | undefined = $currentRound?.colors.bgClass
 
   let image: Image
   let map: Map
@@ -34,16 +41,14 @@
   let imageReady = false
 
   let annotationReady = false
-  $: annotationReady = !$gameService.matches('round.progress.loading')
+  $: annotationReady = !$state.matches('round.progress.loading')
 
   // When SUBMIT event is received, submitted is set to true
-  // Using $gameService.matches('round.display.submitted') caused
+  // Using $snapshot.matches('round.display.submitted') caused
   // strange race-condition bugs with svelte/transition
   let submitted = false
 
   let found = false
-  let animationFinished = false
-  let showScore = true
 
   function focusOlContainer(container: HTMLElement) {
     if (!container) {
@@ -59,8 +64,8 @@
   let displayImage: boolean
   let displayMap: boolean
 
-  $: displayImage = $gameService.matches('round.display.image')
-  $: displayMap = $gameService.matches('round.display.map')
+  $: displayImage = $state.matches('round.display.image')
+  $: displayMap = $state.matches('round.display.map')
 
   $: {
     if (displayImage) {
@@ -70,21 +75,13 @@
     }
   }
 
-  function handleTransition(state: typeof gameService.state) {
-    if (state.event.type === 'START') {
-      gameService.send('SHOW_MAP')
-    } else if (state.event.type === 'SUBMIT') {
+  function handleTransition(snapshot: Snapshot) {
+    if (snapshot.matches('round.progress.submitted.animating')) {
       stopTimer()
       submitted = true
-      found = state.event.submission.found
-    } else if (state.event.type === 'FINISHED') {
-      animationFinished = true
-    } else if (state.event.type === 'MAP_MOVED') {
-      if (animationFinished) {
-        showScore = false
+      if ($currentRound?.submitted) {
+        found = $currentRound.submission?.found
       }
-    } else if (state.event.type === 'NEXT') {
-      gameService.send('SHOW_IMAGE')
     }
 
     bgClass = $currentRound?.colors.bgClass
@@ -108,7 +105,7 @@
   }
 
   function handleSubmit() {
-    gameService.send({
+    actor.send({
       type: 'SUBMIT',
       endTime: $endTime,
       submission: map.getSubmission()
@@ -120,11 +117,11 @@
   }
 
   function handleToggleImageStart() {
-    gameService.send('SHOW_IMAGE')
+    actor.send({ type: 'SHOW_IMAGE' })
   }
 
   function handleToggleImageEnd() {
-    gameService.send('SHOW_MAP')
+    actor.send({ type: 'SHOW_MAP' })
   }
 
   function handleToggleSubmissionStart() {
@@ -141,19 +138,19 @@
     startTime = getTime()
     intervalId = setInterval(updateTimer, 1000)
 
-    gameService.onTransition(handleTransition)
+    const subscription = actor.subscribe(handleTransition)
 
     return () => {
       stopTimer()
-      gameService.off(handleTransition)
+      subscription.unsubscribe()
     }
   })
 </script>
 
 <div class="w-full h-full flex flex-col items-center justify-center {bgClass}">
-  {#if $gameService.matches('round.progress.loading') || $gameService.matches('round.progress.intro')}
+  {#if $state.matches('round.progress.loading') || $state.matches('round.progress.intro')}
     <div class="w-full h-full">
-      {#if $gameService.matches('round.progress.intro')}
+      {#if $state.matches('round.progress.intro')}
         <div bind:this={containerImage} class="absolute w-full h-full left-0 top-0">
           <Image bind:this={image} on:ready={handleImageReady} />
         </div>
@@ -178,7 +175,7 @@
                 timeout={AUTO_ADVANCE_MS}
                 verb="show map"
                 button={$environment.getButton('submit')}
-                on:click={() => gameService.send('START')}>Show map</Button
+                on:click={() => actor.send({ type: 'START' })}>Show map</Button
               >
             </div>
             <div class="place-self-end">
@@ -208,7 +205,7 @@
       </div>
     </div>
     {#if submitted}
-      {#if $currentRound?.submitted && showScore}
+      {#if $currentRound?.submitted && ($state.matches('round.progress.submitted.animating') || $state.matches('round.progress.submitted.score'))}
         <div
           class="absolute w-full h-full top-0 left-0 flex justify-center items-center pointer-events-none"
         >
@@ -233,13 +230,13 @@
               <Button
                 button={$environment.getButton('submit')}
                 verb="show results"
-                on:click={() => gameService.send('NEXT')}>Show results</Button
+                on:click={() => actor.send({ type: 'NEXT' })}>Show results</Button
               >
             {:else}
               <Button
                 button={$environment.getButton('submit')}
                 verb="go to next round"
-                on:click={() => gameService.send('NEXT')}>Next round</Button
+                on:click={() => actor.send({ type: 'NEXT' })}>Next round</Button
               >
             {/if}
           </div>

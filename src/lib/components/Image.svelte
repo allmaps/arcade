@@ -12,7 +12,7 @@
   import Feature from 'ol/Feature.js'
   import Polygon from 'ol/geom/Polygon.js'
 
-  import { gameService, currentRound, currentRoundIndex } from '$lib/shared/machines/game.js'
+  import { actor, currentRound, currentRoundIndex } from '$lib/shared/machines/game.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
   import { maskStyle, maskToPolygon } from '$lib/shared/openlayers.js'
@@ -82,7 +82,7 @@
 
         ol.on('rendercomplete', () => dispatch('ready'))
 
-        gameService.send({
+        actor.send({
           type: 'SET_OL_IMAGE',
           ol
         })

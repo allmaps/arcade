@@ -1,13 +1,27 @@
 <script lang="ts">
-  import { gameService } from '$lib/shared/machines/game.js'
+  import { fade } from 'svelte/transition'
+
+  import { actor, state } from '$lib/shared/machines/game.js'
   import { environment } from '$lib/shared/stores/environment.js'
 
   import Masks from '$lib/components/Masks.svelte'
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
+  import EyeIcon from '$lib/components/EyeIcon.svelte'
+  import About from '$lib/components/About.svelte'
 
   // TODO: Add inverted logo to @allmaps/ui
   import logo from '$lib/images/allmaps-logo.svg'
+
+  let showAbout = false
+
+  function handleToggleAboutStart() {
+    showAbout = true
+  }
+
+  function handleToggleAboutEnd() {
+    showAbout = false
+  }
 
   // import LoadingAnimation from '$lib/animations/allmaps-loading.lottie'
   // onMount(async () => {
@@ -42,12 +56,34 @@
   </div>
 </div>
 
-{#if $gameService.matches('title')}
+{#if showAbout}
+  <div
+    transition:fade={{ duration: 100 }}
+    class="absolute w-full h-full top-0 flex justify-center items-center p-4"
+  >
+    <About />
+  </div>
+{/if}
+
+{#if $state.matches('title')}
   <Footer>
-    <Button
-      button={$environment.getButton('submit')}
-      verb="start new game"
-      on:click={() => gameService.send('NEXT')}>Start new game</Button
-    >
+    <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
+      <div class="grid grid-flow-col gap-2 self-center">
+        <Button
+          button={$environment.getButton('toggle')}
+          verb="learn more about Allmaps Arcade"
+          on:mousedown={handleToggleAboutStart}
+          on:mouseup={handleToggleAboutEnd}><EyeIcon /></Button
+        >
+      </div>
+      <div>
+        <Button
+          button={$environment.getButton('submit')}
+          verb="start new game"
+          on:click={() => actor.send({ type: 'NEXT' })}>Start new game</Button
+        >
+      </div>
+      <div></div>
+    </div>
   </Footer>
 {/if}

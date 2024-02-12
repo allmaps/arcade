@@ -1,5 +1,6 @@
 import type { z } from 'zod'
 import type OLMap from 'ol/Map.js'
+import type { MachineContext } from 'xstate'
 
 import type { Map } from '@allmaps/annotation'
 import type { GcpTransformer } from '@allmaps/transform'
@@ -10,7 +11,7 @@ import type { ConfigurationSchema } from '$lib/shared/schemas.js'
 
 export type Configuration = z.infer<typeof ConfigurationSchema>
 
-export type Context = {
+export interface Context extends MachineContext {
   rounds: Rounds
   configuration: Configuration
   olImage?: OLMap
@@ -53,6 +54,7 @@ export type LoadingRound = BaseRound & {
 export type LoadedRound = BaseRound & {
   loaded: true
   submitted: false
+  canSubmit: boolean
   annotationUrl: string
   map: Map
   transformer: GcpTransformer

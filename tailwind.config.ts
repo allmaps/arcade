@@ -1,5 +1,7 @@
 import { theme } from '@allmaps/tailwind'
 
+import tailwindTypography from '@tailwindcss/typography'
+
 import type { Config } from 'tailwindcss'
 
 export default {
@@ -9,5 +11,5 @@ export default {
     './node_modules/@allmaps/ui/dist/components/**/*.{html,js,svelte,ts}'
   ],
   theme,
-  plugins: []
+  plugins: [tailwindTypography]
 } satisfies Config

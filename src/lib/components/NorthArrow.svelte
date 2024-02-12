@@ -4,15 +4,15 @@
 
   import computeBearing from '@turf/bearing'
 
-  import { gameService, currentRound } from '$lib/shared/machines/game.js'
+  import { state, currentRound } from '$lib/shared/machines/game.js'
 
   let bearing = 0
   let rotation = 0
 
   $: {
-    if ($gameService.matches('round.display.image')) {
+    if ($state.matches('round.display.image')) {
       rotation = bearing
-    } else if ($gameService.matches('round.display.map')) {
+    } else if ($state.matches('round.display.map')) {
       rotation = 0
     }
   }

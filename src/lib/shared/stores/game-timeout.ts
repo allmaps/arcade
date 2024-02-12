@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store'
 
-import { gameService } from '$lib/shared/machines/game.js'
+import { actor } from '$lib/shared/machines/game.js'
 
 import { GAME_TIMEOUT_MS, GAME_TIMEOUT_WARNING_MS } from '$lib/shared/constants.js'
 
@@ -13,7 +13,7 @@ function tick() {
   const $gameDuration = get(gameDuration)
   if ($gameDuration > GAME_TIMEOUT_MS) {
     resetLastInteraction()
-    gameService.send('TIMEOUT')
+    actor.send({ type: 'TIMEOUT' })
   }
 
   if ($gameDuration > GAME_TIMEOUT_MS - GAME_TIMEOUT_WARNING_MS && intervalId !== undefined) {

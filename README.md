@@ -2,8 +2,9 @@
 
 https://arcade.allmaps.org
 
-- OSM attribution
-- XState 5
+- About page - by using toggle button on title screen?
+- Make toggle work on mobile
+- Fix WebGL context lost / memory issues. Are they caused by Allmaps or by OL + vector tiles?
 - Timeout for loading annotation and IIIF image tiles
 - _Explode_ mask animation on perfect score
 - Add heading text to ScoreLarge
@@ -18,7 +19,7 @@ https://arcade.allmaps.org
 - Show area overlap in Score.
 - Single Footer in Round.svelte
 - Transitions between all views, also inside Round
-- Fixed max points per game, load 5 annotations before start
+- Fixed max points per game, load 5 annotations before start????
 - Loading.svelte:
   - Show max points, show area
   - animate mask!
@@ -26,12 +27,14 @@ https://arcade.allmaps.org
 - Use real geoMasks in title screen
 - Calculate single 3D distance, instead of zoom difference + 2D distance
 - Add 3 difficulty levels
-  - Easy:
-  - Medium:
+  - Easy: current settings
+  - Medium: don't show warped map
   - Hard: can't look at map again
 - Use MaplibreGL
 - Add swipe/pinch gestures to Title screen
 - Make sure minZoom/maxZoom/currentZoom is still correct after window resize
+- Only show OSM attribution on first game
+- Update README, add instructions for running locally
 
 ## Running locally
 

@@ -32,12 +32,15 @@ dependencies:
   '@turf/convex':
     specifier: ^6.5.0
     version: 6.5.0
+  '@turf/line-slice-along':
+    specifier: ^6.5.0
+    version: 6.5.0
   '@turf/rewind':
     specifier: ^6.5.0
     version: 6.5.0
   '@xstate/svelte':
-    specifier: ^2.0.1
-    version: 2.1.0(svelte@4.2.9)(xstate@4.38.2)
+    specifier: ^3.0.2
+    version: 3.0.2(svelte@4.2.9)(xstate@5.6.2)
   bits-ui:
     specifier: ^0.15.1
     version: 0.15.1(svelte@4.2.9)
@@ -60,8 +63,8 @@ dependencies:
     specifier: ^1.5.3
     version: 1.5.3
   xstate:
-    specifier: ^4.38.0
-    version: 4.38.2
+    specifier: ^5.6.2
+    version: 5.6.2
   yaml:
     specifier: ^2.3.4
     version: 2.3.4
@@ -79,6 +82,9 @@ devDependencies:
   '@sveltejs/vite-plugin-svelte':
     specifier: ^3.0.0
     version: 3.0.1(svelte@4.2.9)(vite@5.0.12)
+  '@tailwindcss/typography':
+    specifier: ^0.5.10
+    version: 0.5.10(tailwindcss@3.4.1)
   '@types/culori':
     specifier: ^2.0.4
     version: 2.0.4
@@ -805,6 +811,18 @@ packages:
       tslib: 2.6.2
     dev: false
 
+  /@tailwindcss/typography@0.5.10(tailwindcss@3.4.1):
+    resolution: {integrity: sha512-Pe8BuPJQJd3FfRnm6H0ulKIGoMEQS+Vq01R6M5aCrFB/ccR/shT+0kXLjouGC1gFLm9hopTFN+DMP0pfwRWzPw==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || insiders'
+    dependencies:
+      lodash.castarray: 4.4.0
+      lodash.isplainobject: 4.0.6
+      lodash.merge: 4.6.2
+      postcss-selector-parser: 6.0.10
+      tailwindcss: 3.4.1
+    dev: true
+
   /@turf/bearing@6.5.0:
     resolution: {integrity: sha512-dxINYhIEMzgDOztyMZc20I7ssYVNEpSv04VbMo5YPQsqa80KO3TFvbuCahMsCAW5z8Tncc8dwBlEFrmRjJG33A==}
     dependencies:
@@ -861,6 +879,15 @@ packages:
   /@turf/invariant@6.5.0:
     resolution: {integrity: sha512-Wv8PRNCtPD31UVbdJE/KVAWKe7l6US+lJItRR/HOEW3eh+U/JwRCSUl/KZ7bmjM/C+zLNoreM2TU6OoLACs4eg==}
     dependencies:
+      '@turf/helpers': 6.5.0
+    dev: false
+
+  /@turf/line-slice-along@6.5.0:
+    resolution: {integrity: sha512-KHJRU6KpHrAj+BTgTNqby6VCTnDzG6a1sJx/I3hNvqMBLvWVA2IrkR9L9DtsQsVY63IBwVdQDqiwCuZLDQh4Ng==}
+    dependencies:
+      '@turf/bearing': 6.5.0
+      '@turf/destination': 6.5.0
+      '@turf/distance': 6.5.0
       '@turf/helpers': 6.5.0
     dev: false
 
@@ -1067,20 +1094,17 @@ packages:
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
     dev: true
 
-  /@xstate/svelte@2.1.0(svelte@4.2.9)(xstate@4.38.2):
-    resolution: {integrity: sha512-cot553w2v4MdmDLkRBLhEjGO5LlnlPcpZ9RT7jFqpn+h0rpmjtkva6zjIZddPrxEOM6DVHDwzYbpDe+BErElQg==}
+  /@xstate/svelte@3.0.2(svelte@4.2.9)(xstate@5.6.2):
+    resolution: {integrity: sha512-yBOmyVq/b87OHh2qRY8aMm7lusW+kMWMC9JIZwID9/FyX4kMQYtwkqg3NE7G+L7sbNQ2BTARA0KU4d7sC7BRyw==}
     peerDependencies:
-      '@xstate/fsm': ^2.1.0
       svelte: ^3.24.1 || ^4
-      xstate: ^4.38.1
+      xstate: ^5.4.1
     peerDependenciesMeta:
-      '@xstate/fsm':
-        optional: true
       xstate:
         optional: true
     dependencies:
       svelte: 4.2.9
-      xstate: 4.38.2
+      xstate: 5.6.2
     dev: false
 
   /acorn-jsx@5.3.2(acorn@8.10.0):
@@ -1969,6 +1993,14 @@ packages:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
     dev: false
 
+  /lodash.castarray@4.4.0:
+    resolution: {integrity: sha512-aVx8ztPv7/2ULbArGJ2Y42bG1mEQ5mGjpdvrbJcJFU3TbYybe+QlLS4pst9zV52ymy2in1KpFPiZnAOATxD4+Q==}
+    dev: true
+
+  /lodash.isplainobject@4.0.6:
+    resolution: {integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==}
+    dev: true
+
   /lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
     dev: true
@@ -2368,6 +2400,14 @@ packages:
       postcss: ^8.4.19
     dependencies:
       postcss: 8.4.28
+    dev: true
+
+  /postcss-selector-parser@6.0.10:
+    resolution: {integrity: sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==}
+    engines: {node: '>=4'}
+    dependencies:
+      cssesc: 3.0.0
+      util-deprecate: 1.0.2
     dev: true
 
   /postcss-selector-parser@6.0.13:
@@ -3055,8 +3095,8 @@ packages:
     resolution: {integrity: sha512-bWB489+RQQclC7A9OW8e5BzbT8Tu//jtAOvkYwewFr+Q9T9KDGvfzC1lp0pYPEQPEoPQLDkmxkepSC/2gIAZGw==}
     dev: false
 
-  /xstate@4.38.2:
-    resolution: {integrity: sha512-Fba/DwEPDLneHT3tbJ9F3zafbQXszOlyCJyQqqdzmtlY/cwE2th462KK48yaANf98jHlP6lJvxfNtN0LFKXPQg==}
+  /xstate@5.6.2:
+    resolution: {integrity: sha512-cXYrnP5vrlY4PFkS1l8uP+LY9XAX/7rdVQlWfqfi/gQJEJgCX5AYk5UI/QQfewQ2mrPREBVTmy4QeMlSubepxw==}
     dev: false
 
   /y18n@4.0.3:

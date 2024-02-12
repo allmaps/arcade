@@ -13,7 +13,7 @@
 
   import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
 
-  import { gameService } from '$lib/shared/machines/game.js'
+  import { actor } from '$lib/shared/machines/game.js'
   import { environment } from '$lib/shared/stores/environment.js'
 
   import Score from './Score.svelte'
@@ -137,7 +137,7 @@
 
     ol.getView().fit(convexHullVectorSource.getExtent())
 
-    gameService.send({
+    actor.send({
       type: 'SET_OL_MAP',
       ol
     })
@@ -180,7 +180,7 @@
       <Button
         button={$environment.getButton('submit')}
         verb="start new game"
-        on:click={() => gameService.send('NEXT')}
+        on:click={() => actor.send({ type: 'NEXT' })}
       >
         Start new game
       </Button>
