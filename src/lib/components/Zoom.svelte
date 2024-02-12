@@ -5,9 +5,6 @@
   import { olTarget } from '$lib/shared/machines/game.js'
   import { zoomIn, zoomOut } from '$lib/shared/openlayers.js'
 
-  import zoomInImage from '$lib/images/plus.svg'
-  import zoomOutImage from '$lib/images/minus.svg'
-
   function handleZoomIn() {
     zoomIn($olTarget)
   }
@@ -18,8 +15,18 @@
 </script>
 
 <Button button={$environment.getButton('zoomOut')} verb="zoom out" on:click={handleZoomOut}>
-  <div class="w-full h-full" style="background-image: url({zoomOutImage});" />
+  <div class="zoom-out w-full h-full" />
 </Button>
 <Button button={$environment.getButton('zoomIn')} verb="zoom in" on:click={handleZoomIn}
-  ><div class="w-full h-full" style="background-image: url({zoomInImage});" /></Button
+  ><div class="zoom-in w-full h-full" /></Button
 >
+
+<style scoped>
+  div.zoom-out {
+    background-image: url($lib/images/minus.svg);
+  }
+
+  div.zoom-in {
+    background-image: url($lib/images/plus.svg);
+  }
+</style>
