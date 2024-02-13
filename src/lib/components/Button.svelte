@@ -5,7 +5,7 @@
   import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
 
   import { flyAndScale } from '$lib/shared/transitions.js'
-  import { isTouchDevice } from '$lib/shared/touch.js'
+  import { isTouchDevice } from '$lib/shared/stores/touch.js'
 
   import type { Button } from '$lib/shared/types.js'
 
@@ -69,19 +69,19 @@
   }
 
   function handleMousedown() {
-    if (!touch) {
+    if (!$isTouchDevice) {
       toggleStart()
     }
   }
 
   function handleMouseup() {
-    if (!touch) {
+    if (!$isTouchDevice) {
       toggleEnd()
     }
   }
 
   function handleClick() {
-    if (touch) {
+    if ($isTouchDevice) {
       if (!toggled) {
         toggleStart()
       } else {
@@ -93,8 +93,6 @@
   }
 
   onMount(() => {
-    touch = isTouchDevice()
-
     if (timeout > 0) {
       timeoutId = setTimeout(() => {
         element.dispatchEvent(new Event('click'))
@@ -126,7 +124,7 @@
           ? 'bg-none'
           : bgClass}"
       />
-      <div class="relative {textClass} w-full h-full"><slot /></div></button
+      <div class="relative {textClass} w-full h-full"><slot />chips</div></button
     >
   </Tooltip.Trigger>
   <Tooltip.Content

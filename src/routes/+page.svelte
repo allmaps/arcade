@@ -14,6 +14,7 @@
   import { actor, state, currentRoundNumber, olTarget } from '$lib/shared/machines/game.js'
 
   import { environment } from '$lib/shared/stores/environment.js'
+  import { isTouchDevice } from '$lib/shared/stores/touch.js'
   import { resetLastInteraction, showGameTimeoutWarning } from '$lib/shared/stores/game-timeout.js'
   import { isCabinet } from '$lib/shared/cabinet.js'
   import { GAME_TIMEOUT_WARNING_MS } from '$lib/shared/constants.js'
@@ -42,8 +43,15 @@
     resetLastInteraction()
   }
 
+  function handleFirstTouch() {
+    isTouchDevice.set(true)
+    window.removeEventListener('touchstart', handleFirstTouch, false)
+  }
+
   onMount(() => {
     const subscription = actor.subscribe(handleTransition)
+
+    window.addEventListener('touchstart', handleFirstTouch, false)
 
     return () => {
       subscription.unsubscribe()
