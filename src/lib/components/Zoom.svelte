@@ -15,10 +15,10 @@
 </script>
 
 <Button button={$environment.getButton('zoomOut')} verb="zoom out" on:click={handleZoomOut}>
-  <div class="zoom-out w-full h-full" />
+  <div class="zoom-out w-full h-full bg-no-repeat bg-center" />
 </Button>
 <Button button={$environment.getButton('zoomIn')} verb="zoom in" on:click={handleZoomIn}
-  ><div class="zoom-in w-full h-full" /></Button
+  ><div class="zoom-in w-full h-full bg-no-repeat bg-center" /></Button
 >
 
 <style scoped>
