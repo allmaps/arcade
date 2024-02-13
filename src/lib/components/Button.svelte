@@ -124,7 +124,7 @@
           ? 'bg-none'
           : bgClass}"
       />
-      <div class="relative {textClass} w-full h-full"><slot />chips</div></button
+      <div class="relative {textClass} w-full h-full"><slot /></div></button
     >
   </Tooltip.Trigger>
   <Tooltip.Content
