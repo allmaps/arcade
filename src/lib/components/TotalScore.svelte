@@ -5,5 +5,5 @@
 </script>
 
 <div class="rounded-full shadow-md bg-white text-2xl px-8 py-4">
-  Final score: <span class="font-bold">{formatScore($configuration, $score)} points</span>
+  Total score: <span class="font-bold">{formatScore($configuration, $score)} points</span>
 </div>

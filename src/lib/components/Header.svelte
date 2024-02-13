@@ -6,7 +6,7 @@
   import { configuration } from '$lib/shared/machines/game.js'
 
   import Timer from '$lib/components/Timer.svelte'
-  import FinalScore from '$lib/components/FinalScore.svelte'
+  import TotalScore from '$lib/components/TotalScore.svelte'
 </script>
 
 <header
@@ -26,7 +26,7 @@
   </div>
   <div>
     {#if $state.matches('results')}
-      <FinalScore />
+      <TotalScore />
     {:else if $state.matches('round')}
       {#if $state.matches('round.progress.playing')}
         <Timer />
