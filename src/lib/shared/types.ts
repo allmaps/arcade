@@ -1,21 +1,26 @@
 import type { z } from 'zod'
-import type OLMap from 'ol/Map.js'
 import type { MachineContext } from 'xstate'
 
 import type { Map } from '@allmaps/annotation'
 import type { GcpTransformer } from '@allmaps/transform'
-
-import type { Polygon as GeoJsonPolygon } from 'geojson'
+import type { GeojsonPolygon, Point } from '@allmaps/types'
 
 import type { ConfigurationSchema } from '$lib/shared/schemas.js'
 
 export type Configuration = z.infer<typeof ConfigurationSchema>
 
+export type MappingLibrary = 'maplibre' | 'openlayers'
+
+export type KeyboardTarget = {
+  element: HTMLElement
+  library: MappingLibrary
+}
+
 export interface Context extends MachineContext {
   rounds: Rounds
   configuration: Configuration
-  olImage?: OLMap
-  olMap?: OLMap
+  imageKeyboardTarget?: KeyboardTarget
+  mapKeyboardTarget?: KeyboardTarget
   error?: Error
 }
 
@@ -24,8 +29,8 @@ export type GameEvent =
   | { type: 'START' }
   | { type: 'FINISHED' }
   | { type: 'MAP_MOVED' }
-  | { type: 'SET_OL_IMAGE'; ol: OLMap }
-  | { type: 'SET_OL_MAP'; ol: OLMap }
+  | { type: 'SET_IMAGE_KEYBOARD_TARGET'; element: HTMLElement; library: MappingLibrary }
+  | { type: 'SET_MAP_KEYBOARD_TARGET'; element: HTMLElement; library: MappingLibrary }
   | { type: 'SHOW_IMAGE' }
   | { type: 'SHOW_MAP' }
   | { type: 'SUBMIT'; endTime: number; submission: Submission }
@@ -58,7 +63,7 @@ export type LoadedRound = BaseRound & {
   annotationUrl: string
   map: Map
   transformer: GcpTransformer
-  geoMask: GeoJsonPolygon
+  geoMask: GeojsonPolygon
   area: number
   maxScore: number
   imageInfo: any
@@ -81,13 +86,13 @@ export type Submission = {
     warpedMap: number
   }
   center: {
-    submission: number[]
-    warpedMap: number[]
+    submission: Point
+    warpedMap: Point
   }
   distance: number
-  geoMask: GeoJsonPolygon
+  geoMask: GeojsonPolygon
   area: number
-  convexHull: GeoJsonPolygon
+  convexHull: GeojsonPolygon
   found: boolean
 }
 
@@ -97,14 +102,9 @@ export type Ratios = {
   distance: number
 }
 
-// TODO: import from stdlib
-export type BBox = number[]
-
-export type Size = [number, number]
-
 export type Padding = [number, number, number, number]
 
-export type DoneFn = (complete: boolean) => void
+export type CallbackFn = (err?: unknown) => void
 
 export type ButtonType = 'toggle' | 'zoomOut' | 'zoomIn' | 'submit'
 

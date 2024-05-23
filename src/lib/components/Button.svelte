@@ -23,7 +23,7 @@
 
   let element: HTMLButtonElement
 
-  const bgClass = button.bgClass || 'bg-green'
+  $: bgClass = disabled ? 'bg-gray' : button.bgClass || 'bg-green'
   const textClass = button.textClass || 'text-white'
   const type = button.type || 'secondary'
   const icon = button.icon || false

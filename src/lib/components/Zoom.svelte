@@ -2,15 +2,15 @@
   import Button from '$lib/components/Button.svelte'
 
   import { environment } from '$lib/shared/stores/environment.js'
-  import { olTarget } from '$lib/shared/machines/game.js'
-  import { zoomIn, zoomOut } from '$lib/shared/openlayers.js'
+  import { keyboardTarget } from '$lib/shared/machines/game.js'
+  import { zoomIn, zoomOut } from '$lib/shared/keyboard.js'
 
   function handleZoomIn() {
-    zoomIn($olTarget)
+    zoomIn($keyboardTarget)
   }
 
   function handleZoomOut() {
-    zoomOut($olTarget)
+    zoomOut($keyboardTarget)
   }
 </script>
 

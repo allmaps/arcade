@@ -1,4 +1,4 @@
-import type { Padding } from './types.js'
+import type { Padding } from '$lib/shared/types.js'
 
 export const NUMBER_OF_ROUNDS = 5
 
@@ -16,3 +16,10 @@ export const ATTRIBUTION_MIN_MS = 5 * 1_000
 // Padding (in pixels) to be cleared inside the view.
 // Values in the array are top, right, bottom and left padding.
 export const PADDING = [100, 30, 120, 30] as Padding
+
+export const MAPLIBRE_PADDING = {
+  top: PADDING[0],
+  bottom: PADDING[2],
+  left: PADDING[3],
+  right: PADDING[1]
+}

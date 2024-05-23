@@ -11,15 +11,16 @@
   import Results from '$lib/components/Results.svelte'
   import Timeout from '$lib/components/Timeout.svelte'
 
-  import { actor, state, currentRoundNumber, olTarget } from '$lib/shared/machines/game.js'
+  import { actor, state, currentRoundNumber, keyboardTarget } from '$lib/shared/machines/game.js'
 
   import { environment } from '$lib/shared/stores/environment.js'
   import { isTouchDevice } from '$lib/shared/stores/touch.js'
   import { resetLastInteraction, showGameTimeoutWarning } from '$lib/shared/stores/game-timeout.js'
   import { isCabinet } from '$lib/shared/cabinet.js'
   import { GAME_TIMEOUT_WARNING_MS } from '$lib/shared/constants.js'
-  import { zoomIn, zoomOut } from '$lib/shared/openlayers.js'
+  import { zoomIn, zoomOut } from '$lib/shared/keyboard.js'
 
+  import 'maplibre-gl/dist/maplibre-gl.css'
   import 'ol/ol.css'
 
   const key = 'page-crossfade'
@@ -32,10 +33,10 @@
   function handleKeydown(event: KeyboardEvent) {
     if (event.code === $environment.getButton('zoomIn').keyCode) {
       // Zoom in!
-      zoomIn($olTarget)
+      zoomIn($keyboardTarget)
     } else if (event.code === $environment.getButton('zoomOut').keyCode) {
       // Zoom out!
-      zoomOut($olTarget)
+      zoomOut($keyboardTarget)
     }
   }
 

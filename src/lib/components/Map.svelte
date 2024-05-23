@@ -1,23 +1,21 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import OLMap from 'ol/Map.js'
-  import View from 'ol/View.js'
-  import VectorTile from 'ol/layer/VectorTile.js'
-  import VectorSource from 'ol/source/Vector.js'
-  import VectorLayer from 'ol/layer/Vector.js'
+  import { Map, addProtocol } from 'maplibre-gl'
+  import layers from 'protomaps-themes-base'
+  import { Protocol } from 'pmtiles'
+
+  import { throttle } from 'lodash-es'
+
   import GeoJSON from 'ol/format/GeoJSON.js'
-  import { getCenter } from 'ol/extent.js'
-  import Feature from 'ol/Feature.js'
-  import Polygon from 'ol/geom/Polygon.js'
-  import { fromLonLat, toLonLat } from 'ol/proj'
+
   import { getDistance, getArea } from 'ol/sphere.js'
 
-  import { applyStyle } from 'ol-mapbox-style'
-
-  import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
+  import { computeBbox, bboxToCenter } from '@allmaps/stdlib'
+  import { WarpedMapLayer } from '@allmaps/maplibre'
 
   import { geometryToPixels, coordinatesToSvgPoints, getConvexHull } from '$lib/shared/geometry.js'
+  import { generateEmptyFeatureCollection } from '$lib/shared/geojson.js'
   import {
     actor,
     state,
@@ -26,35 +24,35 @@
     configuration,
     type Snapshot
   } from '$lib/shared/machines/game.js'
-  import { style as protomapsStyle } from '$lib/shared/protomaps.js'
   import {
-    maskStyle,
+    flyTo,
     convexHullStyle,
-    getExtent,
-    getZoomForExtent,
-    flyTo
-  } from '$lib/shared/openlayers.js'
+    maskStyle,
+    makeHandleKeydownWithPanStepAndZoomFraction,
+    getFirstSymbolLayerId
+  } from '$lib/shared/maplibre.js'
+  // import { ArcadeKeyboardHandler } from '$lib/shared/keyboard-handler.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
   import { computeZoomRatio, computeDistanceRatio } from '$lib/shared/score.js'
 
   import { PADDING } from '$lib/shared/constants.js'
 
-  import type { Polygon as GeoJsonPolygon } from 'geojson'
+  import type { GeoJSONSource, MapLibreEvent } from 'maplibre-gl'
+  import type { GeojsonPolygon, Point } from '@allmaps/types'
 
-  import type { LoadedRound, Submission, DoneFn } from '$lib/shared/types.js'
+  import type { LoadedRound, Submission, CallbackFn } from '$lib/shared/types.js'
 
-  let ol: OLMap
+  let map: Map
 
-  let submissionVectorSource: VectorSource
-  let submissionVectorLayer: VectorLayer<VectorSource>
+  let warpedMapLayer: WarpedMapLayer
 
-  let convexHullVectorSource: VectorSource
-  let convexHullVectorLayer: VectorLayer<VectorSource>
+  // TODO: get from config
+  const panStep = 150
 
-  let element: HTMLElement
+  let container: HTMLElement
   let svgPolygon: SVGPathElement | undefined
-  let svgCoordinates: [number, number][] = []
+  let svgCoordinates: Point[] = []
 
   let strokeColor: string
 
@@ -62,30 +60,27 @@
 
   let warpedMapZoom: number
 
-  let mapHadFirstInteraction: boolean | undefined
+  let mapHadFirstInteraction = false
+
   let submitted = false
+  let submission: Submission | undefined
 
   const geoMask = ($currentRound as LoadedRound).geoMask
 
-  let convexHull: GeoJsonPolygon | undefined
-  let submittedGeoMask: GeoJsonPolygon | undefined
+  let convexHull: GeojsonPolygon | undefined
+  let submittedGeoMask: GeojsonPolygon | undefined
 
-  function getWarpedMapCenter() {
-    return toLonLat(getCenter(getExtent(geoMask)))
+  function getWarpedMapCenter(): Point {
+    return bboxToCenter(computeBbox(geoMask))
   }
 
   function getSubmissionCenter() {
-    const view = ol.getView()
-    const center = view.getCenter()
-    if (center) {
-      return toLonLat(center)
-    }
-
-    return [0, 0]
+    return map.getCenter().toArray()
   }
 
-  function getWarpedMapPixelCenter() {
-    return ol.getPixelFromCoordinate(getCenter(getExtent(geoMask)))
+  function getWarpedMapPixelCenter(): Point {
+    const point = map.project(bboxToCenter(computeBbox(geoMask)))
+    return [point.x, point.y]
   }
 
   function getSubmissionPixelCenter() {
@@ -101,53 +96,65 @@
   }
 
   function getWarpedMapZoom() {
-    return getZoomForExtent(ol, getExtent(geoMask), PADDING) || 0
+    const bbox = computeBbox(geoMask)
+
+    const { zoom } = map.cameraForBounds(bbox, {
+      padding: { top: PADDING[0], bottom: PADDING[2], left: PADDING[3], right: PADDING[1] }
+    })
+
+    return zoom || 0
   }
 
   function getSubmissionZoom() {
-    const view = ol.getView()
-    return view.getZoom() || 0
+    return map.getZoom()
   }
 
-  export function flyToSubmission(duration?: number, done?: DoneFn) {
-    if (convexHull && submittedGeoMask) {
-      flyTo(ol.getView(), [getExtent(convexHull), getExtent(submittedGeoMask)], duration, done)
+  export function flyToSubmission(callback?: CallbackFn) {
+    if (submission) {
+      const center = submission.center.submission
+      const zoom = submission.zoom.submission
+      flyTo(map, center, zoom, callback)
     }
   }
 
-  export function flyToWarpedMap(duration?: number, done?: DoneFn) {
-    if (convexHull && geoMask) {
-      flyTo(ol.getView(), [getExtent(convexHull), getExtent(geoMask)], duration, done)
+  export function flyToWarpedMap(callback?: CallbackFn) {
+    if (geoMask) {
+      const center = getWarpedMapCenter()
+      const zoom = getWarpedMapZoom()
+      flyTo(map, center, zoom, callback)
     }
   }
 
-  function getSubmittedGeoMask(): GeoJsonPolygon {
-    const submittedGeoMaskPolygon = new Polygon([
-      [...svgCoordinates, svgCoordinates[0]].map((coordinate) =>
-        ol.getCoordinateFromPixel(coordinate)
-      )
-    ])
-
-    const submittedGeoMask = new GeoJSON().writeGeometryObject(submittedGeoMaskPolygon, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: 'EPSG:3857'
-    })
-
-    if (submittedGeoMask.type !== 'Polygon') {
-      throw new Error('Submitted geoMask is not a polygon')
+  function getSubmittedGeoMask(): GeojsonPolygon {
+    const submittedGeoMask = {
+      type: 'Polygon' as const,
+      coordinates: [
+        [...svgCoordinates, svgCoordinates[0]].map((coordinate) =>
+          map.unproject(coordinate).toArray()
+        )
+      ]
     }
 
     return submittedGeoMask
   }
 
-  export function getSubmission(found = false): Submission {
+  export function getSubmission(found?: boolean): Submission {
     const warpedMapZoom = getWarpedMapZoom()
-    const submissionZoom = getSubmissionZoom()
-
     const warpedMapCenter = getWarpedMapCenter()
-    const submissionCenter = getSubmissionCenter()
 
-    submittedGeoMask = getSubmittedGeoMask()
+    let submissionZoom: number
+    let submissionCenter: Point
+
+    if (found) {
+      submissionZoom = warpedMapZoom
+      submissionCenter = warpedMapCenter
+      submittedGeoMask = geoMask
+    } else {
+      submissionZoom = getSubmissionZoom()
+      submissionCenter = getSubmissionCenter()
+      submittedGeoMask = getSubmittedGeoMask()
+    }
+
     const area = getArea(
       new GeoJSON().readGeometry(submittedGeoMask, {
         dataProjection: 'EPSG:4326',
@@ -161,7 +168,7 @@
       throw new Error('No convexHull')
     }
 
-    return {
+    submission = {
       zoom: {
         warpedMap: warpedMapZoom,
         submission: submissionZoom
@@ -174,47 +181,39 @@
       geoMask: submittedGeoMask,
       area,
       convexHull,
-      found
+      found: geoMask !== undefined
     }
+
+    return submission
   }
 
   function handleTransition(snapshot: Snapshot) {
     if (!submitted && snapshot.matches('round.progress.submitted')) {
+      warpedMapLayer.setOpacity(1)
       submitted = true
 
-      // Add submittedGeoMask to map
+      map.setPaintProperty('convex-hull', 'fill-opacity', 1)
 
+      map.off('move', throttledHandleMapmove)
+      map.off('movestart', handleMovestart)
+
+      // Add submittedGeoMask to map
       // submittedGeoMask should already been set. Throw error otherwise
       if (!submittedGeoMask || !convexHull) {
         throw new Error('No submittedGeoMask or no convexHull')
       }
 
-      const submittedGeoMaskFeature = new Feature({
-        geometry: new GeoJSON().readGeometry(submittedGeoMask, {
-          dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857'
-        })
+      const submissionSource = map.getSource('submission') as GeoJSONSource
+      submissionSource.setData(submittedGeoMask)
+
+      const convexHullSource = map.getSource('convex-hull') as GeoJSONSource
+      convexHullSource.setData(convexHull)
+
+      flyToWarpedMap(() => {
+        actor.send({ type: 'FINISHED' })
       })
 
-      submissionVectorSource.addFeature(submittedGeoMaskFeature)
-
-      // Add convex hull of geoMask and submittedGeoMask to map
-      const convexHullFeature = new Feature({
-        geometry: new GeoJSON().readGeometry(convexHull, {
-          dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857'
-        })
-      })
-
-      convexHullVectorSource.addFeature(convexHullFeature)
-
-      if (convexHull && geoMask) {
-        flyToWarpedMap(4000, () => {
-          // console.log('BEREN')
-          actor.send({ type: 'FINISHED' })
-        })
-      }
-
+      // TODO:
       // ol.getInteractions().clear()
     }
   }
@@ -229,146 +228,68 @@
     }
   }
 
-  function handleSubmit() {
+  function handleSubmit(found?: boolean) {
     actor.send({
       type: 'SUBMIT',
       endTime: $endTime,
-      submission: getSubmission(true)
+      submission: getSubmission(found)
     })
   }
 
-  onMount(() => {
-    if (!$currentRound || !$currentRound.loaded || $currentRoundIndex === undefined) {
+  function handleMapmove() {
+    if (submitted) {
       return
     }
 
-    strokeColor = $currentRound.colors.color
+    const submissionCenter = getSubmissionCenter()
 
-    const baseLayer = new VectorTile({ declutter: true, maxZoom: 20 })
-    applyStyle(baseLayer, protomapsStyle)
-
-    const warpedMapSource = new WarpedMapSource()
-    const warpedMapLayer = new WarpedMapLayer({
-      source: warpedMapSource
-    })
-    warpedMapLayer.setOpacity(0)
-
-    warpedMapSource.addGeoreferencedMap($currentRound.map)
-
-    submissionVectorSource = new VectorSource()
-    submissionVectorLayer = new VectorLayer({
-      source: submissionVectorSource,
-      style: maskStyle(strokeColor),
-      updateWhileAnimating: true,
-      updateWhileInteracting: true
-    })
-
-    convexHullVectorSource = new VectorSource()
-    convexHullVectorLayer = new VectorLayer({
-      source: convexHullVectorSource,
-      style: convexHullStyle($currentRound.colors.convexHullColor),
-      updateWhileAnimating: true,
-      updateWhileInteracting: true
-    })
-
-    ol = new OLMap({
-      target: element,
-      // @ts-ignore
-      layers: [baseLayer, convexHullVectorLayer, warpedMapLayer, submissionVectorLayer],
-      controls: [],
-      view: new View({
-        center: fromLonLat($configuration.map.center),
-        padding: PADDING,
-        enableRotation: false
-      }),
-      keyboardEventTarget: element
-    })
-
-    actor.send({
-      type: 'SET_OL_MAP',
-      ol
-    })
-
-    const subscription = actor.subscribe(handleTransition)
-
-    warpedMapZoom = getWarpedMapZoom()
-
-    const fraction = warpedMapZoom % 1
-
-    const view = ol.getView()
-
-    const minZoom = $configuration.map.initialZoom + fraction
-
-    const maxZoom = warpedMapZoom + 4
-
-    view.setMinZoom(minZoom)
-    view.setMaxZoom(maxZoom)
-
-    view.setZoom(minZoom)
-
-    function handleRendercomplete() {
-      mapHadFirstInteraction = false
-
-      ol.un('rendercomplete', handleRendercomplete)
+    if (!submissionCenter || !$currentRound?.loaded) {
+      return
     }
 
-    ol.on('rendercomplete', handleRendercomplete)
-
-    ol.on('postrender', () => {
-      if (submitted) {
-        warpedMapLayer.setOpacity(1)
-        return
-      }
-
-      const submissionCenter = getSubmissionCenter()
-
-      if (!submissionCenter || !$currentRound?.loaded) {
-        return
-      }
-
-      const zoomRatio = computeZoomRatio({
-        zoom: {
-          warpedMap: getWarpedMapZoom(),
-          submission: getSubmissionZoom()
-        }
-      })
-
-      const distanceRatio = computeDistanceRatio($currentRound.area, {
-        distance: getDistance(getWarpedMapCenter(), submissionCenter)
-      })
-
-      // TODO: Turn 0.7 into configuration variable
-      const distanceRatioVisible = 0.7
-      const zoomRatioVisible = 0.6
-
-      if (zoomRatio > zoomRatioVisible && distanceRatio > distanceRatioVisible) {
-        const zoomOpacityRatio = (zoomRatio - zoomRatioVisible) / (1 - zoomRatioVisible)
-        const distanceOpacityRatio =
-          (distanceRatio - distanceRatioVisible) / (1 - distanceRatioVisible)
-
-        warpedMapLayer.setOpacity(zoomOpacityRatio * distanceOpacityRatio)
-      } else {
-        warpedMapLayer.setOpacity(0)
+    const zoomRatio = computeZoomRatio({
+      zoom: {
+        warpedMap: getWarpedMapZoom(),
+        submission: getSubmissionZoom()
       }
     })
 
-    ol.on('movestart', () => {
-      if (mapHadFirstInteraction === false || submitted) {
-        mapHadFirstInteraction = true
-        actor.send({ type: 'MAP_MOVED' })
-      }
+    const distanceRatio = computeDistanceRatio($currentRound.area, {
+      distance: getDistance(getWarpedMapCenter(), submissionCenter)
     })
 
-    ol.on('moveend', () => {
+    // TODO: Turn 0.7 into configuration variable
+    const distanceRatioVisible = 0.7
+    const zoomRatioVisible = 0.6
+
+    if (zoomRatio > zoomRatioVisible && distanceRatio > distanceRatioVisible) {
+      const zoomOpacityRatio = (zoomRatio - zoomRatioVisible) / (1 - zoomRatioVisible)
+      const distanceOpacityRatio =
+        (distanceRatio - distanceRatioVisible) / (1 - distanceRatioVisible)
+      warpedMapLayer.setOpacity(zoomOpacityRatio * distanceOpacityRatio)
+    } else {
+      warpedMapLayer.setOpacity(0)
+    }
+  }
+
+  const throttledHandleMapmove = throttle(handleMapmove, 100)
+
+  function handleMovestart() {
+    if (!mapHadFirstInteraction) {
+      mapHadFirstInteraction = true
+      actor.send({ type: 'MAP_MOVED' })
+    }
+  }
+
+  function handleMoveend() {
+    if (!submitted) {
       const submissionZoom = getSubmissionZoom()
-
       const zoomDiff = Math.abs(submissionZoom - warpedMapZoom)
 
-      // Check if center is within 128 px distance
-      // https://github.com/openlayers/openlayers/blob/be95fd71b6edeeb947411db740d839ae9d455dd4/src/ol/interaction/KeyboardPan.js#L75C63-L75C66
-
+      // Check if center is within panStep + panStepPadding px distance
       const zoomDiffPerfectScore = 0.1
-      const distanceThreshold = 128 + 10
+      const panStepPadding = 10
+      const distanceThreshold = panStep + panStepPadding
 
       if (zoomDiff < zoomDiffPerfectScore) {
         const warpedMapPixelCenter = getWarpedMapPixelCenter()
@@ -379,18 +300,144 @@
           const distanceY = Math.abs(warpedMapPixelCenter[1] - submissionPixelCenter[1])
 
           if (distanceX < distanceThreshold && distanceY < distanceThreshold) {
-            ol.getView().fit(getExtent(geoMask), {
-              duration: 200,
-              callback: handleSubmit
+            // Perfect score!
+
+            flyToWarpedMap(() => {
+              setTimeout(() => {
+                handleSubmit(true)
+              }, 1000)
             })
+
+            // ol.getView().fit(getExtent(geoMask), {
+            //   duration: 200,
+            //   callback: handleSubmit
+            // })
           }
         }
       }
+    }
+    resetLastInteraction()
+  }
 
-      resetLastInteraction()
+  onMount(() => {
+    if (!$currentRound || !$currentRound.loaded || $currentRoundIndex === undefined) {
+      return
+    }
+
+    strokeColor = $currentRound.colors.color
+
+    const protocol = new Protocol()
+    addProtocol('pmtiles', protocol.tile)
+
+    map = new Map({
+      container,
+      style: {
+        version: 8,
+        glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
+        sources: {
+          protomaps: {
+            type: 'vector',
+            tiles: ['https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=ca7652ec836f269a'],
+            maxzoom: 14,
+            attribution:
+              '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
+          }
+        },
+        layers: layers('protomaps', 'light')
+      },
+      center: $configuration.map.center as Point,
+      zoom: 7,
+      maxPitch: 0,
+      preserveDrawingBuffer: true,
+      attributionControl: false
     })
 
-    contentBoxSize = { inlineSize: element.clientWidth, blockSize: element.clientHeight }
+    map.dragRotate.disable()
+    map.touchZoomRotate.disableRotation()
+
+    map.on('load', () => {
+      const firstSymbolLayerId = getFirstSymbolLayerId(map)
+
+      if (!$currentRound || !$currentRound.loaded) {
+        console.error('Round not loaded')
+        return
+      }
+
+      map.addSource('submission', {
+        type: 'geojson',
+        data: generateEmptyFeatureCollection()
+      })
+
+      map.addSource('convex-hull', {
+        type: 'geojson',
+        data: generateEmptyFeatureCollection()
+      })
+
+      map.addLayer(
+        {
+          id: 'submission',
+          type: 'line',
+          source: 'submission',
+          ...maskStyle(strokeColor)
+        },
+        firstSymbolLayerId
+      )
+
+      map.addLayer(
+        {
+          id: 'convex-hull',
+          type: 'fill',
+          source: 'convex-hull',
+          ...convexHullStyle($currentRound.colors.convexHullColor)
+        },
+        firstSymbolLayerId
+      )
+
+      warpedMapLayer = new WarpedMapLayer()
+      map.addLayer(warpedMapLayer, firstSymbolLayerId)
+
+      warpedMapLayer.setOpacity(0)
+      warpedMapLayer.addGeoreferencedMap($currentRound.map)
+
+      actor.send({
+        type: 'SET_MAP_KEYBOARD_TARGET',
+        element: map.getCanvas(),
+        library: 'maplibre'
+      })
+    })
+
+    const subscription = actor.subscribe(handleTransition)
+
+    warpedMapZoom = getWarpedMapZoom()
+
+    const zoomFraction = warpedMapZoom % 1
+
+    const initialZoom = $configuration.map.initialZoom + zoomFraction
+    const minZoom = 1 + zoomFraction
+    const maxZoom = warpedMapZoom + 4
+
+    // MapLibre's regular keyboard handler rounds the zoom level
+    // when zooming with the keyboard. Override the keydown
+    // handler to prevent this.
+    // @ts-expect-error: MapLibre typings are incomplete
+    map.keyboard.keydown = makeHandleKeydownWithPanStepAndZoomFraction(panStep, zoomFraction)
+
+    map.setMinZoom(minZoom)
+    map.setMaxZoom(maxZoom)
+
+    map.setZoom(initialZoom)
+
+    // function handleRendercomplete() {
+    //   mapHadFirstInteraction = false
+
+    //   ol.un('rendercomplete', handleRendercomplete)
+    // }
+
+    map.on('move', throttledHandleMapmove)
+    map.on('movestart', handleMovestart)
+    map.on('moveend', handleMoveend)
+
+    contentBoxSize = { inlineSize: container.clientWidth, blockSize: container.clientHeight }
 
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -400,19 +447,19 @@
       }
     })
 
-    resizeObserver.observe(element)
+    resizeObserver.observe(container)
 
     return () => {
-      warpedMapLayer.dispose()
-      warpedMapSource.dispose()
-
+      // TODO: add function to @allmaps/maplibre
+      // warpedMapLayer.dispose()
       subscription.unsubscribe()
     }
   })
 </script>
 
-<div class="relative w-full h-full bg-[#e0e0e0]">
-  <div bind:this={element} id="ol-map" class="w-full h-full ring-0" tabindex="-1" />
+<!-- <div class="relative w-full h-full bg-[#e0e0e0]"> -->
+<div class="relative w-full h-full">
+  <div bind:this={container} class="w-full h-full ring-0" tabindex="-1" />
   {#if geoMask && contentBoxSize && !$state.matches('round.progress.submitted')}
     <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
       <svg viewBox={`0 0 ${contentBoxSize.inlineSize} ${contentBoxSize.blockSize}`}>

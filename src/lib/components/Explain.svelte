@@ -11,14 +11,14 @@
 
   import { geometryToPath } from '$lib/shared/svg.js'
 
-  import type { Polygon as GeoJsonPolygon } from 'geojson'
+  import type { GeojsonPolygon } from '@allmaps/types'
 
   import lomanBuurtQQ from '$lib/explain/loman-buurt-qq.jpg'
   import lomanBuurtQQWarped from '$lib/explain/loman-buurt-qq-warped.jpg'
   import protomapsAmsterdam from '$lib/explain/protomaps-amsterdam.jpg'
   import lomanBuurtQQGeoMaskImported from '$lib/explain/loman-buurt-qq.json'
 
-  const lomanBuurtQQGeoMask = lomanBuurtQQGeoMaskImported as GeoJsonPolygon
+  const lomanBuurtQQGeoMask = lomanBuurtQQGeoMaskImported as GeojsonPolygon
 
   let intervalId: number | undefined
   let step = 0
@@ -38,10 +38,10 @@
 <div
   class="absolute w-full h-full p-4 lg:p-8 bg-darkblue text-white flex justify-center lg:text-lg"
 >
-  <div
+  <ol
     class="max-w-6xl grid grid-cols-[1fr_minmax(200px,_1fr)] grid-rows-3 md:grid-cols-3 md:grid-rows-[1fr_minmax(200px,_1fr)] items-stretch md:items-center gap-4 lg:gap-8"
   >
-    <div
+    <li
       class="grid col-span-2 grid-cols-subgrid md:grid-cols-none md:grid-rows-subgrid md:col-auto md:row-span-2"
     >
       <div class="md:aspect-square relative rounded-md md:self-end shadow-inner overflow-hidden">
@@ -61,6 +61,7 @@
           >
         </div>
       </div>
+      <h2>sojsoiJ</h2>
       <div>
         Look at the historic map for clues about the location it depicts — place names, street
         names, the legend or other text on the map. <strong
@@ -69,9 +70,9 @@
           /></strong
         >.
       </div>
-    </div>
+    </li>
 
-    <div
+    <li
       class="grid col-span-2 grid-cols-subgrid md:grid-cols-none md:grid-rows-subgrid md:col-auto md:row-span-2"
     >
       <div class="md:aspect-square relative rounded-md md:self-end shadow-inner overflow-hidden">
@@ -123,9 +124,9 @@
           right location.</strong
         >
       </div>
-    </div>
+    </li>
 
-    <div
+    <li
       class="grid col-span-2 grid-cols-subgrid md:grid-cols-none md:grid-rows-subgrid md:col-auto md:row-span-2"
     >
       <div class="md:aspect-square relative rounded-md md:self-end shadow-inner overflow-hidden">
@@ -151,8 +152,8 @@
           >The quicker you are and the better your guess is, the more points you'll earn</strong
         >. Maps of small areas are worth more points than maps of large areas.
       </div>
-    </div>
-  </div>
+    </li>
+  </ol>
 </div>
 
 <Footer>

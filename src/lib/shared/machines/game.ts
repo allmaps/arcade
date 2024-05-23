@@ -26,7 +26,7 @@ import { assignLastRound } from '$lib/shared/xstate.js'
 import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
 
 import type { Map } from '@allmaps/annotation'
-import type { Polygon as GeoJsonPolygon } from 'geojson'
+import type { GeojsonPolygon } from '@allmaps/types'
 
 import type {
   Context,
@@ -34,7 +34,8 @@ import type {
   Rounds,
   LoadedRound,
   SubmittedRound,
-  Configuration
+  Configuration,
+  MappingLibrary
 } from '$lib/shared/types.js'
 
 function getTime() {
@@ -207,11 +208,11 @@ export const machine = createMachine(
               }
             },
             on: {
-              SET_OL_IMAGE: {
-                actions: 'setOlImage'
+              SET_IMAGE_KEYBOARD_TARGET: {
+                actions: 'setImageKeyboardTarget'
               },
-              SET_OL_MAP: {
-                actions: 'setOlMap'
+              SET_MAP_KEYBOARD_TARGET: {
+                actions: 'setMapKeyboardTarget'
               }
             }
           }
@@ -225,8 +226,11 @@ export const machine = createMachine(
           review: {}
         },
         on: {
-          SET_OL_MAP: {
-            actions: ['setOlMap']
+          SET_IMAGE_KEYBOARD_TARGET: {
+            actions: ['setImageKeyboardTarget']
+          },
+          SET_MAP_KEYBOARD_TARGET: {
+            actions: ['setMapKeyboardTarget']
           },
           NEXT: {
             target: 'title'
@@ -290,11 +294,17 @@ export const machine = createMachine(
 
         return round
       }),
-      setOlImage: assign({
-        olImage: ({ event }) => (event.type === 'SET_OL_IMAGE' ? event.ol : undefined)
+      setImageKeyboardTarget: assign({
+        imageKeyboardTarget: ({ event }) =>
+          event.type === 'SET_IMAGE_KEYBOARD_TARGET'
+            ? { element: event.element, library: event.library }
+            : undefined
       }),
-      setOlMap: assign({
-        olMap: ({ event }) => (event.type === 'SET_OL_MAP' ? event.ol : undefined)
+      setMapKeyboardTarget: assign({
+        mapKeyboardTarget: ({ event }) =>
+          event.type === 'SET_MAP_KEYBOARD_TARGET'
+            ? { element: event.element, library: event.library }
+            : undefined
       }),
       callGameStart: () => {
         const $environment = get(environment)
@@ -321,7 +331,7 @@ export const machine = createMachine(
           let map: Map | undefined
           let transformer: GcpTransformer | undefined
           let imageInfo: unknown | undefined
-          let geoMask: GeoJsonPolygon | undefined
+          let geoMask: GeojsonPolygon | undefined
           let area: number | undefined
           let maxScore: number | undefined
 
@@ -362,7 +372,7 @@ export const machine = createMachine(
 
                 success = true
               } catch (err) {
-                console.warn('Failed to load annotation', annotationUrl)
+                console.warn('Failed to load annotation', annotationUrl, err)
                 addFailedAnnotationUrl(annotationUrl)
               }
             }
@@ -433,19 +443,11 @@ export const score = useSelector(actor, (state) =>
     .reduce((acc, round) => acc + round.score, 0)
 )
 
-export const olTarget = useSelector(actor, (state) => {
-  let target: HTMLElement | string | undefined
-
+export const keyboardTarget = useSelector(actor, (state) => {
   if (state.matches('round.display.image')) {
-    target = state.context.olImage?.getTarget()
+    return state.context.imageKeyboardTarget
   } else {
     // in states 'round.display.map' and 'results'
-    target = state.context.olMap?.getTarget()
-  }
-
-  // HTMLElement does not exist when not in browser
-  // check if not string instead
-  if (typeof target !== 'string') {
-    return target
+    return state.context.mapKeyboardTarget
   }
 })

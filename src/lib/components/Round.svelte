@@ -17,12 +17,14 @@
     state,
     currentRound,
     isLastRound,
-    olTarget,
+    keyboardTarget,
     type Snapshot
   } from '$lib/shared/machines/game.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { environment } from '$lib/shared/stores/environment.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
+
+  import type { KeyboardTarget, LoadedRound } from '$lib/shared/types.js'
 
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
 
@@ -50,15 +52,15 @@
 
   let found = false
 
-  function focusOlContainer(container: HTMLElement) {
-    if (!container) {
+  function focusElement(element: HTMLElement, keyboardTarget: KeyboardTarget) {
+    if (!element) {
       return
     }
 
     // This is a hack to ensure sure $olTarget's container
     // is visible before focusing
-    container.classList.remove('fade-to-invisible')
-    $olTarget?.focus()
+    element.classList.remove('fade-to-invisible')
+    keyboardTarget.element.focus()
   }
 
   let displayImage: boolean
@@ -67,11 +69,15 @@
   $: displayImage = $state.matches('round.display.image')
   $: displayMap = $state.matches('round.display.map')
 
+  $: canSubmit = ($currentRound as LoadedRound)?.canSubmit || false
+
   $: {
-    if (displayImage) {
-      focusOlContainer(containerImage)
-    } else if (displayMap) {
-      focusOlContainer(containerMap)
+    if ($keyboardTarget) {
+      if (displayImage) {
+        focusElement(containerImage, $keyboardTarget)
+      } else if (displayMap) {
+        focusElement(containerMap, $keyboardTarget)
+      }
     }
   }
 
@@ -166,7 +172,9 @@
         </div>
       {:else}
         <Footer>
-          <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
+          <div
+            class="w-full grid grid-cols-[1fr_max-content_1fr] items-center place-items-end gap-2"
+          >
             <div class="grid grid-flow-col gap-2 self-center">
               <Zoom />
             </div>
@@ -215,7 +223,7 @@
         </div>
       {/if}
       <Footer>
-        <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
+        <div class="w-full grid grid-cols-[1fr_max-content_1fr] items-center place-items-end gap-2">
           <div class="grid grid-flow-col gap-2 self-center">
             <Button
               button={$environment.getButton('toggle')}
@@ -247,7 +255,7 @@
       </Footer>
     {:else}
       <Footer>
-        <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
+        <div class="w-full grid grid-cols-[1fr_max-content_1fr] items-center place-items-end gap-2">
           <div class="grid grid-flow-col gap-2 self-center">
             <Button
               button={$environment.getButton('toggle')}
@@ -260,7 +268,7 @@
           <div>
             <Button
               button={$environment.getButton('submit')}
-              disabled={!displayMap}
+              disabled={!canSubmit}
               verb="submit"
               on:click={handleSubmit}>Submit</Button
             >

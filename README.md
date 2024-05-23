@@ -2,13 +2,17 @@
 
 https://arcade.allmaps.org
 
+- Achtergrondkleur MapLibre
+- Show what's loading on Get Ready screen
+- misschien toch niet score van oppervlakte laten afhangen
+- Make sure map focus works on Firefox
+- No convex hull for perfect score
 - Fix WebGL context lost / memory issues. Are they caused by Allmaps or by OL + vector tiles?
 - Timeout for loading annotation and IIIF image tiles
 - _Explode_ mask animation on perfect score
 - Add heading text to ScoreLarge
 - In Results view, perfect score now twice, how to improve? add property to submission: found: boolean
 - Show round score in header when no longer showing in center
-- Improve `flyTo` function
 - Improve `<kbd>` styling
 - Also button with icon in Explain
 - Icons for all buttons (https://phosphoricons.com/ and https://github.com/haruaki07/phosphor-svelte)
@@ -28,13 +32,18 @@ https://arcade.allmaps.org
   - Easy: current settings
   - Medium: don't show warped map
   - Hard: can't look at map again
-- Use MaplibreGL
 - Add swipe/pinch gestures to Title screen
 - Make sure minZoom/maxZoom/currentZoom is still correct after window resize
 - Only show OSM attribution on first game
 - Update README, add instructions for running locally
+- zoeken # - https://annotations.allmaps.org/images/f3c00c845d32346b
 
 ## Running locally
+
+in conjunction with the Allmaps monorepo, you can run
+pnpm run watch
+
+and
 
     pnpm link ../allmaps/packages/annotation
     pnpm link ../allmaps/packages/openlayers

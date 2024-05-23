@@ -2,12 +2,14 @@
   import Attribution from '$lib/components/Attribution.svelte'
 </script>
 
-<div class="bg-white rounded-lg p-4 lg:p-6 max-w-lg prose-sm md:prose">
-  <h2 class="text-center">About Allmaps Arcade</h2>
+<div
+  class="bg-white/75 backdrop-blur-md rounded-2xl shadow-md p-4 lg:p-6 max-w-lg md:max-w-xl prose prose-sm md:prose-base"
+>
+  <h2 class="text-center">About</h2>
   <p>
-    Allmaps Arcade is a game made by Bert Spaan. A part of the development was commissioned by the <a
-      href="https://heritage.tudelft.nl/">Delft University of Technology Library</a
-    >.
+    Allmaps Arcade is a game made by <a href="https://bertspaan.nl">Bert Spaan</a>. A part of the
+    development was commissioned by the
+    <a href="https://heritage.tudelft.nl/">Delft University of Technology Library</a>.
   </p>
   <p>
     The game is part of <a href="https://allmaps.org">Allmaps</a>, an open source project for
@@ -22,13 +24,13 @@
     </li>
 
     <li>
-      <Attribution />. The hosting, styling and rendering of the background map is done by
+      <Attribution />. The hosting, styling and rendering of the background map is done using
       <a href="https://protomaps.com/">Protomaps</a>.
     </li>
 
     <li>
       Built with <a href="https://kit.svelte.dev/">SvelteKit</a>,
-      <a href="https://openlayers.org/">OpenLayers</a>
+      <a href="https://maplibre.org/">MapLibre</a>
       and
       <a href="https://xstate.js.org/">XState</a>. The source code of Allmaps Arcade is available
       <a href="https://github.com/allmaps/arcade">on GitHub</a>.

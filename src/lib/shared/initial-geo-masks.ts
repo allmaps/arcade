@@ -1,4 +1,4 @@
-import type { Polygon as GeoJsonPolygon } from 'geojson'
+import type { GeojsonPolygon } from '@allmaps/types'
 
 export default [
   {
@@ -298,4 +298,4 @@ export default [
       ]
     ]
   }
-] as GeoJsonPolygon[]
+] as GeojsonPolygon[]

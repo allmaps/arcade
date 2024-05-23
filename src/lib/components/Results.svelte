@@ -1,22 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import OLMap from 'ol/Map.js'
-  import View from 'ol/View.js'
-  import VectorTile from 'ol/layer/VectorTile.js'
-  import VectorSource from 'ol/source/Vector.js'
-  import VectorLayer from 'ol/layer/Vector.js'
-  import GeoJSON from 'ol/format/GeoJSON.js'
-  import Feature from 'ol/Feature.js'
+  import { Map, addProtocol } from 'maplibre-gl'
+  import layers from 'protomaps-themes-base'
+  import { Protocol } from 'pmtiles'
 
-  import { applyStyle } from 'ol-mapbox-style'
-
-  import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
+  import { computeBbox, bboxToCenter } from '@allmaps/stdlib'
+  import { WarpedMapLayer } from '@allmaps/maplibre'
 
   import { actor } from '$lib/shared/machines/game.js'
   import { environment } from '$lib/shared/stores/environment.js'
 
-  import Score from './Score.svelte'
+  import Score from '$lib/components/Score.svelte'
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
   import Zoom from '$lib/components/Zoom.svelte'
@@ -24,22 +19,30 @@
   import NorthArrow from '$lib/components/NorthArrow.svelte'
 
   import { rounds } from '$lib/shared/machines/game.js'
-  import { style as protomapsStyle } from '$lib/shared/protomaps.js'
-  import { flyTo } from '$lib/shared/openlayers.js'
-  import { maskStyle, convexHullStyle, getExtent } from '$lib/shared/openlayers.js'
+
+  import { generateEmptyFeatureCollection } from '$lib/shared/geojson.js'
+  import {
+    flyTo,
+    convexHullStyle,
+    maskStyle,
+    makeHandleKeydownWithPanStepAndZoomFraction,
+    getFirstSymbolLayerId
+  } from '$lib/shared/maplibre.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
-  import { PADDING } from '$lib/shared/constants.js'
+  import { PADDING, MAPLIBRE_PADDING } from '$lib/shared/constants.js'
 
-  let ol: OLMap
+  import type { GeoJSONSource, MapLibreEvent } from 'maplibre-gl'
+  import type { GeojsonPolygon, Point } from '@allmaps/types'
 
-  let submissionVectorSource: VectorSource
-  let submissionVectorLayer: VectorLayer<VectorSource>
+  let map: Map
 
-  let convexHullVectorSource: VectorSource
-  let convexHullVectorLayer: VectorLayer<VectorSource>
+  let warpedMapLayer: WarpedMapLayer
 
-  let element: HTMLElement
+  // TODO: get from config
+  const panStep = 150
+
+  let container: HTMLElement
 
   let selectedRoundIndex: number | undefined = undefined
   let showSubmission = true
@@ -60,9 +63,13 @@
 
     if (round.submitted) {
       if (showSubmission) {
-        flyTo(ol.getView(), [getExtent(round.submission.geoMask)])
+        map.fitBounds(computeBbox(round.submission.geoMask), {
+          padding: MAPLIBRE_PADDING
+        })
       } else {
-        flyTo(ol.getView(), [getExtent(round.submission.convexHull), getExtent(round.geoMask)])
+        map.fitBounds(computeBbox(round.geoMask), {
+          padding: MAPLIBRE_PADDING
+        })
       }
     }
 
@@ -70,89 +77,140 @@
   }
 
   onMount(() => {
-    const baseLayer = new VectorTile({ declutter: true, maxZoom: 20 })
-    applyStyle(baseLayer, protomapsStyle)
+    const protocol = new Protocol()
+    addProtocol('pmtiles', protocol.tile)
 
-    const warpedMapSource = new WarpedMapSource()
-    const warpedMapLayer = new WarpedMapLayer({
-      source: warpedMapSource
+    map = new Map({
+      container,
+      style: {
+        version: 8,
+        glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
+        sources: {
+          protomaps: {
+            type: 'vector',
+            tiles: ['https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=ca7652ec836f269a'],
+            maxzoom: 14,
+            attribution:
+              '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
+          }
+        },
+        layers: layers('protomaps', 'light')
+      },
+      center: [0, 0],
+      zoom: 7,
+      maxPitch: 0,
+      preserveDrawingBuffer: true,
+      attributionControl: false
     })
 
-    submissionVectorSource = new VectorSource()
-    submissionVectorLayer = new VectorLayer({
-      source: submissionVectorSource,
-      style: (feature) => maskStyle(feature.get('color')),
-      updateWhileAnimating: true,
-      updateWhileInteracting: true
-    })
+    map.dragRotate.disable()
+    map.touchZoomRotate.disableRotation()
 
-    convexHullVectorSource = new VectorSource()
-    convexHullVectorLayer = new VectorLayer({
-      source: convexHullVectorSource,
-      style: (feature) => convexHullStyle(feature.get('color')),
-      updateWhileAnimating: true,
-      updateWhileInteracting: true
-    })
+    map.on('load', () => {
+      const firstSymbolLayerId = getFirstSymbolLayerId(map)
 
-    for (const round of $rounds) {
-      if (round.submitted) {
-        warpedMapSource.addGeoreferencedMap(round.map)
+      map.addSource('submission', {
+        type: 'geojson',
+        data: generateEmptyFeatureCollection()
+      })
 
-        const submissionFeature = new Feature({
-          geometry: new GeoJSON().readGeometry(round.submission.geoMask, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857'
-          })
-        })
+      map.addSource('convex-hull', {
+        type: 'geojson',
+        data: generateEmptyFeatureCollection()
+      })
 
-        const convexHullFeature = new Feature({
-          geometry: new GeoJSON().readGeometry(round.submission.convexHull, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857'
-          })
-        })
+      map.addLayer(
+        {
+          id: 'submission',
+          type: 'line',
+          source: 'submission',
+          ...maskStyle(['get', 'color'])
+        },
+        firstSymbolLayerId
+      )
 
-        submissionFeature.set('color', round.colors.color)
-        convexHullFeature.set('color', round.colors.convexHullColor)
+      map.addLayer(
+        {
+          id: 'convex-hull',
+          type: 'fill',
+          source: 'convex-hull',
+          ...convexHullStyle(['get', 'color'])
+        },
+        firstSymbolLayerId
+      )
 
-        submissionVectorSource.addFeature(submissionFeature)
-        convexHullVectorSource.addFeature(convexHullFeature)
+      warpedMapLayer = new WarpedMapLayer()
+      map.addLayer(warpedMapLayer, firstSymbolLayerId)
+
+      const geoMaskPolygons: GeojsonPolygon[] = []
+      const convexHullPolygons: GeojsonPolygon[] = []
+
+      for (const round of $rounds) {
+        if (round.submitted) {
+          warpedMapLayer.addGeoreferencedMap(round.map)
+
+          geoMaskPolygons.push(round.submission.geoMask)
+          convexHullPolygons.push(round.submission.convexHull)
+        }
       }
-    }
 
-    ol = new OLMap({
-      target: element,
-      // @ts-ignore
-      layers: [baseLayer, convexHullVectorLayer, warpedMapLayer, submissionVectorLayer],
-      controls: [],
-      view: new View({
-        center: [0, 0],
-        maxZoom: 24,
-        zoom: 2,
-        padding: PADDING,
-        enableRotation: false
-      }),
-      keyboardEventTarget: element
+      const submissionSource = map.getSource('submission') as GeoJSONSource
+      submissionSource.setData({
+        type: 'FeatureCollection',
+        features: geoMaskPolygons.map((geoMask, index) => ({
+          type: 'Feature',
+          geometry: geoMask,
+          properties: {
+            index,
+            color: $rounds[index].colors.color
+          }
+        }))
+      })
+
+      const convexHullSource = map.getSource('convex-hull') as GeoJSONSource
+      convexHullSource.setData({
+        type: 'FeatureCollection',
+        features: convexHullPolygons.map((convexHull, index) => ({
+          type: 'Feature',
+          geometry: convexHull,
+          properties: {
+            index,
+            color: $rounds[index].colors.convexHullColor
+          }
+        }))
+      })
+
+      // nu fit bounds
+
+      actor.send({
+        type: 'SET_MAP_KEYBOARD_TARGET',
+        element: map.getCanvas(),
+        library: 'maplibre'
+      })
     })
 
-    ol.getView().fit(convexHullVectorSource.getExtent())
+    // actor.send({
+    //   type: 'SET_OL_MAP',
+    //   ol
+    // })
 
-    actor.send({
-      type: 'SET_OL_MAP',
-      ol
-    })
+    // MapLibre's regular keyboard handler rounds the zoom level
+    // when zooming with the keyboard. Override the keydown
+    // handler to prevent this.
+    // @ts-expect-error: MapLibre typings are incomplete
+    map.keyboard.keydown = makeHandleKeydownWithPanStepAndZoomFraction(panStep)
 
-    element.focus()
+    // element.focus()
 
     return () => {
-      warpedMapLayer.dispose()
-      warpedMapSource.dispose()
+      // TODO: add function to @allmaps/maplibre
+      // warpedMapLayer.dispose()
     }
   })
 </script>
 
 <div class="w-full h-full relative">
-  <div bind:this={element} id="ol-map" class="w-full h-full ring-0" tabindex="-1" />
+  <div bind:this={container} class="w-full h-full ring-0" tabindex="-1" />
   <ol class="absolute top-0 h-full flex flex-col justify-center">
     {#each $rounds as round, index}
       {#if round.submitted}
@@ -165,7 +223,7 @@
 </div>
 
 <Footer
-  ><div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
+  ><div class="w-full grid grid-cols-[1fr_max-content_1fr] items-center place-items-end gap-2">
     <div class="grid grid-flow-col gap-2 self-center">
       <Button
         button={$environment.getButton('toggle')}
