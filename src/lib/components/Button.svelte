@@ -16,7 +16,6 @@
   export let timeout = 0
   export let disabled = false
 
-  let touch = false
   let toggled = false
 
   let timeoutId: number
@@ -106,8 +105,10 @@
 <svelte:document on:keypress={handleKeypress} on:keydown={handleKeydown} on:keyup={handleKeyup} />
 
 <Tooltip.Root openDelay={2000}>
-  <Tooltip.Trigger>
+  <Tooltip.Trigger asChild let:builder>
     <button
+      use:builder.action
+      {...builder}
       bind:this={element}
       type="button"
       on:mousedown={handleMousedown}

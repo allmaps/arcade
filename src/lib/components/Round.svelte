@@ -9,7 +9,7 @@
   import Map from '$lib/components/Map.svelte'
   import Zoom from '$lib/components/Zoom.svelte'
   import NorthArrow from '$lib/components/NorthArrow.svelte'
-  import EyeIcon from '$lib/components/EyeIcon.svelte'
+  import ArrowsIcon from '$lib/components/ArrowsIcon.svelte'
   import ScoreLarge from '$lib/components/ScoreLarge.svelte'
 
   import {
@@ -69,6 +69,13 @@
   $: displayImage = $state.matches('round.display.image')
   $: displayMap = $state.matches('round.display.map')
 
+  $: loading = $state.matches('round.progress.loading')
+  $: intro = $state.matches('round.progress.intro')
+
+  $: showLargeRoundScore =
+    $state.matches('round.progress.submitted.animating') ||
+    $state.matches('round.progress.submitted.score')
+
   $: canSubmit = ($currentRound as LoadedRound)?.canSubmit || false
 
   $: {
@@ -82,9 +89,14 @@
   }
 
   function handleTransition(snapshot: Snapshot) {
+    if (snapshot.matches('round.progress.submitted')) {
+      // stopTimer()
+      submitted = true
+    }
+
     if (snapshot.matches('round.progress.submitted.animating')) {
       stopTimer()
-      submitted = true
+      // submitted = true
       if ($currentRound?.submitted) {
         found = $currentRound.submission?.found
       }
@@ -154,16 +166,20 @@
 </script>
 
 <div class="w-full h-full flex flex-col items-center justify-center {bgClass}">
-  {#if $state.matches('round.progress.loading') || $state.matches('round.progress.intro')}
+  {#if loading || intro}
     <div class="w-full h-full">
-      {#if $state.matches('round.progress.intro')}
-        <div bind:this={containerImage} class="absolute w-full h-full left-0 top-0">
+      {#if intro}
+        <div
+          bind:this={containerImage}
+          in:fade={{ duration: 1000 }}
+          class="absolute w-full h-full left-0 top-0"
+        >
           <Image bind:this={image} on:ready={handleImageReady} />
         </div>
       {/if}
 
       {#if !ready}
-        <div out:fade={{ duration: 300 }} class="absolute w-full h-full top-0 {bgClass}">
+        <div class="absolute w-full h-full top-0 {bgClass}">
           <RoundLoading
             annotationLoading={!annotationReady}
             imageLoading={!imageReady}
@@ -213,13 +229,24 @@
       </div>
     </div>
     {#if submitted}
-      {#if $currentRound?.submitted && ($state.matches('round.progress.submitted.animating') || $state.matches('round.progress.submitted.score'))}
+      <!-- {#if showLargeRoundScore}
+        <div transition:fade={{ duration: 2000 }} class="absolute top-0 text-xl">KOEEEEEK</div>
+      {/if} -->
+
+      <!-- <div
+        transition:fade={{ duration: 2000 }}
+        class="absolute w-full h-full top-0 left-0 flex justify-center items-center pointer-events-none"
+      >
+        <ScoreLarge round={$currentRound} {found} />
+      </div> -->
+
+      {#if $currentRound?.submitted && showLargeRoundScore}
         <div
+          in:fade={{ duration: 500 }}
+          out:fade={{ duration: 150 }}
           class="absolute w-full h-full top-0 left-0 flex justify-center items-center pointer-events-none"
         >
-          <div transition:fade={{ duration: 200 }}>
-            <ScoreLarge round={$currentRound} {found} />
-          </div>
+          <ScoreLarge round={$currentRound} {found} />
         </div>
       {/if}
       <Footer>
@@ -229,7 +256,7 @@
               button={$environment.getButton('toggle')}
               verb="show submission"
               on:toggleStart={handleToggleSubmissionStart}
-              on:toggleEnd={handleToggleSubmissionEnd}><EyeIcon /></Button
+              on:toggleEnd={handleToggleSubmissionEnd}><ArrowsIcon /></Button
             >
             <Zoom />
           </div>
@@ -261,7 +288,7 @@
               button={$environment.getButton('toggle')}
               verb="toggle image"
               on:toggleStart={handleToggleImageStart}
-              on:toggleEnd={handleToggleImageEnd}><EyeIcon /></Button
+              on:toggleEnd={handleToggleImageEnd}><ArrowsIcon /></Button
             >
             <Zoom />
           </div>

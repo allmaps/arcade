@@ -2,10 +2,10 @@
   import { onMount } from 'svelte'
 
   import { Map, addProtocol } from 'maplibre-gl'
-  import layers from 'protomaps-themes-base'
+  import getProtomapsTheme from 'protomaps-themes-base'
   import { Protocol } from 'pmtiles'
 
-  import { computeBbox, bboxToCenter } from '@allmaps/stdlib'
+  import { combineBboxes, computeBbox } from '@allmaps/stdlib'
   import { WarpedMapLayer } from '@allmaps/maplibre'
 
   import { actor } from '$lib/shared/machines/game.js'
@@ -15,14 +15,13 @@
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
   import Zoom from '$lib/components/Zoom.svelte'
-  import EyeIcon from '$lib/components/EyeIcon.svelte'
+  import ArrowsIcon from '$lib/components/ArrowsIcon.svelte'
   import NorthArrow from '$lib/components/NorthArrow.svelte'
 
   import { rounds } from '$lib/shared/machines/game.js'
 
   import { generateEmptyFeatureCollection } from '$lib/shared/geojson.js'
   import {
-    flyTo,
     convexHullStyle,
     maskStyle,
     makeHandleKeydownWithPanStepAndZoomFraction,
@@ -30,10 +29,10 @@
   } from '$lib/shared/maplibre.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
-  import { PADDING, MAPLIBRE_PADDING } from '$lib/shared/constants.js'
+  import { MAPLIBRE_PADDING } from '$lib/shared/constants.js'
 
-  import type { GeoJSONSource, MapLibreEvent } from 'maplibre-gl'
-  import type { GeojsonPolygon, Point } from '@allmaps/types'
+  import type { GeoJSONSource } from 'maplibre-gl'
+  import type { GeojsonPolygon, Bbox } from '@allmaps/types'
 
   let map: Map
 
@@ -47,12 +46,16 @@
   let selectedRoundIndex: number | undefined = undefined
   let showSubmission = true
 
-  function handleShowRounds() {
+  function handleShowRounds(newSelectedRoundIndex?: number) {
     resetLastInteraction()
-    if (selectedRoundIndex === undefined) {
-      selectedRoundIndex = 0
-    } else if (showSubmission) {
-      selectedRoundIndex = (selectedRoundIndex + 1) % $rounds.length
+    if (newSelectedRoundIndex !== undefined) {
+      selectedRoundIndex = newSelectedRoundIndex % $rounds.length
+    } else {
+      if (selectedRoundIndex === undefined) {
+        selectedRoundIndex = 0
+      } else if (showSubmission) {
+        selectedRoundIndex = (selectedRoundIndex + 1) % $rounds.length
+      }
     }
 
     const round = $rounds[selectedRoundIndex]
@@ -94,7 +97,7 @@
               '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
           }
         },
-        layers: layers('protomaps', 'light')
+        layers: getProtomapsTheme('protomaps', 'light')
       },
       center: [0, 0],
       zoom: 7,
@@ -140,10 +143,14 @@
       )
 
       warpedMapLayer = new WarpedMapLayer()
+      // @ts-expect-error: Incorrect MapLibre typings
+
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
 
       const geoMaskPolygons: GeojsonPolygon[] = []
       const convexHullPolygons: GeojsonPolygon[] = []
+
+      let bbox: Bbox | undefined
 
       for (const round of $rounds) {
         if (round.submitted) {
@@ -151,6 +158,8 @@
 
           geoMaskPolygons.push(round.submission.geoMask)
           convexHullPolygons.push(round.submission.convexHull)
+
+          bbox = bbox ? combineBboxes(bbox, computeBbox(round.geoMask)) : computeBbox(round.geoMask)
         }
       }
 
@@ -179,6 +188,10 @@
           }
         }))
       })
+
+      if (bbox) {
+        map.fitBounds(bbox)
+      }
 
       // nu fit bounds
 
@@ -215,7 +228,9 @@
     {#each $rounds as round, index}
       {#if round.submitted}
         <li class="p-4">
-          <Score {round} border={selectedRoundIndex === index} />
+          <button on:click={() => handleShowRounds(index)}>
+            <Score {round} border={selectedRoundIndex === index} />
+          </button>
         </li>
       {/if}
     {/each}
@@ -228,9 +243,9 @@
       <Button
         button={$environment.getButton('toggle')}
         verb="toggle rounds"
-        on:click={handleShowRounds}
+        on:click={() => handleShowRounds()}
       >
-        <EyeIcon />
+        <ArrowsIcon />
       </Button>
       <Zoom />
     </div>
@@ -240,7 +255,7 @@
         verb="start new game"
         on:click={() => actor.send({ type: 'NEXT' })}
       >
-        Start new game
+        New game
       </Button>
     </div>
     <div class="place-self-end">

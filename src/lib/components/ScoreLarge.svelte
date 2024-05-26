@@ -20,11 +20,11 @@
 <div>
   <div
     style="--color: {round.colors.color}"
-    class="score shadow-md transition-all font-bold bg-white pl-2 pr-6 py-2 rounded-full pointer-events-auto border-8 flex gap-4"
+    class="score shadow-md transition-all min-h-20 font-bold bg-white pl-2 pr-6 py-2 rounded-full pointer-events-auto border-8 flex gap-4"
   >
     <div
-      class="{round.colors.bgClass} {round.colors
-        .textColor} rounded-full px-4 text-white flex items-center justify-center text-xl"
+      class="{round.colors
+        .bgClass} rounded-full px-4 text-white flex items-center justify-center text-xl"
     >
       Round {round.number}
     </div>

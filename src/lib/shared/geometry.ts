@@ -48,6 +48,13 @@ export function coordinatesToSvgPoints(coordinates: Point[]) {
   return coordinates.map((coordinate) => coordinate.join(',')).join(' ')
 }
 
+export function coordinatesToSvgPath(coordinates: Point[]) {
+  return `M ${coordinates[0].join(' ')} L ${coordinates
+    .slice(1)
+    .map((coordinate) => coordinate.join(' '))
+    .join(' L ')} Z`
+}
+
 export function getConvexHull(
   polygon1: GeojsonPolygon,
   polygon2: GeojsonPolygon

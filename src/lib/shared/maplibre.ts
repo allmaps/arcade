@@ -80,6 +80,8 @@ export function makeHandleKeydownWithPanStepAndZoomFraction(panStep: number, zoo
 }
 
 export function flyTo(map: Map, center: LngLatLike, zoom: number, callback?: CallbackFn) {
+  map.stop()
+
   if (callback) {
     function handleMoveend({
       originalEvent
@@ -131,9 +133,9 @@ export function maskStyle(color: DataDrivenPropertyValueSpecification<ColorSpeci
 }
 export function convexHullStyle(color: DataDrivenPropertyValueSpecification<ColorSpecification>) {
   return {
-    transition: {
+    'fill-opacity-transition': {
       duration: 5000,
-      delay: 0
+      delay: 1000
     },
     layout: {},
     paint: {

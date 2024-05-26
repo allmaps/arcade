@@ -13,6 +13,7 @@ import { fetchMap } from '$lib/shared/maps.js'
 import { computeScoreRatios, computeMaxScore, computeScore } from '$lib/shared/score.js'
 import { colorForRounds } from '$lib/shared/colors.js'
 import defaultConfig from '$lib/shared/default-config.js'
+import { getTimeoutSignal } from '$lib/shared/timeout.js'
 
 import {
   failedAnnotationUrls,
@@ -356,9 +357,9 @@ export const machine = createMachine(
 
             if (annotationUrl) {
               try {
-                map = await fetchMap(annotationUrl)
+                map = await fetchMap(annotationUrl, getTimeoutSignal())
                 transformer = new GcpTransformer(map.gcps)
-                imageInfo = await fetchImageInfo(map.resource.id)
+                imageInfo = await fetchImageInfo(map.resource.id, getTimeoutSignal())
 
                 geoMask = transformer.transformToGeoAsGeojson([map.resourceMask])
                 area = getArea(

@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { fade } from 'svelte/transition'
 
   import { Map, addProtocol } from 'maplibre-gl'
-  import layers from 'protomaps-themes-base'
+  import getProtomapsTheme from 'protomaps-themes-base'
   import { Protocol } from 'pmtiles'
 
   import { throttle } from 'lodash-es'
@@ -31,14 +32,15 @@
     makeHandleKeydownWithPanStepAndZoomFraction,
     getFirstSymbolLayerId
   } from '$lib/shared/maplibre.js'
-  // import { ArcadeKeyboardHandler } from '$lib/shared/keyboard-handler.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
   import { computeZoomRatio, computeDistanceRatio } from '$lib/shared/score.js'
 
+  import PerfectScore from '$lib/components/PerfectScore.svelte'
+
   import { PADDING } from '$lib/shared/constants.js'
 
-  import type { GeoJSONSource, MapLibreEvent } from 'maplibre-gl'
+  import type { GeoJSONSource } from 'maplibre-gl'
   import type { GeojsonPolygon, Point } from '@allmaps/types'
 
   import type { LoadedRound, Submission, CallbackFn } from '$lib/shared/types.js'
@@ -63,7 +65,10 @@
   let mapHadFirstInteraction = false
 
   let submitted = false
+  let perfectScore = false
   let submission: Submission | undefined
+
+  let showPerfectScore = false
 
   const geoMask = ($currentRound as LoadedRound).geoMask
 
@@ -113,7 +118,12 @@
     if (submission) {
       const center = submission.center.submission
       const zoom = submission.zoom.submission
-      flyTo(map, center, zoom, callback)
+
+      flyTo(map, center, zoom, () => {
+        // map.setPaintProperty('convex-hull', 'fill-opacity', 0)
+        callback?.()
+      })
+      map.setPaintProperty('convex-hull', 'fill-opacity', 1)
     }
   }
 
@@ -121,7 +131,12 @@
     if (geoMask) {
       const center = getWarpedMapCenter()
       const zoom = getWarpedMapZoom()
-      flyTo(map, center, zoom, callback)
+
+      flyTo(map, center, zoom, () => {
+        map.setPaintProperty('convex-hull', 'fill-opacity', 0)
+        callback?.()
+      })
+      map.setPaintProperty('convex-hull', 'fill-opacity', 1)
     }
   }
 
@@ -195,7 +210,6 @@
       map.setPaintProperty('convex-hull', 'fill-opacity', 1)
 
       map.off('move', throttledHandleMapmove)
-      map.off('movestart', handleMovestart)
 
       // Add submittedGeoMask to map
       // submittedGeoMask should already been set. Throw error otherwise
@@ -206,15 +220,19 @@
       const submissionSource = map.getSource('submission') as GeoJSONSource
       submissionSource.setData(submittedGeoMask)
 
-      const convexHullSource = map.getSource('convex-hull') as GeoJSONSource
-      convexHullSource.setData(convexHull)
+      if (!perfectScore) {
+        const convexHullSource = map.getSource('convex-hull') as GeoJSONSource
+        convexHullSource.setData(convexHull)
 
-      flyToWarpedMap(() => {
-        actor.send({ type: 'FINISHED' })
-      })
+        flyToWarpedMap(() => {
+          actor.send({ type: 'FINISHED' })
+          map.setPaintProperty('convex-hull', 'fill-opacity', 0)
+        })
+      }
+    }
 
-      // TODO:
-      // ol.getInteractions().clear()
+    if (snapshot.matches('round.progress.submitted.review')) {
+      showPerfectScore = false
     }
   }
 
@@ -275,10 +293,8 @@
   const throttledHandleMapmove = throttle(handleMapmove, 100)
 
   function handleMovestart() {
-    if (!mapHadFirstInteraction) {
-      mapHadFirstInteraction = true
-      actor.send({ type: 'MAP_MOVED' })
-    }
+    mapHadFirstInteraction = true
+    actor.send({ type: 'MAP_MOVED' })
   }
 
   function handleMoveend() {
@@ -301,11 +317,15 @@
 
           if (distanceX < distanceThreshold && distanceY < distanceThreshold) {
             // Perfect score!
+            perfectScore = true
 
             flyToWarpedMap(() => {
-              setTimeout(() => {
-                handleSubmit(true)
-              }, 1000)
+              showPerfectScore = true
+              handleSubmit(true)
+              actor.send({ type: 'FINISHED' })
+              // setTimeout(() => {
+              //   showPerfectScore = false
+              // }, 1500)
             })
 
             // ol.getView().fit(getExtent(geoMask), {
@@ -329,6 +349,9 @@
     const protocol = new Protocol()
     addProtocol('pmtiles', protocol.tile)
 
+    const layers = getProtomapsTheme('protomaps', 'light')
+    // layers[0].paint['background-color'] = $currentRound.colors.convexHullColor
+
     map = new Map({
       container,
       style: {
@@ -343,7 +366,7 @@
               '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
           }
         },
-        layers: layers('protomaps', 'light')
+        layers
       },
       center: $configuration.map.center as Point,
       zoom: 7,
@@ -375,16 +398,6 @@
 
       map.addLayer(
         {
-          id: 'submission',
-          type: 'line',
-          source: 'submission',
-          ...maskStyle(strokeColor)
-        },
-        firstSymbolLayerId
-      )
-
-      map.addLayer(
-        {
           id: 'convex-hull',
           type: 'fill',
           source: 'convex-hull',
@@ -394,7 +407,18 @@
       )
 
       warpedMapLayer = new WarpedMapLayer()
+      // @ts-expect-error: Incorrect MapLibre typings
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
+
+      map.addLayer(
+        {
+          id: 'submission',
+          type: 'line',
+          source: 'submission',
+          ...maskStyle(strokeColor)
+        },
+        firstSymbolLayerId
+      )
 
       warpedMapLayer.setOpacity(0)
       warpedMapLayer.addGeoreferencedMap($currentRound.map)
@@ -470,6 +494,16 @@
           points={coordinatesToSvgPoints(svgCoordinates)}
         />
       </svg>
+    </div>
+  {/if}
+  {#if geoMask && contentBoxSize && showPerfectScore && $currentRound}
+    <div in:fade={{ duration: 500 }} out:fade={{ duration: 150 }}>
+      <PerfectScore
+        color={$currentRound.colors.color}
+        width={contentBoxSize.inlineSize}
+        height={contentBoxSize.blockSize}
+        coordinates={svgCoordinates}
+      />
     </div>
   {/if}
 </div>

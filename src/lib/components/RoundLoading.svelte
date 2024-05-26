@@ -9,39 +9,69 @@
   export let annotationLoading: boolean
   export let imageLoading: boolean
 
+  let loadingPercentage = 0
+  let loadingText = 'Loading map'
+
   let minLoadingReady = false
 
   const showAttribution = $currentRoundIndex === 0
   let attributionReady = false
+
+  const firstStepPercentage = Math.random() * 10 + 10
+  const firstStapAfterMs = Math.random() * 500 + 500
+  const secondStepPercentage = Math.random() * 20 + 30
 
   const dispatch = createEventDispatcher()
 
   setTimeout(() => (minLoadingReady = true), MIN_LOADING_MS)
   setTimeout(() => (attributionReady = true), ATTRIBUTION_MIN_MS)
 
+  setTimeout(
+    () => (loadingPercentage = Math.max(firstStepPercentage, loadingPercentage)),
+    firstStapAfterMs
+  )
+
   $: {
+    if (!annotationLoading) {
+      loadingText = 'Loading image'
+      loadingPercentage = Math.max(secondStepPercentage, loadingPercentage)
+    }
+
     if (
       !annotationLoading &&
       !imageLoading &&
       minLoadingReady &&
       (!showAttribution || attributionReady)
     ) {
-      dispatch('ready')
+      loadingPercentage = 100
+      setTimeout(() => dispatch('ready'), 150)
     }
   }
 </script>
 
-<div
-  class="w-full h-full flex flex-col items-center justify-center gap-4 {$currentRound?.colors
-    .textColor}"
->
-  <h1 class="text-xl font-bold">Round {$currentRoundNumber}</h1>
+<div class="w-full h-full flex flex-col items-center justify-center gap-4">
+  <div
+    class="flex flex-row font-bold items-center justify-center min-h-16 pl-2 pr-6 py-2 gap-4 rounded-full bg-white p-2"
+  >
+    <h2
+      class="text-xl rounded-full h-full px-4 {$currentRound?.colors
+        .bgClass} text-white rounded-full px-4 flex items-center justify-center text-xl"
+    >
+      Round {$currentRoundNumber}
+    </h2>
 
-  <h2>Get ready!</h2>
+    <h3>Get ready!</h3>
+  </div>
 
-  <!-- {#if $currentRound && $currentRound.loaded}
-    <div>{$currentRound.area}, {formatScore($configuration, $currentRound.maxScore)}</div>
-  {/if} -->
+  <div
+    class="bg-white/20 rounded-full w-48 p-1 relative overflow-hidden flex items-center justify-center"
+  >
+    <div
+      class="absolute left-0 h-full transition-all bg-white/35"
+      style:width={`${loadingPercentage}%`}
+    ></div>
+    <div class="relative text-sm">{loadingText}…</div>
+  </div>
 </div>
 
 {#if showAttribution}
@@ -49,3 +79,6 @@
     <Attribution />
   </div>
 {/if}
+
+<style scoped>
+</style>

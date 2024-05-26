@@ -9,8 +9,10 @@
   import TotalScore from '$lib/components/TotalScore.svelte'
 </script>
 
+<!-- grid-cols-3 -->
+
 <header
-  class="absolute p-3 md:p-4 lg:p-6 z-10 grid grid-cols-3 w-full pointer-events-none place-items-center gap-4"
+  class="absolute p-3 md:p-4 lg:p-6 z-10 grid grid-cols-[1fr_max-content_1fr] w-full pointer-events-none place-items-center gap-4"
 >
   <div class="justify-self-start">
     {#if $state.matches('round')}
@@ -38,7 +40,9 @@
       <div
         class="shadow-sm font-bold bg-white px-3 py-1 sm:px-6 sm:py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
       >
-        {formatScore($configuration, $score)} Points
+        {formatScore($configuration, $score)} <span class="hidden sm:inline">Points</span><span
+          class="sm:hidden">Pts</span
+        >
       </div>
     {/if}
   </div>
