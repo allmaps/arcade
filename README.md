@@ -1,65 +1,71 @@
-# Allmaps Arcade
+# Allmaps Arcade 🕹
 
-https://arcade.allmaps.org
+**Put the historical maps back where they belong! Be quick. The faster you are, the more points you'll earn.**
 
-- Achtergrondkleur MapLibre
-- Show what's loading on Get Ready screen
-- misschien toch niet score van oppervlakte laten afhangen
-- Make sure map focus works on Firefox
-- No convex hull for perfect score
-- Fix WebGL context lost / memory issues. Are they caused by Allmaps or by OL + vector tiles?
-- Timeout for loading annotation and IIIF image tiles
-- _Explode_ mask animation on perfect score
-- Add heading text to ScoreLarge
-- In Results view, perfect score now twice, how to improve? add property to submission: found: boolean
-- Show round score in header when no longer showing in center
-- Improve `<kbd>` styling
-- Also button with icon in Explain
-- Icons for all buttons (https://phosphoricons.com/ and https://github.com/haruaki07/phosphor-svelte)
-- Titles in explain screen
-- Fade-in convex hulls
-- Show area overlap in Score.
-- Single Footer in Round.svelte
-- Transitions between all views, also inside Round
-- Fixed max points per game, load 5 annotations before start????
-- Loading.svelte:
-  - Show max points, show area
-  - animate mask!
-- Only allow submit if map has moved
-- Use real geoMasks in title screen
-- Calculate single 3D distance, instead of zoom difference + 2D distance
-- Add 3 difficulty levels
-  - Easy: current settings
-  - Medium: don't show warped map
-  - Hard: can't look at map again
-- Add swipe/pinch gestures to Title screen
-- Make sure minZoom/maxZoom/currentZoom is still correct after window resize
-- Only show OSM attribution on first game
-- Update README, add instructions for running locally
-- zoeken # - https://annotations.allmaps.org/images/f3c00c845d32346b
+Play Allmaps Arcade on https://arcade.allmaps.org. 🕹🎮
+
+## About
+
+Allmaps Arcade is a game made by <a href="https://bertspaan.nl">Bert Spaan</a>.
+The development of the initial version was commissioned by the [Delft University of Technology Library](https://heritage.tudelft.nl/).
+
+The game is part of <a href="https://allmaps.org">Allmaps</a>, an open source project for
+curating, georeferencing and exploring IIIF maps.
+
+Credits:
+
+- Concept & design: [Luuk van de Ven](https://luukvandeven.nl), [Bert Spaan](https://bertspaan.nl) and [Jules Schoonman](https://www.tudelft.nl/en/staff/j.a.schoonman)
+- Background map data © [OpenStreetMap](https://www.openstreetmap.org/about/). [Protomaps](https://protomaps.com/) is used to host, style and render the background
+  map.
+- Built with [SvelteKit](https://kit.svelte.dev/), [MapLibre](https://maplibre.org/) and [XState](https://xstate.js.org/).
+- Georeferenced maps come from the collections of [partner institutions](https://allmaps.org/#partners) of the Allmaps project as well as from other libraries, archives and museums with [IIIF map collections](https://github.com/allmaps/iiif-map-collections).
+
+## Arcade cabinet
+
+<p float="left">
+  <img width="49%" alt="Allmaps Arcade cabinet, photo 1" src="images/arcade-cabinet-1.jpg">
+  <img width="49%" alt="Allmaps Arcade cabinet, photo 2" src="images/arcade-cabinet-2.jpg">
+</p>
+
+![Allmaps Arcade cabinet, photo 3](images/arcade-cabinet-3.jpg)
+
+## Roadmap
+
+We're working on adding the following features to Allmaps Arcade:
+
+- Highscores list
+- Show metadata about map (title, description) as well as links to the holding institution
+- Share results, generate image after each game that you can share, with score and links to maps.
+- Publish instructions how to build cabinet on GitHub
+- Add easy/medium/hard difficulty levels
 
 ## Running locally
 
-in conjunction with the Allmaps monorepo, you can run
-pnpm run watch
+Install dependencies:
 
-and
+    pnpm install
 
-    pnpm link ../allmaps/packages/annotation
-    pnpm link ../allmaps/packages/openlayers
-    pnpm link ../allmaps/packages/iiif-parser
-    pnpm link ../allmaps/packages/tailwind
-    pnpm link ../allmaps/packages/transform
-    pnpm link ../allmaps/packages/ui
-    pnpm link ../allmaps/packages/stdlib
+Run development server:
 
-## I-PAC2
+    pnpm run dev
 
-- https://www.ultimarc.com/control-interfaces/i-pacs/i-pac2/
+## Cabinet version
 
-Keys:
+The cabinet version of Allmaps Arcade is designed to run offline. If an internet connection is available at startup, it builds the latest version of Allmaps Arcade from GitHub and downloads new maps. The computer in the cabinet runs a web server that serves the following files:
 
-- 1 SW 5 Z
-- 1 SW 6 X
-- 1 SW 7 C
-- 1 SW 8 V
+- A Protomaps `pmtiles` files of the whole world.
+- A copy of the Georeference Annotations listed in [`config.yaml`](static/config.yaml).
+- A copy of the IIIF image tiles of each image specified in the Georeference Annotations.
+
+### Joystick and buttons
+
+The Allmaps Arcade cabinet uses the [I-PAC2 USB interface](https://www.ultimarc.com/control-interfaces/i-pacs/i-pac2/) the joystick and buttons to keyboard keys.
+
+The following pins and keys are used:
+
+| Pin    | Key |
+| :----- | :-- |
+| 1 SW 5 | Z   |
+| 1 SW 6 | X   |
+| 1 SW 7 | C   |
+| 1 SW 8 | V   |
