@@ -13,7 +13,7 @@ export const GAME_TIMEOUT_ENABLED = false
 export const GAME_TIMEOUT_MS = 1.5 * 60 * 1_000
 export const GAME_TIMEOUT_WARNING_MS = 30 * 1_000
 
-export const MIN_LOADING_MS = 2 * 1_000
+export const MIN_LOADING_MS = 1 * 1_000
 
 // OpenStreetMap atrribution should be shown at least 5 seconds
 // https://osmfoundation.org/wiki/Licence/Attribution_Guidelines#Interactive_maps
