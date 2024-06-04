@@ -86,7 +86,7 @@
     $state.matches('round.progress.submitted.animating') ||
     $state.matches('round.progress.submitted.score')
 
-  $: canSubmit = ($currentRound as LoadedRound)?.canSubmit || false
+  $: canSubmit = (($currentRound as LoadedRound)?.canSubmit || false) && displayMap
 
   $: {
     if ($keyboardTarget) {
