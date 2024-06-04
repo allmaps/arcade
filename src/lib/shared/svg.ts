@@ -1,13 +1,13 @@
 import turfRewind from '@turf/rewind'
 import { geoProjection, geoPath } from 'd3-geo'
 
-import type { Polygon as GeoJsonPolygon } from 'geojson'
+import type { Point, GeojsonPolygon } from '@allmaps/types'
 
 const mercator = geoProjection((x, y) => [x, Math.log(Math.tan(Math.PI / 4 + y / 2))])
 
 const path = geoPath().projection(mercator)
 
-export function geometryToPath(polygon: GeoJsonPolygon) {
+export function geometryToPath(polygon: GeojsonPolygon) {
   turfRewind(polygon, { mutate: true, reverse: true })
 
   const width = 100
@@ -20,7 +20,7 @@ export function geometryToPath(polygon: GeoJsonPolygon) {
   const scale =
     0.95 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height)
 
-  const translate: [number, number] = [
+  const translate: Point = [
     (width - scale * (bounds[1][0] + bounds[0][0])) / 2,
     (height - scale * (bounds[1][1] + bounds[0][1])) / 2
   ]

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Overlay from '$lib/components/Overlay.svelte'
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
 
@@ -8,17 +9,21 @@
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
 </script>
 
-<div class="w-full h-full flex flex-col items-center justify-center gap-4 bg-red">
-  <h1 class="text-xl font-bold">Error!</h1>
-  <div>{$error && $error.message}</div>
-</div>
+<div class="absolute w-full h-full p-4 lg:p-8 bg-red text-white flex justify-center lg:text-lg">
+  <Overlay>
+    <div class="flex flex-col items-center gap-4">
+      <h1 class="text-xl font-bold">Error!</h1>
+      <div>{$error && $error.message}</div>
+    </div>
 
-<Footer>
-  <Button
-    timeout={AUTO_ADVANCE_MS}
-    verb="reset"
-    button={$environment.getButton('submit')}
-    on:click={() => actor.send({ type: 'NEXT' })}
-    >Reset
-  </Button>
-</Footer>
+    <Footer slot="footer">
+      <Button
+        timeout={AUTO_ADVANCE_MS}
+        verb="reset"
+        button={$environment.getButton('submit')}
+        on:click={() => actor.send({ type: 'NEXT' })}
+        >Reset
+      </Button>
+    </Footer>
+  </Overlay>
+</div>

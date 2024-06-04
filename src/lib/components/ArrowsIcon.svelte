@@ -2,6 +2,6 @@
 
 <style scoped>
   div {
-    background-image: url($lib/images/eye.svg);
+    background-image: url($lib/images/arrows.svg);
   }
 </style>

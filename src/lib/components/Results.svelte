@@ -1,192 +1,318 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import OLMap from 'ol/Map.js'
-  import View from 'ol/View.js'
-  import VectorTile from 'ol/layer/VectorTile.js'
-  import VectorSource from 'ol/source/Vector.js'
-  import VectorLayer from 'ol/layer/Vector.js'
-  import GeoJSON from 'ol/format/GeoJSON.js'
-  import Feature from 'ol/Feature.js'
+  import { Map, addProtocol } from 'maplibre-gl'
+  import getProtomapsTheme from 'protomaps-themes-base'
+  import { Protocol } from 'pmtiles'
 
-  import { applyStyle } from 'ol-mapbox-style'
-
-  import { WarpedMapSource, WarpedMapLayer } from '@allmaps/openlayers'
+  import { computeBbox } from '@allmaps/stdlib'
+  import { WarpedMapLayer } from '@allmaps/maplibre'
 
   import { actor } from '$lib/shared/machines/game.js'
   import { environment } from '$lib/shared/stores/environment.js'
 
-  import Score from './Score.svelte'
+  import Overlay from '$lib/components/Overlay.svelte'
+  import Score from '$lib/components/Score.svelte'
+  import TotalScore from '$lib/components/TotalScore.svelte'
+  import Header from '$lib/components/Header.svelte'
   import Footer from '$lib/components/Footer.svelte'
+  import Buttons from '$lib/components/Buttons.svelte'
   import Button from '$lib/components/Button.svelte'
   import Zoom from '$lib/components/Zoom.svelte'
-  import EyeIcon from '$lib/components/EyeIcon.svelte'
-  import NorthArrow from '$lib/components/NorthArrow.svelte'
+  import ArrowsIcon from '$lib/components/ArrowsIcon.svelte'
 
-  import { rounds } from '$lib/shared/machines/game.js'
-  import { style as protomapsStyle } from '$lib/shared/protomaps.js'
-  import { flyTo } from '$lib/shared/openlayers.js'
-  import { maskStyle, convexHullStyle, getExtent } from '$lib/shared/openlayers.js'
+  import { rounds, configuration } from '$lib/shared/machines/game.js'
+  import { RESULTS_ROUND_MS } from '$lib/shared/constants.js'
+  import { generateEmptyFeatureCollection } from '$lib/shared/geojson.js'
+  import {
+    flyTo,
+    convexHullStyle,
+    maskStyle,
+    makeHandleKeydownWithPanStepAndZoomFraction,
+    getFirstSymbolLayerId
+  } from '$lib/shared/maplibre.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
-  import { PADDING } from '$lib/shared/constants.js'
+  import { MAPLIBRE_PADDING } from '$lib/shared/constants.js'
 
-  let ol: OLMap
+  import type { GeoJSONSource } from 'maplibre-gl'
+  import type { GeojsonPolygon, Point } from '@allmaps/types'
 
-  let submissionVectorSource: VectorSource
-  let submissionVectorLayer: VectorLayer<VectorSource>
+  import type { SubmittedRound } from '$lib/shared/types.js'
 
-  let convexHullVectorSource: VectorSource
-  let convexHullVectorLayer: VectorLayer<VectorSource>
+  let map: Map
 
-  let element: HTMLElement
+  let warpedMapLayer: WarpedMapLayer
 
-  let selectedRoundIndex: number | undefined = undefined
-  let showSubmission = true
+  const firstRound = $rounds[0] as SubmittedRound
 
-  function handleShowRounds() {
-    resetLastInteraction()
-    if (selectedRoundIndex === undefined) {
-      selectedRoundIndex = 0
-    } else if (showSubmission) {
-      selectedRoundIndex = (selectedRoundIndex + 1) % $rounds.length
+  // TODO: get from config
+  const panStep = 150
+
+  let container: HTMLElement
+
+  type SelectedRound = {
+    index: number
+    view: 'submission' | 'warpedMap'
+  }
+
+  let selectedRound: SelectedRound = {
+    index: 0,
+    view: 'warpedMap'
+  }
+
+  let intervalId: number | undefined
+
+  function handleShowRounds(newSelectedRoundIndex?: number) {
+    if (newSelectedRoundIndex !== undefined) {
+      clearInterval(intervalId)
     }
 
-    const round = $rounds[selectedRoundIndex]
+    resetLastInteraction()
+    if (newSelectedRoundIndex !== undefined) {
+      selectedRound = {
+        index: newSelectedRoundIndex % $rounds.length,
+        view: 'warpedMap'
+      }
+    } else {
+      if (
+        selectedRound.view === 'warpedMap' &&
+        !($rounds[selectedRound.index] as SubmittedRound).submission.found
+      ) {
+        selectedRound = {
+          index: selectedRound.index,
+          view: 'submission'
+        }
+      } else {
+        selectedRound = {
+          index: (selectedRound.index + 1) % $rounds.length,
+          view: 'warpedMap'
+        }
+      }
+    }
+
+    const round = $rounds[selectedRound.index]
 
     if (!round) {
       return
     }
 
     if (round.submitted) {
-      if (showSubmission) {
-        flyTo(ol.getView(), [getExtent(round.submission.geoMask)])
+      if (selectedRound.view === 'submission' && !round.submission.found) {
+        map.fitBounds(computeBbox(round.submission.geoMask), {
+          padding: MAPLIBRE_PADDING
+        })
       } else {
-        flyTo(ol.getView(), [getExtent(round.submission.convexHull), getExtent(round.geoMask)])
+        map.fitBounds(computeBbox(round.geoMask), {
+          padding: MAPLIBRE_PADDING
+        })
       }
     }
-
-    showSubmission = !showSubmission
   }
 
   onMount(() => {
-    const baseLayer = new VectorTile({ declutter: true, maxZoom: 20 })
-    applyStyle(baseLayer, protomapsStyle)
+    const protocol = new Protocol()
+    addProtocol('pmtiles', protocol.tile)
 
-    const warpedMapSource = new WarpedMapSource()
-    const warpedMapLayer = new WarpedMapLayer({
-      source: warpedMapSource
+    map = new Map({
+      container,
+      style: {
+        version: 8,
+        glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
+        sources: {
+          protomaps: {
+            type: 'vector',
+            tiles: ['https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=ca7652ec836f269a'],
+            maxzoom: 14,
+            attribution:
+              '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
+          }
+        },
+        layers: getProtomapsTheme('protomaps', 'light')
+      },
+      center: $configuration.map.center as Point,
+      zoom: $configuration.map.initialZoom,
+      maxPitch: 0,
+      preserveDrawingBuffer: true,
+      attributionControl: false
     })
 
-    submissionVectorSource = new VectorSource()
-    submissionVectorLayer = new VectorLayer({
-      source: submissionVectorSource,
-      style: (feature) => maskStyle(feature.get('color')),
-      updateWhileAnimating: true,
-      updateWhileInteracting: true
-    })
+    map.dragRotate.disable()
+    map.touchZoomRotate.disableRotation()
 
-    convexHullVectorSource = new VectorSource()
-    convexHullVectorLayer = new VectorLayer({
-      source: convexHullVectorSource,
-      style: (feature) => convexHullStyle(feature.get('color')),
-      updateWhileAnimating: true,
-      updateWhileInteracting: true
-    })
-
-    for (const round of $rounds) {
-      if (round.submitted) {
-        warpedMapSource.addGeoreferencedMap(round.map)
-
-        const submissionFeature = new Feature({
-          geometry: new GeoJSON().readGeometry(round.submission.geoMask, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857'
-          })
-        })
-
-        const convexHullFeature = new Feature({
-          geometry: new GeoJSON().readGeometry(round.submission.convexHull, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857'
-          })
-        })
-
-        submissionFeature.set('color', round.colors.color)
-        convexHullFeature.set('color', round.colors.convexHullColor)
-
-        submissionVectorSource.addFeature(submissionFeature)
-        convexHullVectorSource.addFeature(convexHullFeature)
+    map.on('movestart', (event) => {
+      if (event.originalEvent) {
+        clearInterval(intervalId)
       }
-    }
-
-    ol = new OLMap({
-      target: element,
-      // @ts-ignore
-      layers: [baseLayer, convexHullVectorLayer, warpedMapLayer, submissionVectorLayer],
-      controls: [],
-      view: new View({
-        center: [0, 0],
-        maxZoom: 24,
-        zoom: 2,
-        padding: PADDING,
-        enableRotation: false
-      }),
-      keyboardEventTarget: element
     })
 
-    ol.getView().fit(convexHullVectorSource.getExtent())
+    map.on('load', () => {
+      const firstSymbolLayerId = getFirstSymbolLayerId(map)
 
-    actor.send({
-      type: 'SET_OL_MAP',
-      ol
+      map.addSource('submission', {
+        type: 'geojson',
+        data: generateEmptyFeatureCollection()
+      })
+
+      map.addSource('convex-hull', {
+        type: 'geojson',
+        data: generateEmptyFeatureCollection()
+      })
+
+      map.addLayer(
+        {
+          id: 'submission',
+          type: 'line',
+          source: 'submission',
+          ...maskStyle(['get', 'color'])
+        },
+        firstSymbolLayerId
+      )
+
+      map.addLayer(
+        {
+          id: 'convex-hull',
+          type: 'fill',
+          source: 'convex-hull',
+          ...convexHullStyle(['get', 'color'])
+        },
+        firstSymbolLayerId
+      )
+
+      warpedMapLayer = new WarpedMapLayer()
+
+      map.addLayer(warpedMapLayer, firstSymbolLayerId)
+
+      const geoMaskPolygons: GeojsonPolygon[] = []
+      const convexHullPolygons: GeojsonPolygon[] = []
+
+      for (const round of $rounds) {
+        if (round.submitted) {
+          warpedMapLayer.addGeoreferencedMap(round.map)
+
+          geoMaskPolygons.push(round.submission.geoMask)
+          convexHullPolygons.push(round.submission.convexHull)
+        }
+      }
+
+      const submissionSource = map.getSource('submission') as GeoJSONSource
+      submissionSource.setData({
+        type: 'FeatureCollection',
+        features: geoMaskPolygons.map((geoMask, index) => ({
+          type: 'Feature',
+          geometry: geoMask,
+          properties: {
+            index,
+            color: $rounds[index].colors.color
+          }
+        }))
+      })
+
+      const convexHullSource = map.getSource('convex-hull') as GeoJSONSource
+      convexHullSource.setData({
+        type: 'FeatureCollection',
+        features: convexHullPolygons.map((convexHull, index) => ({
+          type: 'Feature',
+          geometry: convexHull,
+          properties: {
+            index,
+            color: $rounds[index].colors.convexHullColor
+          }
+        }))
+      })
+
+      // if (bbox) {
+      //   firstRound.geoMask
+      // }
+
+      const center = firstRound.submission.center.warpedMap
+      const zoom = firstRound.submission.zoom.warpedMap
+
+      flyTo(map, center, zoom)
+
+      // nu fit bounds
+
+      actor.send({
+        type: 'SET_MAP_KEYBOARD_TARGET',
+        element: map.getCanvas(),
+        library: 'maplibre'
+      })
     })
 
-    element.focus()
+    // actor.send({
+    //   type: 'SET_OL_MAP',
+    //   ol
+    // })
+
+    // MapLibre's regular keyboard handler rounds the zoom level
+    // when zooming with the keyboard. Override the keydown
+    // handler to prevent this.
+    // @ts-expect-error: MapLibre typings are incomplete
+    map.keyboard.keydown = makeHandleKeydownWithPanStepAndZoomFraction(panStep)
+
+    // element.focus()
+
+    intervalId = setInterval(() => {
+      handleShowRounds()
+    }, RESULTS_ROUND_MS)
 
     return () => {
-      warpedMapLayer.dispose()
-      warpedMapSource.dispose()
+      // TODO: add function to @allmaps/maplibre
+      // warpedMapLayer.dispose()
+      clearInterval(intervalId)
     }
   })
 </script>
 
 <div class="w-full h-full relative">
-  <div bind:this={element} id="ol-map" class="w-full h-full ring-0" tabindex="-1" />
-  <ol class="absolute top-0 h-full flex flex-col justify-center">
-    {#each $rounds as round, index}
-      {#if round.submitted}
-        <li class="p-4">
-          <Score {round} border={selectedRoundIndex === index} />
-        </li>
-      {/if}
-    {/each}
-  </ol>
+  <div bind:this={container} class="w-full h-full ring-0" tabindex="-1" />
 </div>
+<!-- class="p-4 gap-4 top-0 h-full grid grid-cols-[repeat(5,_auto)] w-full max-w-full justify-center" -->
+<!-- style:grid-template-columns={`repeat(${$rounds.length}, 1fr)`} -->
+<Overlay>
+  <Header slot="header">
+    <div class="flex flex-col items-center gap-3">
+      <TotalScore />
+      <ol class="md:p-4 gap-2 md:gap-4 top-0 w-full h-full flex flex-row max-w-2xl justify-center">
+        {#each $rounds as round, index}
+          {#if round.submitted}
+            <li class="flex-1 flex justify-center">
+              <button on:click={() => handleShowRounds(index)}>
+                <Score
+                  {round}
+                  border={selectedRound.index === index}
+                  showPoints={selectedRound.index === index}
+                />
+              </button>
+            </li>
+          {/if}
+        {/each}
+      </ol>
+    </div>
+  </Header>
 
-<Footer
-  ><div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
-    <div class="grid grid-flow-col gap-2 self-center">
+  <Footer slot="footer">
+    <Buttons slot="buttons">
       <Button
         button={$environment.getButton('toggle')}
         verb="toggle rounds"
-        on:click={handleShowRounds}
+        on:click={() => {
+          clearInterval(intervalId)
+          handleShowRounds()
+        }}
       >
-        <EyeIcon />
+        <ArrowsIcon />
       </Button>
+
       <Zoom />
-    </div>
-    <div>
-      <Button
-        button={$environment.getButton('submit')}
-        verb="start new game"
-        on:click={() => actor.send({ type: 'NEXT' })}
-      >
-        Start new game
-      </Button>
-    </div>
-    <div class="place-self-end">
-      <NorthArrow />
-    </div>
-  </div></Footer
->
+    </Buttons>
+
+    <Button
+      button={$environment.getButton('submit')}
+      verb="start new game"
+      on:click={() => actor.send({ type: 'NEXT' })}
+    >
+      New game
+    </Button>
+  </Footer>
+</Overlay>

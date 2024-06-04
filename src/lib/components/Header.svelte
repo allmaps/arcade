@@ -1,45 +1,24 @@
 <script lang="ts">
-  import { state, currentRound, score } from '$lib/shared/machines/game.js'
-  import { formatScore } from '$lib/shared/format.js'
+  const hasLeft = $$slots.left !== undefined
+  const hasRight = $$slots.right !== undefined
 
-  import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
-  import { configuration } from '$lib/shared/machines/game.js'
+  const hasOnlyCenter = !hasLeft && !hasRight
 
-  import Timer from '$lib/components/Timer.svelte'
-  import TotalScore from '$lib/components/TotalScore.svelte'
+  const gridColsClass = hasOnlyCenter ? 'grid-cols-1' : 'grid-cols-[1fr_max-content_1fr]'
 </script>
 
-<header
-  class="absolute p-3 md:p-4 lg:p-6 z-10 grid grid-cols-3 w-full pointer-events-none place-items-center gap-4"
->
-  <div class="justify-self-start">
-    {#if $state.matches('round')}
-      <div
-        class="shadow-sm font-bold bg-white px-3 py-1 sm:px-6 sm:py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
-      >
-        <span class="hidden sm:inline">Round</span><span class="sm:hidden">#</span>
-        <span class="[letter-spacing:theme(spacing.1)]"
-          >{$currentRound?.number}/{NUMBER_OF_ROUNDS}</span
-        >
-      </div>
-    {/if}
+<header class="z-10 grid grid-flow-col {gridColsClass} w-full pointer-events-none gap-4">
+  {#if !hasOnlyCenter}
+    <div class="justify-self-start">
+      <slot name="left" />
+    </div>
+  {/if}
+  <div class={hasOnlyCenter ? '' : 'place-self-center'}>
+    <slot />
   </div>
-  <div>
-    {#if $state.matches('results')}
-      <TotalScore />
-    {:else if $state.matches('round')}
-      {#if $state.matches('round.progress.playing')}
-        <Timer />
-      {/if}
-    {/if}
-  </div>
-  <div class="justify-self-end">
-    {#if $state.matches('round')}
-      <div
-        class="shadow-sm font-bold bg-white px-3 py-1 sm:px-6 sm:py-2 rounded-full pointer-events-auto [word-spacing:theme(spacing.1)]"
-      >
-        {formatScore($configuration, $score)} Points
-      </div>
-    {/if}
-  </div>
+  {#if !hasOnlyCenter}
+    <div class="justify-self-end">
+      <slot name="right" />
+    </div>
+  {/if}
 </header>

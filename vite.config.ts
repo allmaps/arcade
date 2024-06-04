@@ -7,5 +7,7 @@ export default defineConfig({
   build: {
     target: 'esnext'
   },
-  assetsInclude: ['**/*.lottie']
+  ssr: {
+    noExternal: 'maplibre-gl'
+  }
 })

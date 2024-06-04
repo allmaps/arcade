@@ -2,27 +2,39 @@
   import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
 
-  import Footer from '$lib/components/Footer.svelte'
-  import Button from '$lib/components/Button.svelte'
-  import RoundLoading from '$lib/components/RoundLoading.svelte'
-  import Image from '$lib/components/Image.svelte'
-  import Map from '$lib/components/Map.svelte'
-  import Zoom from '$lib/components/Zoom.svelte'
-  import NorthArrow from '$lib/components/NorthArrow.svelte'
-  import EyeIcon from '$lib/components/EyeIcon.svelte'
-  import ScoreLarge from '$lib/components/ScoreLarge.svelte'
+  import { configuration } from '$lib/shared/machines/game.js'
+  import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
+  import { formatScore } from '$lib/shared/format.js'
 
   import {
     actor,
     state,
+    score,
     currentRound,
     isLastRound,
-    olTarget,
+    keyboardTarget,
     type Snapshot
   } from '$lib/shared/machines/game.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { environment } from '$lib/shared/stores/environment.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
+
+  import Overlay from '$lib/components/Overlay.svelte'
+  import Header from '$lib/components/Header.svelte'
+  import HeaderItem from '$lib/components/HeaderItem.svelte'
+  import Footer from '$lib/components/Footer.svelte'
+  import Buttons from '$lib/components/Buttons.svelte'
+  import Button from '$lib/components/Button.svelte'
+  import RoundLoading from '$lib/components/RoundLoading.svelte'
+  import Image from '$lib/components/Image.svelte'
+  import Map from '$lib/components/Map.svelte'
+  import Zoom from '$lib/components/Zoom.svelte'
+  import ArrowsIcon from '$lib/components/ArrowsIcon.svelte'
+  import Score from '$lib/components/Score.svelte'
+  import ScoreLarge from '$lib/components/ScoreLarge.svelte'
+  import Timer from '$lib/components/Timer.svelte'
+
+  import type { KeyboardTarget, LoadedRound } from '$lib/shared/types.js'
 
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
 
@@ -50,15 +62,15 @@
 
   let found = false
 
-  function focusOlContainer(container: HTMLElement) {
-    if (!container) {
+  function focusElement(element: HTMLElement, keyboardTarget: KeyboardTarget) {
+    if (!element) {
       return
     }
 
     // This is a hack to ensure sure $olTarget's container
     // is visible before focusing
-    container.classList.remove('fade-to-invisible')
-    $olTarget?.focus()
+    element.classList.remove('fade-to-invisible')
+    keyboardTarget.element.focus()
   }
 
   let displayImage: boolean
@@ -67,18 +79,34 @@
   $: displayImage = $state.matches('round.display.image')
   $: displayMap = $state.matches('round.display.map')
 
+  $: loading = $state.matches('round.progress.loading')
+  $: intro = $state.matches('round.progress.intro')
+
+  $: showLargeRoundScore =
+    $state.matches('round.progress.submitted.animating') ||
+    $state.matches('round.progress.submitted.score')
+
+  $: canSubmit = (($currentRound as LoadedRound)?.canSubmit || false) && displayMap
+
   $: {
-    if (displayImage) {
-      focusOlContainer(containerImage)
-    } else if (displayMap) {
-      focusOlContainer(containerMap)
+    if ($keyboardTarget) {
+      if (displayImage) {
+        focusElement(containerImage, $keyboardTarget)
+      } else if (displayMap) {
+        focusElement(containerMap, $keyboardTarget)
+      }
     }
   }
 
   function handleTransition(snapshot: Snapshot) {
+    if (snapshot.matches('round.progress.submitted')) {
+      // stopTimer()
+      submitted = true
+    }
+
     if (snapshot.matches('round.progress.submitted.animating')) {
       stopTimer()
-      submitted = true
+      // submitted = true
       if ($currentRound?.submitted) {
         found = $currentRound.submission?.found
       }
@@ -148,43 +176,16 @@
 </script>
 
 <div class="w-full h-full flex flex-col items-center justify-center {bgClass}">
-  {#if $state.matches('round.progress.loading') || $state.matches('round.progress.intro')}
-    <div class="w-full h-full">
-      {#if $state.matches('round.progress.intro')}
-        <div bind:this={containerImage} class="absolute w-full h-full left-0 top-0">
-          <Image bind:this={image} on:ready={handleImageReady} />
-        </div>
-      {/if}
-
-      {#if !ready}
-        <div out:fade={{ duration: 300 }} class="absolute w-full h-full top-0 {bgClass}">
-          <RoundLoading
-            annotationLoading={!annotationReady}
-            imageLoading={!imageReady}
-            on:ready={handleLoadingReady}
-          />
-        </div>
-      {:else}
-        <Footer>
-          <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
-            <div class="grid grid-flow-col gap-2 self-center">
-              <Zoom />
-            </div>
-            <div>
-              <Button
-                timeout={AUTO_ADVANCE_MS}
-                verb="show map"
-                button={$environment.getButton('submit')}
-                on:click={() => actor.send({ type: 'START' })}>Show map</Button
-              >
-            </div>
-            <div class="place-self-end">
-              <NorthArrow />
-            </div>
-          </div>
-        </Footer>
-      {/if}
-    </div>
+  {#if loading || intro}
+    {#if intro}
+      <div
+        bind:this={containerImage}
+        in:fade={{ duration: 1000 }}
+        class="absolute w-full h-full left-0 top-0"
+      >
+        <Image bind:this={image} on:ready={handleImageReady} />
+      </div>
+    {/if}
   {:else}
     <div class="w-full h-full">
       <div
@@ -204,72 +205,124 @@
         <Map bind:this={map} />
       </div>
     </div>
-    {#if submitted}
-      {#if $currentRound?.submitted && ($state.matches('round.progress.submitted.animating') || $state.matches('round.progress.submitted.score'))}
-        <div
-          class="absolute w-full h-full top-0 left-0 flex justify-center items-center pointer-events-none"
-        >
-          <div transition:fade={{ duration: 200 }}>
-            <ScoreLarge round={$currentRound} {found} />
-          </div>
-        </div>
-      {/if}
-      <Footer>
-        <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
-          <div class="grid grid-flow-col gap-2 self-center">
-            <Button
-              button={$environment.getButton('toggle')}
-              verb="show submission"
-              on:toggleStart={handleToggleSubmissionStart}
-              on:toggleEnd={handleToggleSubmissionEnd}><EyeIcon /></Button
-            >
-            <Zoom />
-          </div>
-          <div>
-            {#if $isLastRound}
-              <Button
-                button={$environment.getButton('submit')}
-                verb="show results"
-                on:click={() => actor.send({ type: 'NEXT' })}>Show results</Button
-              >
-            {:else}
-              <Button
-                button={$environment.getButton('submit')}
-                verb="go to next round"
-                on:click={() => actor.send({ type: 'NEXT' })}>Next round</Button
-              >
-            {/if}
-          </div>
-          <div class="place-self-end">
-            <NorthArrow />
-          </div>
-        </div>
-      </Footer>
-    {:else}
-      <Footer>
-        <div class="w-full grid grid-cols-[1fr_max-content_1fr] place-items-end gap-2">
-          <div class="grid grid-flow-col gap-2 self-center">
-            <Button
-              button={$environment.getButton('toggle')}
-              verb="toggle image"
-              on:toggleStart={handleToggleImageStart}
-              on:toggleEnd={handleToggleImageEnd}><EyeIcon /></Button
-            >
-            <Zoom />
-          </div>
-          <div>
-            <Button
-              button={$environment.getButton('submit')}
-              disabled={!displayMap}
-              verb="submit"
-              on:click={handleSubmit}>Submit</Button
-            >
-          </div>
-          <div class="place-self-end">
-            <NorthArrow />
-          </div>
-        </div>
-      </Footer>
-    {/if}
+  {/if}
+
+  {#if !ready}
+    <div transition:fade class="absolute w-full h-full top-0 {bgClass}">
+      <RoundLoading
+        annotationLoading={!annotationReady}
+        imageLoading={!imageReady}
+        on:ready={handleLoadingReady}
+      />
+    </div>
   {/if}
 </div>
+<Overlay>
+  <Header slot="header">
+    <svelte:fragment slot="left">
+      {#if $state.matches('round')}
+        <HeaderItem>
+          <span class="hidden sm:inline">Round</span><span class="sm:hidden">#</span>
+          <span class="[letter-spacing:theme(spacing.1)]"
+            >{$currentRound?.number}/{NUMBER_OF_ROUNDS}</span
+          >
+        </HeaderItem>
+      {/if}
+    </svelte:fragment>
+
+    {#if $state.matches('round.progress.playing')}
+      <div transition:fade class="contents">
+        <Timer />
+      </div>
+    {:else if $currentRound?.submitted && $state.matches('round.progress.submitted.review')}
+      <div transition:fade class="contents">
+        <Score round={$currentRound} border={false} />
+      </div>
+    {/if}
+
+    <svelte:fragment slot="right">
+      <HeaderItem>
+        {formatScore($configuration, $score)} <span class="hidden sm:inline">Points</span><span
+          class="sm:hidden">Pts</span
+        >
+      </HeaderItem>
+    </svelte:fragment>
+  </Header>
+
+  <div>
+    {#if $currentRound?.submitted && showLargeRoundScore}
+      <!-- TODO: use place-self instead of full size absolute element -->
+      <div
+        in:fade={{ duration: 500 }}
+        out:fade={{ duration: 150 }}
+        class="absolute w-full h-full top-0 left-0 flex justify-center items-center pointer-events-none"
+      >
+        <ScoreLarge round={$currentRound} {found} />
+      </div>
+    {/if}
+  </div>
+
+  <svelte:fragment slot="footer">
+    {#if ready}
+      <Footer showNorthArrow={true}>
+        <svelte:fragment slot="buttons">
+          {#if intro}
+            <Buttons>
+              <Zoom />
+            </Buttons>
+          {:else if !submitted}
+            <Buttons>
+              <Button
+                button={$environment.getButton('toggle')}
+                verb="toggle image"
+                on:toggleStart={handleToggleImageStart}
+                on:toggleEnd={handleToggleImageEnd}><ArrowsIcon /></Button
+              >
+              <Zoom />
+            </Buttons>
+          {:else if submitted}
+            <Buttons>
+              <Button
+                button={$environment.getButton('toggle')}
+                verb="show submission"
+                on:toggleStart={handleToggleSubmissionStart}
+                on:toggleEnd={handleToggleSubmissionEnd}><ArrowsIcon /></Button
+              >
+              <Zoom />
+            </Buttons>
+          {/if}
+        </svelte:fragment>
+
+        {#if intro}
+          <Button
+            timeout={AUTO_ADVANCE_MS}
+            verb="show map"
+            button={$environment.getButton('submit')}
+            on:click={() => actor.send({ type: 'START' })}>Show map</Button
+          >
+        {:else if !submitted}
+          <Button
+            button={$environment.getButton('submit')}
+            disabled={!canSubmit}
+            verb="submit"
+            on:click={handleSubmit}>Submit</Button
+          >
+        {:else if submitted}
+          {#if $isLastRound}
+            <Button
+              button={$environment.getButton('submit')}
+              verb="show results"
+              on:click={() => actor.send({ type: 'NEXT' })}>Show results</Button
+            >
+          {:else}
+            <Button
+              button={$environment.getButton('submit')}
+              verb="go to next round"
+              on:click={() => actor.send({ type: 'NEXT' })}>Next round</Button
+            >
+          {/if}
+        {/if}
+      </Footer>
+    {/if}
+  </svelte:fragment>
+</Overlay>

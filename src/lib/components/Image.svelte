@@ -83,8 +83,9 @@
         ol.on('rendercomplete', () => dispatch('ready'))
 
         actor.send({
-          type: 'SET_OL_IMAGE',
-          ol
+          type: 'SET_IMAGE_KEYBOARD_TARGET',
+          element,
+          library: 'openlayers'
         })
 
         element.focus()
@@ -97,4 +98,4 @@
   })
 </script>
 
-<div bind:this={element} id="ol-image" class="w-full h-full ring-0 {bgClass}" tabindex="-1" />
+<div bind:this={element} class="w-full h-full ring-0 {bgClass}" tabindex="-1" />

@@ -16,14 +16,13 @@
   export let timeout = 0
   export let disabled = false
 
-  let touch = false
   let toggled = false
 
   let timeoutId: number
 
   let element: HTMLButtonElement
 
-  const bgClass = button.bgClass || 'bg-green'
+  $: bgClass = disabled ? 'bg-gray' : button.bgClass || 'bg-green'
   const textClass = button.textClass || 'text-white'
   const type = button.type || 'secondary'
   const icon = button.icon || false
@@ -32,7 +31,7 @@
     type === 'primary' ? 'px-6 py-3 lg:px-9 lg:py-5 text-lg' : 'px-4 py-2 lg:px-6 lg:py-3 text-base'
 
   if (icon) {
-    typeClasses = 'w-[2.9rem] h-[2.8rem] p-[0.7rem]'
+    typeClasses = 'w-[2.9rem] h-[2.9rem] p-[0.7rem]'
   }
 
   function toggleStart() {
@@ -106,8 +105,10 @@
 <svelte:document on:keypress={handleKeypress} on:keydown={handleKeydown} on:keyup={handleKeyup} />
 
 <Tooltip.Root openDelay={2000}>
-  <Tooltip.Trigger>
+  <Tooltip.Trigger asChild let:builder>
     <button
+      use:builder.action
+      {...builder}
       bind:this={element}
       type="button"
       on:mousedown={handleMousedown}
