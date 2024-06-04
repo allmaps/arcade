@@ -30,7 +30,9 @@
     convexHullStyle,
     maskStyle,
     makeHandleKeydownWithPanStepAndZoomFraction,
-    getFirstSymbolLayerId
+    getFirstSymbolLayerId,
+    disableInteraction,
+    enableInteraction
   } from '$lib/shared/maplibre.js'
   import { endTime } from '$lib/shared/stores/timer.js'
   import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
@@ -103,11 +105,15 @@
   function getWarpedMapZoom() {
     const bbox = computeBbox(geoMask)
 
-    const { zoom } = map.cameraForBounds(bbox, {
+    const centerZoomBearing = map.cameraForBounds(bbox, {
       padding: { top: PADDING[0], bottom: PADDING[2], left: PADDING[3], right: PADDING[1] }
     })
 
-    return zoom || 0
+    if (centerZoomBearing && centerZoomBearing.zoom !== undefined) {
+      return centerZoomBearing.zoom
+    }
+
+    return 0
   }
 
   function getSubmissionZoom() {
@@ -196,7 +202,7 @@
       geoMask: submittedGeoMask,
       area,
       convexHull,
-      found: geoMask !== undefined
+      found: found || false
     }
 
     return submission
@@ -298,7 +304,7 @@
   }
 
   function handleMoveend() {
-    if (!submitted) {
+    if (!submitted && !perfectScore) {
       const submissionZoom = getSubmissionZoom()
       const zoomDiff = Math.abs(submissionZoom - warpedMapZoom)
 
@@ -316,16 +322,16 @@
           const distanceY = Math.abs(warpedMapPixelCenter[1] - submissionPixelCenter[1])
 
           if (distanceX < distanceThreshold && distanceY < distanceThreshold) {
-            // Perfect score!
+            // Perfect score!!!
             perfectScore = true
+            map.stop()
+
+            // disableInteraction(map)
 
             flyToWarpedMap(() => {
               showPerfectScore = true
               handleSubmit(true)
               actor.send({ type: 'FINISHED' })
-              // setTimeout(() => {
-              //   showPerfectScore = false
-              // }, 1500)
             })
 
             // ol.getView().fit(getExtent(geoMask), {
@@ -350,7 +356,11 @@
     addProtocol('pmtiles', protocol.tile)
 
     const layers = getProtomapsTheme('protomaps', 'light')
-    // layers[0].paint['background-color'] = $currentRound.colors.convexHullColor
+
+    // Override background color
+    if (layers[0] && layers[0].paint && 'background-color' in layers[0].paint) {
+      layers[0].paint['background-color'] = 'rgba(0, 0, 0, 0)'
+    }
 
     map = new Map({
       container,
@@ -407,7 +417,6 @@
       )
 
       warpedMapLayer = new WarpedMapLayer()
-      // @ts-expect-error: Incorrect MapLibre typings
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
 
       map.addLayer(
@@ -481,8 +490,7 @@
   })
 </script>
 
-<!-- <div class="relative w-full h-full bg-[#e0e0e0]"> -->
-<div class="relative w-full h-full">
+<div class="relative w-full h-full {$currentRound?.colors.bgClassFaded}">
   <div bind:this={container} class="w-full h-full ring-0" tabindex="-1" />
   {#if geoMask && contentBoxSize && !$state.matches('round.progress.submitted')}
     <div class="absolute top-0 left-0 w-full h-full pointer-events-none">

@@ -2,6 +2,7 @@
   import { currentRound } from '$lib/shared/machines/game.js'
   import { endTime } from '$lib/shared/stores/timer.js'
 
+  import HeaderItem from '$lib/components/HeaderItem.svelte'
   import Time from '$lib/components/Time.svelte'
 
   let diffTime = 0
@@ -13,8 +14,6 @@
   }
 </script>
 
-<div
-  class="shadow-sm font-bold bg-white px-3 py-1 sm:px-6 sm:py-2 rounded-full pointer-events-auto"
->
+<HeaderItem>
   <Time milliseconds={diffTime} />
-</div>
+</HeaderItem>

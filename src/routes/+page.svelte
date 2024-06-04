@@ -3,8 +3,9 @@
   import { crossfade } from 'svelte/transition'
   import { quintOut } from 'svelte/easing'
 
+  import { Stats } from '@allmaps/ui'
+
   import Error from '$lib/components/Error.svelte'
-  import Header from '$lib/components/Header.svelte'
   import Title from '$lib/components/Title.svelte'
   import Explain from '$lib/components/Explain.svelte'
   import Round from '$lib/components/Round.svelte'
@@ -61,12 +62,9 @@
 </script>
 
 <svelte:document on:keydown={handleKeydown} />
+<Stats />
 
-<Header />
-<main
-  class="absolute w-full h-full flex flex-col items-center justify-center"
-  class:cursor-none={isCabinet}
->
+<div class="w-full h-full" class:cursor-none={isCabinet}>
   {#if $state.matches('error')}
     <Error />
   {:else if $state.matches('loading') || $state.matches('title')}
@@ -106,4 +104,4 @@
       <Timeout timeout={GAME_TIMEOUT_WARNING_MS} />
     </div>
   {/if}
-</main>
+</div>

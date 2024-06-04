@@ -32,19 +32,6 @@ export function convexHullStyle(color: string) {
   })
 }
 
-// export function getZoomForExtent(map: OLMap, bounds: BBox, padding: Padding) {
-//   const size = map.getSize()
-
-//   if (!size) {
-//     return
-//   }
-
-//   const paddedSize = [size[0] - padding[1] - padding[3], size[1] - padding[0] - padding[2]]
-//   return map
-//     .getView()
-//     .getZoomForResolution(map.getView().getResolutionForExtent(bounds, paddedSize))
-// }
-
 export function getExtent(polygon: GeojsonPolygon) {
   return new GeoJSON()
     .readGeometry(polygon, {

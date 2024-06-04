@@ -4,7 +4,7 @@ import type { Configuration } from '$lib/shared/types.js'
 export default {
   map: {
     center: [0, 0],
-    initialZoom: 2
+    initialZoom: 1
   },
   score: {
     maxScore: {

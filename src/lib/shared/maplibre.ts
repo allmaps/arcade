@@ -3,6 +3,8 @@ import type { Map, LngLatLike } from 'maplibre-gl'
 import type { DataDrivenPropertyValueSpecification, ColorSpecification } from 'maplibre-gl'
 import type { CallbackFn } from '$lib/shared/types.js'
 
+import { WARPED_MAP_BEHIND_LABELS } from '$lib/shared/constants.js'
+
 function easeOut(t: number) {
   return t * (2 - t)
 }
@@ -146,6 +148,10 @@ export function convexHullStyle(color: DataDrivenPropertyValueSpecification<Colo
 }
 
 export function getFirstSymbolLayerId(map: Map) {
+  if (!WARPED_MAP_BEHIND_LABELS) {
+    return
+  }
+
   const layers = map.getStyle().layers
 
   // Find the index of the first symbol layer in the map style
@@ -158,4 +164,20 @@ export function getFirstSymbolLayerId(map: Map) {
   }
 
   return firstSymboLayerlId
+}
+
+export function disableInteraction(map: Map) {
+  map.scrollZoom.disable()
+  map.boxZoom.disable()
+  map.dragPan.disable()
+  map.keyboard.disable()
+  map.doubleClickZoom.disable()
+}
+
+export function enableInteraction(map: Map) {
+  map.scrollZoom.enable()
+  map.boxZoom.enable()
+  map.dragPan.enable()
+  map.keyboard.enable()
+  map.doubleClickZoom.enable()
 }

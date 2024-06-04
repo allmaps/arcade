@@ -10,7 +10,7 @@
 </script>
 
 <div
-  class="h-full min-h-min overflow-auto bg-white/50 backdrop-blur-md rounded-2xl shadow-md p-4 lg:p-6 max-w-lg md:max-w-xl prose prose-sm md:prose-base"
+  class="min-h-min max-h-full pointer-events-auto overflow-auto bg-white/50 backdrop-blur-md rounded-2xl shadow-md p-4 lg:p-6 max-w-lg md:max-w-xl prose prose-sm md:prose-base"
 >
   <h2 class="text-center">
     About Allmaps <span class="w-10 inline-block [&>*]:inline-block"><Logo inverted={false} /></span
@@ -18,16 +18,17 @@
     Arcade
   </h2>
   <p>
-    Allmaps Arcade is a game made by <a href="https://bertspaan.nl">Bert Spaan</a>. A part of the
-    development was commissioned by the
+    Allmaps Arcade is a game made by <a href="https://bertspaan.nl">Bert Spaan</a>. The development
+    of the initial version was commissioned by the
     <a href="https://heritage.tudelft.nl/">Delft University of Technology Library</a>.
   </p>
   <p>
     The game is part of <a href="https://allmaps.org">Allmaps</a>, an open source project for
     curating, georeferencing and exploring IIIF maps.
   </p>
+
   <p>Credits:</p>
-  <ul class="">
+  <ul>
     <li>
       Concept & design: <Face name="Luuk van de Ven" href="https://luukvandeven.nl"
         ><img src={faceLuuk} alt="Luuk van de Ven" /></Face
@@ -41,8 +42,8 @@
 
     <li>
       <Attribution />.
-      <a href="https://protomaps.com/">Protomaps</a> handles the hosting, styling and rendering of the
-      background map.
+      <a href="https://protomaps.com/">Protomaps</a> is used to host, style and render the background
+      map.
     </li>
 
     <li>

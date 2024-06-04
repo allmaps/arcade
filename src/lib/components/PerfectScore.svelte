@@ -1,6 +1,5 @@
 <script lang="ts">
   import { coordinatesToSvgPath } from '$lib/shared/geometry.js'
-  import { colorForRounds } from '$lib/shared/colors.js'
 
   import type { Point } from '@allmaps/types'
 
