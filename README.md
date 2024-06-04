@@ -23,8 +23,8 @@ Credits:
 ## Arcade cabinet
 
 <p float="left">
-  <img width="49%" alt="Allmaps Arcade cabinet, photo 1" src="images/arcade-cabinet-1.jpg">
-  <img width="49%" alt="Allmaps Arcade cabinet, photo 2" src="images/arcade-cabinet-2.jpg">
+  <img width="49.6%" alt="Allmaps Arcade cabinet, photo 1" src="images/arcade-cabinet-1.jpg">
+  <img width="49.6%" alt="Allmaps Arcade cabinet, photo 2" src="images/arcade-cabinet-2.jpg">
 </p>
 
 ![Allmaps Arcade cabinet, photo 3](images/arcade-cabinet-3.jpg)
