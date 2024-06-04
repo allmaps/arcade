@@ -1,5 +1,6 @@
 Things to do (or to consider):
 
+- Mention Casper
 - Only run on browsers that support container-queries? Use supports tag and display modal overlay otherwise?
 - Make keyboard shortcut / button explanation responsive + work for cabinet
 - Read Protomaps API key from config
