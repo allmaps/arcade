@@ -62,7 +62,7 @@
 </script>
 
 <svelte:document on:keydown={handleKeydown} />
-<Stats />
+<Stats statsWebsiteId={import.meta.env.ARCADE_STATS_WEBSITE_ID} />
 
 <div class="w-full h-full" class:cursor-none={isCabinet}>
   {#if $state.matches('error')}
