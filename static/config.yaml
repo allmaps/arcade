@@ -61,15 +61,6 @@ annotationUrls:
   - https://annotations.allmaps.org/maps/aaa0c42c86beda85@fda8924f1f96756b
   - https://annotations.allmaps.org/maps/a0758d2723f14664@445d0d5b75d980af
   - https://annotations.allmaps.org/maps/f72b9431c691a7c0@a6865b3c957a39dc
-  # - https://annotations.allmaps.org/maps/bae16bbbd9606a6d
-  # - https://annotations.allmaps.org/maps/dd8af01a1789ed7e
-  # - https://annotations.allmaps.org/maps/79cf590481a14893
-  # - https://annotations.allmaps.org/maps/b6ad81e345d93472
-  # - https://annotations.allmaps.org/maps/28815b833aa39437
-  # - https://annotations.allmaps.org/maps/057658ec63de7785
-  # - https://annotations.allmaps.org/images/604246637770fac3
-  # - https://annotations.allmaps.org/maps/453c8908d3ba052c
-  # - https://annotations.allmaps.org/maps/64a2f6a44face76d
   - https://annotations.allmaps.org/maps/68e20c1468b759b6@9087941450571132
   - https://annotations.allmaps.org/maps/020d813d9fef01ef@45479cc88b7ae8b4
   - https://annotations.allmaps.org/maps/cf4eb38cfd72a7e5@af14fd9823fc5fed
@@ -116,14 +107,13 @@ annotationUrls:
   - https://annotations.allmaps.org/maps/1dfe35b95d261d2f@d41ea85a1c0654f8
   - https://annotations.allmaps.org/maps/699016d82bc650b6@f82c10b9a64e0c37
   - https://annotations.allmaps.org/maps/096f57b5ff35b3eb@f4bd9276ab7230ab
-  - https://annotations.allmaps.org/maps/aa50ea6e3cffda6a
-  - https://annotations.allmaps.org/maps/24e76fcb71df73db
+  - https://annotations.allmaps.org/maps/aa50ea6e3cffda6a@538d0afdd678b43b
   - https://annotations.allmaps.org/maps/3ccb157b909911f9@f8fbc4e7143c567d
   - https://annotations.allmaps.org/maps/e16dd2a24cf0e185@d5327b80f2a4b114
-  - https://annotations.allmaps.org/maps/5d5eeb9904fc008a
+  - https://annotations.allmaps.org/maps/5d5eeb9904fc008a@96bcaa8465865757
   - https://annotations.allmaps.org/maps/a9dad12e36b2af79@0f0e0b5c7e92a094
-  - https://annotations.allmaps.org/maps/1dc2da63239b73ee
-  - https://annotations.allmaps.org/maps/db5ae572068eefe9
+  - https://annotations.allmaps.org/maps/1dc2da63239b73ee@526781e505a452e1
+  - https://annotations.allmaps.org/maps/db5ae572068eefe9@9d5d794977dc8ccc
   - https://annotations.allmaps.org/maps/d96aad0a7632a06e@2ebaba48263b3b30
   - https://annotations.allmaps.org/maps/814e150e26c93015@0b864a4da88c5ccc
   - https://annotations.allmaps.org/maps/dd689913d12a4f61@32eceb24bf910b32
@@ -185,13 +175,13 @@ annotationUrls:
   - https://annotations.allmaps.org/maps/3075257ad286a088@001c29f603d9dbac
   - https://annotations.allmaps.org/maps/f17e60c96e6d681f@cb5dab914f35bc4a
   - https://annotations.allmaps.org/maps/b3afa5b449e1ad5d@5096b0640930831f
-  - https://annotations.allmaps.org/maps/12b64b5d8a865a2a
+  - https://annotations.allmaps.org/maps/12b64b5d8a865a2a@44346debbf7a8d4c
   - https://annotations.allmaps.org/maps/8884657dec4a6530@9d08b038a7d65100
   - https://annotations.allmaps.org/maps/18cee8330b3a1a3f@38c0770eece5c9f4
-  - https://annotations.allmaps.org/maps/34643c2fde5d1e93
+  - https://annotations.allmaps.org/maps/34643c2fde5d1e93@7ee3ed27231447fe
   - https://annotations.allmaps.org/maps/233794dc88ae7242@52631467309538a0
-  - https://annotations.allmaps.org/maps/2cc8355ed13d0ad3
-  - https://annotations.allmaps.org/maps/6c4f022c239a565e
+  - https://annotations.allmaps.org/maps/2cc8355ed13d0ad3@37ffe6305786d27a
+  - https://annotations.allmaps.org/maps/6c4f022c239a565e@13c81ec22a5ea021
   - https://annotations.allmaps.org/maps/ad870063d3995022@03ded57b65fed520
   - https://annotations.allmaps.org/maps/823477e46012e947@cf1bb895e3da2f78
   - https://annotations.allmaps.org/maps/0431887a9d208417@f0b68ac47fe5a7b2
@@ -199,29 +189,29 @@ annotationUrls:
   - https://annotations.allmaps.org/maps/2667ad4b03382f79@ba8d316d1b220825
   - https://annotations.allmaps.org/maps/b22fd81e1c13e4d7@18acc6bbf8703c52
   - https://annotations.allmaps.org/maps/83ead11405073450@0be8a9a941183225
-  - https://annotations.allmaps.org/maps/ae2ef16e7859f814
+  - https://annotations.allmaps.org/maps/ae2ef16e7859f814@4aa7103f290c238a
   - https://annotations.allmaps.org/maps/0994509a521dab49@2902850f060596b9
-  - https://annotations.allmaps.org/maps/8e70dcbe4ce37ad9
+  - https://annotations.allmaps.org/maps/8e70dcbe4ce37ad9@6bac6e3a23a4314a
   - https://annotations.allmaps.org/maps/a79aa30b9df3e3b5@2f240ce5223ae05b
-  - https://annotations.allmaps.org/maps/8af5fb867819e6f3
-  - https://annotations.allmaps.org/maps/c82a1b02d56e1e2c
+  - https://annotations.allmaps.org/maps/8af5fb867819e6f3@f7b2168e245dc932
+  - https://annotations.allmaps.org/maps/c82a1b02d56e1e2c@0947251ca75e6fd0
   - https://annotations.allmaps.org/maps/ae7db1c765f47416@d9882c9dd727d4aa
-  - https://annotations.allmaps.org/maps/6e40bd9829b56fe7
-  - https://annotations.allmaps.org/maps/572438e094bf3935
-  - https://annotations.allmaps.org/maps/b2802520064ac96d
+  - https://annotations.allmaps.org/maps/6e40bd9829b56fe7@2c7a9eaef4de7094
+  - https://annotations.allmaps.org/maps/572438e094bf3935@9385ef1e6b19ae07
+  - https://annotations.allmaps.org/maps/b2802520064ac96d@cb4dfcd9e5089e9f
   - https://annotations.allmaps.org/maps/c629b1caafb10013@7896c082c1b01ba4
-  - https://annotations.allmaps.org/maps/8f86e07e47c53f1e
-  - https://annotations.allmaps.org/maps/c477b3f666146611
+  - https://annotations.allmaps.org/maps/8f86e07e47c53f1e@da5d3a67ecf8eb0a
+  - https://annotations.allmaps.org/maps/c477b3f666146611@3b78cf6d838e1139
   - https://annotations.allmaps.org/maps/83ec5095adf295af@7dd02a6f3ae37da4
-  - https://annotations.allmaps.org/maps/878536ba2ed87eb4
-  - https://annotations.allmaps.org/maps/3794cb189f90a93f
+  - https://annotations.allmaps.org/maps/878536ba2ed87eb4@e03578ca80d56786
+  - https://annotations.allmaps.org/maps/3794cb189f90a93f@4b19690a9f736971
   - https://annotations.allmaps.org/maps/1cef48cbc222ea91@a775fc46289c3d36
-  - https://annotations.allmaps.org/maps/47a61b59e6ec6002
+  - https://annotations.allmaps.org/maps/47a61b59e6ec6002@260e02e43e406a48
   - https://annotations.allmaps.org/maps/55ca4437490ebdc1@70cadbe5ca0ca8c8
-  - https://annotations.allmaps.org/maps/76d9a86a84f9f7b6
-  - https://annotations.allmaps.org/maps/a7081c4f92e9287c
+  - https://annotations.allmaps.org/maps/76d9a86a84f9f7b6@b3a129ca4f668547
+  - https://annotations.allmaps.org/maps/a7081c4f92e9287c@343fd82c3a7d1b35
   - https://annotations.allmaps.org/maps/f26954c7c075bf97@ea2fa6b2e88c8b1f
-  - https://annotations.allmaps.org/maps/9b4fe711438e9c2e
+  - https://annotations.allmaps.org/maps/9b4fe711438e9c2e@82448e356a4cbdd3
   - https://annotations.allmaps.org/maps/036509c0a91dd48d@6d88c89976a0f0d9
   - https://annotations.allmaps.org/maps/13d5de6e70269314@f5dc5bfd24dbdb7b
   - https://annotations.allmaps.org/maps/8a6d1e0597b8a5ba@f2296e74a3cc01b1
@@ -306,3 +296,14 @@ annotationUrls:
   - https://annotations.allmaps.org/maps/823f3dde3e02e6e5@b6211b5a200f56ad
   - https://annotations.allmaps.org/maps/395e3dcee5a083ae@53948b27d67273cb
   - https://annotations.allmaps.org/maps/2b7abb4206ccf972@6e04507cfc6319f0
+  - https://annotations.allmaps.org/maps/52274ff81d764d24@489429f91aae77c8
+  # - https://annotations.allmaps.org/maps/bae16bbbd9606a6d
+  # - https://annotations.allmaps.org/maps/dd8af01a1789ed7e
+  # - https://annotations.allmaps.org/maps/79cf590481a14893
+  # - https://annotations.allmaps.org/maps/b6ad81e345d93472
+  # - https://annotations.allmaps.org/maps/28815b833aa39437
+  # - https://annotations.allmaps.org/maps/057658ec63de7785
+  # - https://annotations.allmaps.org/images/604246637770fac3
+  # - https://annotations.allmaps.org/maps/453c8908d3ba052c
+  # - https://annotations.allmaps.org/maps/64a2f6a44face76d
+  # - https://annotations.allmaps.org/maps/24e76fcb71df73db
