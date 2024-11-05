@@ -12,8 +12,8 @@ importers:
         specifier: ^1.0.0-beta.30
         version: 1.0.0-beta.30
       '@allmaps/basemap':
-        specifier: 1.0.0-beta.1
-        version: 1.0.0-beta.1
+        specifier: 1.0.0-beta.2
+        version: 1.0.0-beta.2
       '@allmaps/iiif-parser':
         specifier: ^1.0.0-beta.40
         version: 1.0.0-beta.40
@@ -169,8 +169,8 @@ packages:
   '@allmaps/annotation@1.0.0-beta.30':
     resolution: {integrity: sha512-XsQfGdX+TBaha+Zt9s86waSrEUcM1pnVkaCnyJN6/04j/2wzpubHRhPPUM+SYby+FHsxbd7hKNjhmIpnzKlj4w==}
 
-  '@allmaps/basemap@1.0.0-beta.1':
-    resolution: {integrity: sha512-NEGWECROrf61nhHtCkQ9tHaDGJlcz1G7ziAGMVdcsCXbihtUU8odIRjhrrXG6uYETIPTE4aM+TXZ2a0KoJREtQ==}
+  '@allmaps/basemap@1.0.0-beta.2':
+    resolution: {integrity: sha512-Z+4cjTTgravUTaEI2AfJRFaT/xy1JQnfRpz4+fzM0f0GkvVZeTUp6R/k/6INKemWtrrqI7P3UXKJc6ZwyVkYHA==}
 
   '@allmaps/id@1.0.0-beta.30':
     resolution: {integrity: sha512-HxFwBSDzCzcHe82cOsdTyKUiNWCbxCA1oQ06B7DcNvUuTXd1QC40frGMVP8/+PVpWEPsH0dctE6S4txtHdUc1A==}
@@ -1816,8 +1816,8 @@ packages:
   protomaps-themes-base@2.0.0-alpha.5:
     resolution: {integrity: sha512-IQ63JgClmJY89jyk+5qodvoTlpaAshmy8iJIze1UapPCo4Q+gEuErLrIqgsRWN1aXyL7pNm9CrhkKaNEUmWXBg==}
 
-  protomaps-themes-base@4.2.0:
-    resolution: {integrity: sha512-g3BgIM0NMgkicygbOUm4VwUy37jEpAi513CsO5A3Q1MHNUah+nX76vJ9sOdJuapbAmO4BLaTyXtz0bpvj2n6nw==}
+  protomaps-themes-base@4.3.0:
+    resolution: {integrity: sha512-XNLs3zamw/XucflU0qBXgiPN72/YEo6h01ClsVrfUUQCDzA4r8Eu23hG/fqYqFuocciwu0doCxGBBpE8xGMtoA==}
 
   punycode@2.3.0:
     resolution: {integrity: sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==}
@@ -2291,11 +2291,11 @@ snapshots:
     dependencies:
       zod: 3.22.4
 
-  '@allmaps/basemap@1.0.0-beta.1':
+  '@allmaps/basemap@1.0.0-beta.2':
     dependencies:
       maplibre-contour: 0.0.7
       maplibre-gl: 4.7.1
-      protomaps-themes-base: 4.2.0
+      protomaps-themes-base: 4.3.0
 
   '@allmaps/id@1.0.0-beta.30':
     dependencies:
@@ -4039,7 +4039,7 @@ snapshots:
 
   protomaps-themes-base@2.0.0-alpha.5: {}
 
-  protomaps-themes-base@4.2.0: {}
+  protomaps-themes-base@4.3.0: {}
 
   punycode@2.3.0: {}
 
