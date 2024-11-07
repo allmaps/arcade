@@ -2,11 +2,7 @@ import { writable, derived, get } from 'svelte/store'
 
 import { actor } from '$lib/shared/machines/game.js'
 
-import {
-  GAME_TIMEOUT_ENABLED,
-  GAME_TIMEOUT_MS,
-  GAME_TIMEOUT_WARNING_MS
-} from '$lib/shared/constants.js'
+import { GAME_TIMEOUT_MS, GAME_TIMEOUT_WARNING_MS } from '$lib/shared/constants.js'
 
 let intervalId: number | undefined
 
@@ -26,7 +22,7 @@ function tick() {
 }
 
 export function startGameTimeout() {
-  if (GAME_TIMEOUT_ENABLED && intervalId === undefined) {
+  if (intervalId === undefined) {
     intervalId = setInterval(tick, 1000)
   }
 }
