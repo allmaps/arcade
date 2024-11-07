@@ -9,7 +9,6 @@ export const AUTO_ADVANCE_MS = 10 * 1_000
 export const EXPLAIN_STEP_MS = 2 * 1_000
 export const RESULTS_ROUND_MS = 8 * 1_000
 
-export const GAME_TIMEOUT_ENABLED = false
 export const GAME_TIMEOUT_MS = 1.5 * 60 * 1_000
 export const GAME_TIMEOUT_WARNING_MS = 30 * 1_000
 
