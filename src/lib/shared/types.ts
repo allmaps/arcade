@@ -5,9 +5,11 @@ import type { Map } from '@allmaps/annotation'
 import type { GcpTransformer } from '@allmaps/transform'
 import type { GeojsonPolygon, Point } from '@allmaps/types'
 
-import type { ConfigurationSchema } from '$lib/shared/schemas.js'
+import type { ConfigurationSchema, HighscoreSchema } from '$lib/shared/schemas.js'
 
 export type Configuration = z.infer<typeof ConfigurationSchema>
+
+export type Highscore = z.infer<typeof HighscoreSchema>
 
 export type MappingLibrary = 'maplibre' | 'openlayers'
 
@@ -18,10 +20,13 @@ export type KeyboardTarget = {
 
 export interface Context extends MachineContext {
   rounds: Rounds
+  environment: ArcadeEnvironment
   configuration: Configuration
   imageKeyboardTarget?: KeyboardTarget
   mapKeyboardTarget?: KeyboardTarget
   error?: Error
+  lastHighscore?: Highscore
+  highscores: Highscore[]
 }
 
 export type GameEvent =
@@ -34,6 +39,7 @@ export type GameEvent =
   | { type: 'SHOW_IMAGE' }
   | { type: 'SHOW_MAP' }
   | { type: 'SUBMIT'; endTime: number; submission: Submission }
+  | { type: 'SUBMIT_HIGHSCORE'; highscore: Highscore }
   | { type: 'TIMEOUT' }
 
 type BaseRound = {
@@ -134,6 +140,6 @@ export interface ArcadeEnvironment {
     previousAnnotationUrls: string[]
   ): Promise<string>
 
-  // getHighscores(): Promise<Highscore>[]
-  // saveHighscore(): void
+  getHighscores?(): Promise<Highscore[]>
+  saveHighscore?(highscore: Highscore): Promise<void>
 }

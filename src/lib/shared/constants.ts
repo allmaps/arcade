@@ -2,6 +2,8 @@ import type { Padding } from '$lib/shared/types.js'
 
 export const WARPED_MAP_BEHIND_LABELS = false
 
+export const HIGHSCORE_DISPLAY_COUNT = 10
+
 export const NUMBER_OF_ROUNDS = 5
 
 export const AUTO_ADVANCE_MS = 10 * 1_000

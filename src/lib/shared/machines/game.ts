@@ -10,21 +10,26 @@ import { GcpTransformer } from '@allmaps/transform'
 
 import { getConfiguration } from '$lib/shared/config.js'
 import { fetchMap } from '$lib/shared/maps.js'
-import { computeScoreRatios, computeMaxScore, computeScore } from '$lib/shared/score.js'
+import {
+  computeTotalScore,
+  computeScoreRatios,
+  computeMaxScore,
+  computeScore,
+  isHighscore
+} from '$lib/shared/score.js'
 import { colorForRounds } from '$lib/shared/colors.js'
 import defaultConfig from '$lib/shared/default-config.js'
 import { getTimeoutSignal } from '$lib/shared/timeout.js'
+import { assignLastRound } from '$lib/shared/xstate.js'
+import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
 
 import {
   failedAnnotationUrls,
   addFailedAnnotationUrl,
   resetFailedAnnotationUrls
 } from '$lib/shared/stores/failed-annotation-urls.js'
-
 import { environment } from '$lib/shared/stores/environment'
 import { startGameTimeout, stopGameTimeout } from '$lib/shared/stores/game-timeout.js'
-import { assignLastRound } from '$lib/shared/xstate.js'
-import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
 
 import type { Map } from '@allmaps/annotation'
 import type { GeojsonPolygon } from '@allmaps/types'
@@ -34,9 +39,9 @@ import type {
   GameEvent,
   Rounds,
   LoadedRound,
-  SubmittedRound,
   Configuration,
-  MappingLibrary
+  ArcadeEnvironment,
+  Highscore
 } from '$lib/shared/types.js'
 
 function getTime() {
@@ -55,7 +60,8 @@ export const machine = createMachine(
     context: {
       rounds: [] as Rounds,
       configuration: defaultConfig,
-      error: undefined
+      environment: get(environment),
+      highscores: []
     },
     initial: 'loading',
     on: {
@@ -85,6 +91,17 @@ export const machine = createMachine(
       title: {
         entry: ['resetRounds', 'stopGameTimeout'],
         exit: ['startGameTimeout'],
+        invoke: {
+          src: 'getHighscores',
+          input: ({ context }) => ({
+            environment: context.environment
+          }),
+          onDone: {
+            actions: assign({
+              highscores: ({ event }) => event.output
+            })
+          }
+        },
         on: {
           NEXT: {
             target: 'explain'
@@ -112,7 +129,8 @@ export const machine = createMachine(
                   src: 'fetchRoundData',
                   input: ({ context }) => ({
                     rounds: context.rounds,
-                    configuration: context.configuration
+                    configuration: context.configuration,
+                    environment: context.environment
                   }),
                   onDone: {
                     target: 'intro',
@@ -125,6 +143,7 @@ export const machine = createMachine(
                     target: '#game.error',
                     actions: assign({
                       error: ({ event }) => {
+                        console.error(event.error)
                         if (event.error instanceof Error) {
                           return event.error
                         } else {
@@ -222,7 +241,6 @@ export const machine = createMachine(
       },
       results: {
         initial: 'score',
-        exit: 'callGameEnd',
         states: {
           score: {},
           review: {}
@@ -234,10 +252,42 @@ export const machine = createMachine(
           SET_MAP_KEYBOARD_TARGET: {
             actions: ['setMapKeyboardTarget']
           },
-          NEXT: {
-            target: 'title'
-          }
+          NEXT: [
+            {
+              target: 'highscores.new',
+              guard: 'isHighscore'
+            },
+            {
+              target: 'highscores.show'
+            }
+          ]
         }
+      },
+      highscores: {
+        initial: 'new',
+        states: {
+          new: {
+            on: {
+              SUBMIT_HIGHSCORE: {
+                target: 'show',
+                actions: [
+                  assign({
+                    lastHighscore: ({ event }) => event.highscore
+                  }),
+                  'saveHighscore'
+                ]
+              }
+            }
+          },
+          show: {
+            on: {
+              NEXT: {
+                target: '#game.title'
+              }
+            }
+          }
+        },
+        exit: 'callGameEnd'
       }
     }
   },
@@ -261,9 +311,8 @@ export const machine = createMachine(
           return []
         }
       }),
-      startGameTimeout: () => {
-        const $environment = get(environment)
-        if ($environment.timeoutEnabled) {
+      startGameTimeout: ({ context }) => {
+        if (context.environment.timeoutEnabled) {
           startGameTimeout()
         }
       },
@@ -284,6 +333,7 @@ export const machine = createMachine(
             round.area,
             event.submission
           )
+
           return {
             ...round,
             endTime: Math.max(round.startTime, event.endTime),
@@ -308,17 +358,16 @@ export const machine = createMachine(
             ? { element: event.element, library: event.library }
             : undefined
       }),
-      callGameStart: () => {
-        const $environment = get(environment)
-        if ($environment) {
-          $environment.onGameStart?.()
+      saveHighscore: ({ context, event }) => {
+        if (event.type === 'SUBMIT_HIGHSCORE') {
+          context.environment.saveHighscore?.(event.highscore)
         }
       },
-      callGameEnd: () => {
-        const $environment = get(environment)
-        if ($environment) {
-          $environment.onGameEnd?.()
-        }
+      callGameStart: ({ context }) => {
+        context.environment.onGameStart?.()
+      },
+      callGameEnd: ({ context }) => {
+        context.environment.onGameEnd?.()
       }
     },
     actors: {
@@ -327,7 +376,7 @@ export const machine = createMachine(
         async ({
           input
         }: {
-          input: { rounds: Rounds; configuration: Configuration }
+          input: { rounds: Rounds; configuration: Configuration; environment: ArcadeEnvironment }
         }): Promise<Partial<LoadedRound>> => {
           let annotationUrl: string | undefined
           let map: Map | undefined
@@ -341,8 +390,6 @@ export const machine = createMachine(
           let tries = 0
           let success = false
 
-          const $environment = get(environment)
-
           while (!success && tries < maxTries) {
             const previousAnnotationUrls = [
               ...input.rounds
@@ -351,7 +398,7 @@ export const machine = createMachine(
               ...get(failedAnnotationUrls)
             ].filter((url) => url)
 
-            annotationUrl = await $environment.getRandomAnnotationUrl(
+            annotationUrl = await input.environment.getRandomAnnotationUrl(
               input.configuration,
               previousAnnotationUrls
             )
@@ -400,10 +447,19 @@ export const machine = createMachine(
             throw new Error('Failed to load annotation')
           }
         }
+      ),
+      getHighscores: fromPromise(
+        async ({ input }: { input: { environment: ArcadeEnvironment } }): Promise<Highscore[]> =>
+          input.environment.getHighscores?.() || []
       )
     },
     guards: {
       playing: ({ context }: { context: Context }) => context.rounds.length < NUMBER_OF_ROUNDS,
+      isHighscore: ({ context }: { context: Context }) => {
+        const highscores = context.highscores
+        const totalScore = computeTotalScore(context)
+        return isHighscore(highscores, totalScore)
+      },
       canSubmit: ({ context }: { context: Context }) => {
         const lastRound = context.rounds[context.rounds.length - 1]
         return lastRound.loaded && lastRound.canSubmit
@@ -419,6 +475,10 @@ export type Snapshot = ReturnType<typeof actor.getSnapshot>
 export const state = useSelector(actor, (state) => state)
 
 export const configuration = useSelector(actor, (state) => state.context.configuration)
+
+export const lastHighscore = useSelector(actor, (state) => state.context.lastHighscore)
+
+export const highscores = useSelector(actor, (state) => state.context.highscores)
 
 export const rounds = useSelector(actor, (state) => state.context.rounds)
 
@@ -439,10 +499,10 @@ export const isLastRound = useSelector(
   (state) => state.context.rounds.length === NUMBER_OF_ROUNDS
 )
 
-export const score = useSelector(actor, (state) =>
-  state.context.rounds
-    .filter((round): round is SubmittedRound => round.submitted)
-    .reduce((acc, round) => acc + round.score, 0)
+export const totalScore = useSelector(actor, (state) => computeTotalScore(state.context))
+
+export const isNewHighscore = derived([highscores, totalScore], ([$highscores, $totalScore]) =>
+  isHighscore($highscores, $totalScore)
 )
 
 export const keyboardTarget = useSelector(actor, (state) => {

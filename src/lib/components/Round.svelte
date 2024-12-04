@@ -9,7 +9,7 @@
   import {
     actor,
     state,
-    score,
+    totalScore,
     currentRound,
     isLastRound,
     keyboardTarget,
@@ -242,7 +242,7 @@
 
     <svelte:fragment slot="right">
       <HeaderItem>
-        {formatScore($configuration, $score)} <span class="hidden sm:inline">Points</span><span
+        {formatScore($configuration, $totalScore)} <span class="hidden sm:inline">Points</span><span
           class="sm:hidden">Pts</span
         >
       </HeaderItem>

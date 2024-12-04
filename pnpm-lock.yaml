@@ -14,6 +14,9 @@ importers:
       '@allmaps/basemap':
         specifier: 1.0.0-beta.2
         version: 1.0.0-beta.2
+      '@allmaps/id':
+        specifier: 1.0.0-beta.30
+        version: 1.0.0-beta.30
       '@allmaps/iiif-parser':
         specifier: ^1.0.0-beta.40
         version: 1.0.0-beta.40
