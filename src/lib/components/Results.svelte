@@ -257,9 +257,9 @@
     }, RESULTS_ROUND_MS)
 
     return () => {
-      // TODO: add function to @allmaps/maplibre
-      // warpedMapLayer.dispose()
       clearInterval(intervalId)
+      map.removeLayer('warped-map-layer')
+      map.remove()
     }
   })
 </script>

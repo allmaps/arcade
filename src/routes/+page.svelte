@@ -11,6 +11,8 @@
   import Round from '$lib/components/Round.svelte'
   import Results from '$lib/components/Results.svelte'
   import Timeout from '$lib/components/Timeout.svelte'
+  import NewHighscore from '$lib/components/NewHighscore.svelte'
+  import Highscores from '$lib/components/Highscores.svelte'
 
   import { actor, state, currentRoundNumber, keyboardTarget } from '$lib/shared/machines/game.js'
 
@@ -96,6 +98,22 @@
       class="absolute w-full h-full flex flex-col items-center justify-center"
     >
       <Results />
+    </div>
+  {:else if $state.matches('highscores.new')}
+    <div
+      in:send={{ key }}
+      out:receive={{ key }}
+      class="absolute w-full h-full flex flex-col items-center justify-center"
+    >
+      <NewHighscore />
+    </div>
+  {:else if $state.matches('highscores.show')}
+    <div
+      in:send={{ key }}
+      out:receive={{ key }}
+      class="absolute w-full h-full flex flex-col items-center justify-center"
+    >
+      <Highscores />
     </div>
   {/if}
 

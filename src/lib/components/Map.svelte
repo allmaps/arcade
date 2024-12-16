@@ -417,6 +417,7 @@
       )
 
       warpedMapLayer = new WarpedMapLayer()
+      // @ts-expect-error: MapLibre typings are incomplete
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
 
       map.addLayer(

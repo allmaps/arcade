@@ -1,4 +1,39 @@
-import type { Configuration, Submission, Ratios } from '$lib/shared/types.js'
+import { HIGHSCORE_DISPLAY_COUNT } from '$lib/shared/constants.js'
+
+import type {
+  Context,
+  SubmittedRound,
+  Configuration,
+  Submission,
+  Ratios,
+  Highscore
+} from '$lib/shared/types.js'
+
+export function isHighscore(highscores: Highscore[], score: number) {
+  if (Math.floor(score) === 0) {
+    return false
+  }
+
+  if (highscores.length < HIGHSCORE_DISPLAY_COUNT) {
+    return true
+  }
+
+  for (const highscore of highscores
+    .toSorted((a, b) => a.score - b.score)
+    .slice(0, HIGHSCORE_DISPLAY_COUNT)) {
+    if (score > highscore.score) {
+      return true
+    }
+  }
+
+  return false
+}
+
+export function computeTotalScore(context: Context) {
+  return context.rounds
+    .filter((round): round is SubmittedRound => round.submitted)
+    .reduce((acc, round) => acc + round.score, 0)
+}
 
 export function computeAreaRatio(configuration: Configuration, area: number) {
   const areaMin = configuration.score.area.min

@@ -30,3 +30,10 @@ export const ConfigurationSchema = z.object({
   }),
   annotationUrls: z.array(z.string().url())
 })
+
+export const HighscoreSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  date: z.string().pipe(z.coerce.date()),
+  score: z.number()
+})

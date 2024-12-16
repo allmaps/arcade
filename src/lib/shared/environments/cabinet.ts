@@ -1,4 +1,8 @@
-import type { ArcadeEnvironment, ButtonType, Configuration } from '$lib/shared/types.js'
+import { uniqBy } from 'lodash-es'
+
+import { HighscoreSchema } from '$lib/shared/schemas.js'
+
+import type { ArcadeEnvironment, ButtonType, Configuration, Highscore } from '$lib/shared/types.js'
 
 export default class CabinetEnvironment implements ArcadeEnvironment {
   annotationUrls: string[] = []
@@ -50,5 +54,25 @@ export default class CabinetEnvironment implements ArcadeEnvironment {
       (annotationUrl) => !previousAnnotationUrls.includes(annotationUrl)
     )
     return filteredAnnotationUrls[Math.floor(Math.random() * filteredAnnotationUrls.length)]
+  }
+
+  async getHighscores(): Promise<Highscore[]> {
+    try {
+      const highscores = JSON.parse(localStorage.getItem('highscores') || '[]')
+      return HighscoreSchema.array().parse(highscores)
+    } catch (err) {
+      console.error('Error while parsing highscores from localStorage', err)
+      return []
+    }
+  }
+
+  async saveHighscore(highscore: Highscore): Promise<void> {
+    const highscores = await this.getHighscores()
+
+    // Add new highscore and sort by score
+    const newHighscores = uniqBy([...highscores, highscore], 'id').toSorted(
+      (a, b) => b.score - a.score
+    )
+    localStorage.setItem('highscores', JSON.stringify(newHighscores))
   }
 }

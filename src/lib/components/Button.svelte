@@ -129,6 +129,7 @@
     >
   </Tooltip.Trigger>
   <Tooltip.Content
+    class="z-[999]"
     transition={flyAndScale}
     transitionConfig={{ y: 8, duration: 150 }}
     sideOffset={8}
