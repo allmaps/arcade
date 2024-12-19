@@ -257,7 +257,7 @@
         out:fade={{ duration: 150 }}
         class="absolute w-full h-full top-0 left-0 flex justify-center items-center pointer-events-none"
       >
-        <ScoreLarge round={$currentRound} {found} />
+        <ScoreLarge round={$currentRound} />
       </div>
     {/if}
   </div>
