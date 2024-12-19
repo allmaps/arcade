@@ -2,12 +2,17 @@ import { HIGHSCORE_DISPLAY_COUNT } from '$lib/shared/constants.js'
 
 import type {
   Context,
+  ArcadeEnvironment,
   SubmittedRound,
   Configuration,
   Submission,
   Ratios,
   Highscore
 } from '$lib/shared/types.js'
+
+export function getHighscoresEnabled(environment: ArcadeEnvironment) {
+  return environment.getHighscores !== undefined && environment.saveHighscore !== undefined
+}
 
 export function isHighscore(highscores: Highscore[], score: number) {
   if (Math.floor(score) === 0) {

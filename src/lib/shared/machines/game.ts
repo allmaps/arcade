@@ -15,6 +15,7 @@ import {
   computeScoreRatios,
   computeMaxScore,
   computeScore,
+  getHighscoresEnabled,
   isHighscore
 } from '$lib/shared/score.js'
 import { colorForRounds } from '$lib/shared/colors.js'
@@ -254,6 +255,10 @@ export const machine = createMachine(
           },
           NEXT: [
             {
+              target: '#game.title',
+              guard: 'highscoresDisabled'
+            },
+            {
               target: 'highscores.new',
               guard: 'isHighscore'
             },
@@ -455,6 +460,8 @@ export const machine = createMachine(
     },
     guards: {
       playing: ({ context }: { context: Context }) => context.rounds.length < NUMBER_OF_ROUNDS,
+      highscoresDisabled: ({ context }: { context: Context }) =>
+        !getHighscoresEnabled(context.environment),
       isHighscore: ({ context }: { context: Context }) => {
         const highscores = context.highscores
         const totalScore = computeTotalScore(context)
@@ -500,6 +507,10 @@ export const isLastRound = useSelector(
 )
 
 export const totalScore = useSelector(actor, (state) => computeTotalScore(state.context))
+
+export const highscoresEnabled = useSelector(actor, (state) =>
+  getHighscoresEnabled(state.context.environment)
+)
 
 export const isNewHighscore = derived([highscores, totalScore], ([$highscores, $totalScore]) =>
   isHighscore($highscores, $totalScore)
