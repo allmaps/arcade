@@ -5,9 +5,10 @@
 
   import { geometryToPath } from '$lib/shared/svg.js'
 
-  import type { Polygon as GeoJsonPolygon } from 'geojson'
+  import type { GeojsonPolygon } from '@allmaps/types'
 
-  export let geoMask: GeoJsonPolygon
+  export let geoMask: GeojsonPolygon
+
   export let strokeClass: string
   export let tickInterval: number
 

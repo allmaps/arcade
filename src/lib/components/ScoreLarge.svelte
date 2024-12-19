@@ -7,7 +7,6 @@
   import type { SubmittedRound } from '$lib/shared/types.js'
 
   export let round: SubmittedRound
-  export let found = false
 
   // Add heading text:
   // 1. maxScore: Perfect Score!
