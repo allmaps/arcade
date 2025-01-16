@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte'
 
+  import { isCabinet } from '$lib/shared/cabinet.js'
+
   const dispatch = createEventDispatcher()
 
   const HIGHSCORE_NAME_LENGTH = 5
@@ -111,7 +113,10 @@
       selectAndFocusInput(index - 1)
     } else if (event.key === 'ArrowRight') {
       selectAndFocusInput(index + 1)
-    } else if (new RegExp(input.pattern).test(event.key)) {
+    } else if (!isCabinet && new RegExp(input.pattern).test(event.key)) {
+      // On the Arcade cabinet, the arcade buttons are mapped keyboard keys.
+      // Regular keyboard keys should not change the input value on the cabinet.
+
       input.value = event.key.toUpperCase()
 
       if (inputs[index + 1]) {
