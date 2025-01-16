@@ -5,7 +5,7 @@
 
   import Mask from '$lib/components/Mask.svelte'
 
-  import initialtGeoMasks from '$lib/shared/initial-geo-masks.js'
+  import initialGeoMasks from '$lib/shared/initial-geo-masks.js'
 
   let intervalId: number | undefined
   const tickInterval = 4000
@@ -72,7 +72,7 @@
     }
   }
 
-  const geoMasks = initialtGeoMasks
+  const geoMasks = initialGeoMasks
 
   let keyDirection: SlideDirection | undefined
   let resetKeyDirectionOnNextTick = false
