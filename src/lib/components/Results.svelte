@@ -122,7 +122,7 @@
         sources: {
           protomaps: {
             type: 'vector',
-            tiles: ['https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=ca7652ec836f269a'],
+            tiles: [import.meta.env.ARCADE_PMTILES_URL],
             maxzoom: 14,
             attribution:
               '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
