@@ -1,6 +1,15 @@
 <script lang="ts">
-  const hasHeader = $$slots.header !== undefined
-  const hasContent = $$slots.default !== undefined
+  import type { Snippet } from 'svelte'
+
+  type Props = {
+    header?: Snippet
+    children?: Snippet
+    footer?: Snippet
+  }
+
+  let { header, children, footer }: Props = $props()
+  const hasHeader = header !== undefined
+  const hasContent = children !== undefined
 
   const gridRowsWithHeader = 'grid-rows-[min-content,1fr,min-content]'
   const gridRowsWithoutHeader = 'grid-rows-[1fr,min-content]'
@@ -11,13 +20,13 @@
   p-2 sm:p-3 md:p-4 lg:p-6 gap-2 sm:gap-3 md:gap-4 lg:gap-6 z-10 pointer-events-none
   grid {hasHeader ? gridRowsWithHeader : gridRowsWithoutHeader} justify-items-center items-center"
 >
-  <slot name="header" />
+  {@render header?.()}
 
   {#if hasContent}
-    <slot />
+    {@render children?.()}
   {:else}
     <div></div>
   {/if}
 
-  <slot name="footer" />
+  {@render footer?.()}
 </section>

@@ -1,23 +1,26 @@
 <script lang="ts">
-  import { environment } from '$lib/shared/stores/environment.js'
+  import { getDeviceState } from '$lib/shared/stores/device.svelte.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
-  import { isTouchDevice } from '$lib/shared/stores/touch.js'
   import { isCabinet } from '$lib/shared/cabinet.js'
 
   import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
+
+  const deviceState = getDeviceState()
+  const { snapshot } = getSnapshotState()
 </script>
 
 {#if isCabinet}
   Find the right location by moving the map with the joystick and zooming in and out with the <ArcadeButtonIcon
-    button={$environment.getButton('zoomIn')}
+    button={$snapshot.context.environment.getButton('zoomIn')}
   /> buttons.
-{:else if $isTouchDevice}
+{:else if deviceState.isTouch}
   Find the right location by moving the map and zooming in.
 {:else}
   Find the right location by moving the map with your mouse of with the arrow keys. You can zoom in
-  and out by scrolling or with <ArcadeButtonIcon button={$environment.getButton('zoomIn')} /> and <ArcadeButtonIcon
-    button={$environment.getButton('zoomOut')}
-  />.
+  and out by scrolling or with <ArcadeButtonIcon
+    button={$snapshot.context.environment.getButton('zoomIn')}
+  /> and <ArcadeButtonIcon button={$snapshot.context.environment.getButton('zoomOut')} />.
 {/if}
 
 <!--

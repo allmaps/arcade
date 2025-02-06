@@ -17,14 +17,11 @@
 
   import { geometryToPixels, coordinatesToSvgPoints, getConvexHull } from '$lib/shared/geometry.js'
   import { generateEmptyFeatureCollection } from '$lib/shared/geojson.js'
-  import {
-    actor,
-    state,
-    currentRound,
-    currentRoundIndex,
-    configuration,
-    type Snapshot
-  } from '$lib/shared/machines/game.js'
+
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
+  import { getTimerState } from '$lib/shared/stores/timer.svelte.js'
+  import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
+
   import {
     flyTo,
     convexHullStyle,
@@ -34,18 +31,25 @@
     disableInteraction,
     enableInteraction
   } from '$lib/shared/maplibre.js'
-  import { endTime } from '$lib/shared/stores/timer.js'
-  import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
+
   import { computeZoomRatio, computeDistanceRatio } from '$lib/shared/score.js'
 
   import PerfectScore from '$lib/components/PerfectScore.svelte'
 
   import { PADDING } from '$lib/shared/constants.js'
 
+  import type { SnapshotFrom } from 'xstate'
+
   import type { GeoJSONSource } from 'maplibre-gl'
   import type { GeojsonPolygon, Point } from '@allmaps/types'
 
+  import type { GameMachine } from '$lib/shared/machines/game.js'
+
   import type { LoadedRound, Submission, CallbackFn } from '$lib/shared/types.js'
+
+  const { snapshot, send, actorRef, currentRound, currentRoundIndex } = getSnapshotState()
+  const gameTimeoutState = getGameTimeoutState()
+  const timerState = getTimerState()
 
   let map: Map
 
@@ -55,12 +59,12 @@
   const panStep = 150
 
   let container: HTMLElement
-  let svgPolygon: SVGPathElement | undefined
-  let svgCoordinates: Point[] = []
 
-  let strokeColor: string
+  let svgPolygon = $state<SVGPathElement>()
 
-  let contentBoxSize: ResizeObserverSize | undefined
+  let strokeColor = $state('#ffffff00')
+
+  let contentBoxSize = $state<ResizeObserverSize>()
 
   let warpedMapZoom: number
 
@@ -70,12 +74,24 @@
   let perfectScore = false
   let submission: Submission | undefined
 
-  let showPerfectScore = false
+  let showPerfectScore = $state(false)
 
   const geoMask = ($currentRound as LoadedRound).geoMask
 
   let convexHull: GeojsonPolygon | undefined
   let submittedGeoMask: GeojsonPolygon | undefined
+
+  let svgCoordinates = $derived.by(() => {
+    if (contentBoxSize) {
+      return geometryToPixels(
+        geoMask,
+        [contentBoxSize.inlineSize, contentBoxSize.blockSize],
+        PADDING
+      )
+    }
+
+    return []
+  })
 
   function getWarpedMapCenter(): Point {
     return bboxToCenter(computeBbox(geoMask))
@@ -208,7 +224,7 @@
     return submission
   }
 
-  function handleTransition(snapshot: Snapshot) {
+  function handleTransition(snapshot: SnapshotFrom<GameMachine>) {
     if (!submitted && snapshot.matches('round.progress.submitted')) {
       warpedMapLayer.setOpacity(1)
       submitted = true
@@ -231,7 +247,7 @@
         convexHullSource.setData(convexHull)
 
         flyToWarpedMap(() => {
-          actor.send({ type: 'FINISHED' })
+          send({ type: 'FINISHED' })
           map.setPaintProperty('convex-hull', 'fill-opacity', 0)
         })
       }
@@ -242,20 +258,10 @@
     }
   }
 
-  $: {
-    if (contentBoxSize) {
-      svgCoordinates = geometryToPixels(
-        geoMask,
-        [contentBoxSize.inlineSize, contentBoxSize.blockSize],
-        PADDING
-      )
-    }
-  }
-
   function handleSubmit(found?: boolean) {
-    actor.send({
+    send({
       type: 'SUBMIT',
-      endTime: $endTime,
+      endTime: timerState.endTime,
       submission: getSubmission(found)
     })
   }
@@ -300,7 +306,7 @@
 
   function handleMovestart() {
     mapHadFirstInteraction = true
-    actor.send({ type: 'MAP_MOVED' })
+    send({ type: 'MAP_MOVED' })
   }
 
   function handleMoveend() {
@@ -331,7 +337,7 @@
             flyToWarpedMap(() => {
               showPerfectScore = true
               handleSubmit(true)
-              actor.send({ type: 'FINISHED' })
+              send({ type: 'FINISHED' })
             })
 
             // ol.getView().fit(getExtent(geoMask), {
@@ -342,11 +348,11 @@
         }
       }
     }
-    resetLastInteraction()
+    gameTimeoutState.resetLastInteraction()
   }
 
   onMount(() => {
-    if (!$currentRound || !$currentRound.loaded || $currentRoundIndex === undefined) {
+    if (!$currentRound || !$currentRound.loaded || currentRoundIndex === undefined) {
       return
     }
 
@@ -378,7 +384,7 @@
         },
         layers
       },
-      center: $configuration.map.center as Point,
+      center: $snapshot.context.configuration.map.center as Point,
       zoom: 7,
       maxPitch: 0,
       preserveDrawingBuffer: true,
@@ -433,20 +439,20 @@
       warpedMapLayer.setOpacity(0)
       warpedMapLayer.addGeoreferencedMap($currentRound.map)
 
-      actor.send({
+      send({
         type: 'SET_MAP_KEYBOARD_TARGET',
         element: map.getCanvas(),
         library: 'maplibre'
       })
     })
 
-    const subscription = actor.subscribe(handleTransition)
+    const subscription = actorRef.subscribe(handleTransition)
 
     warpedMapZoom = getWarpedMapZoom()
 
     const zoomFraction = warpedMapZoom % 1
 
-    const initialZoom = $configuration.map.initialZoom + zoomFraction
+    const initialZoom = $snapshot.context.configuration.map.initialZoom + zoomFraction
     const minZoom = 1 + zoomFraction
     const maxZoom = warpedMapZoom + 4
 
@@ -492,8 +498,8 @@
 </script>
 
 <div class="relative w-full h-full {$currentRound?.colors.bgClassFaded}">
-  <div bind:this={container} class="w-full h-full ring-0" tabindex="-1" />
-  {#if geoMask && contentBoxSize && !$state.matches('round.progress.submitted')}
+  <div bind:this={container} class="w-full h-full ring-0" tabindex="-1"></div>
+  {#if geoMask && contentBoxSize && !$snapshot.matches('round.progress.submitted')}
     <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
       <svg viewBox={`0 0 ${contentBoxSize.inlineSize} ${contentBoxSize.blockSize}`}>
         <polygon

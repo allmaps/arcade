@@ -1,11 +1,14 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte'
 
-  import { isTouchDevice } from '$lib/shared/stores/touch.js'
-  import { environment } from '$lib/shared/stores/environment.js'
+  import { getDeviceState } from '$lib/shared/stores/device.svelte.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
-  import { keyboardTarget } from '$lib/shared/machines/game.js'
   import { zoomIn, zoomOut } from '$lib/shared/keyboard.js'
+
+  const deviceState = getDeviceState()
+
+  const { snapshot, keyboardTarget } = getSnapshotState()
 
   function handleZoomIn() {
     zoomIn($keyboardTarget)
@@ -16,12 +19,18 @@
   }
 </script>
 
-{#if !$isTouchDevice}
-  <Button button={$environment.getButton('zoomOut')} verb="zoom out" on:click={handleZoomOut}>
-    <div class="zoom-out w-full h-full bg-no-repeat bg-center" />
+{#if !deviceState.isTouch}
+  <Button
+    button={$snapshot.context.environment.getButton('zoomOut')}
+    verb="zoom out"
+    onclick={handleZoomOut}
+  >
+    <div class="zoom-out w-full h-full bg-no-repeat bg-center"></div>
   </Button>
-  <Button button={$environment.getButton('zoomIn')} verb="zoom in" on:click={handleZoomIn}
-    ><div class="zoom-in w-full h-full bg-no-repeat bg-center" /></Button
+  <Button
+    button={$snapshot.context.environment.getButton('zoomIn')}
+    verb="zoom in"
+    onclick={handleZoomIn}><div class="zoom-in w-full h-full bg-no-repeat bg-center"></div></Button
   >
 {/if}
 

@@ -1,16 +1,19 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte'
+  import { onMount } from 'svelte'
 
   import { isCabinet } from '$lib/shared/cabinet.js'
-
-  const dispatch = createEventDispatcher()
 
   const HIGHSCORE_NAME_LENGTH = 5
 
   let inputList: HTMLOListElement
   let inputs: HTMLInputElement[] = []
 
-  export let value = ''
+  type Props = {
+    value?: string
+    onsubmit?: (value: string) => void
+  }
+
+  let { value = $bindable(''), onsubmit }: Props = $props()
 
   export function backspace(index?: number) {
     if (index === undefined) {
@@ -77,7 +80,7 @@
 
     const input = event.target as HTMLInputElement
     if (event.key === 'Enter') {
-      dispatch('submit', { value })
+      onsubmit?.(value)
     } else if (event.key === 'Backspace') {
       backspace(index)
       return
@@ -149,7 +152,7 @@
 <ol class="flex gap-2" bind:this={inputList}>
   {#each { length: HIGHSCORE_NAME_LENGTH } as _, index}
     <li>
-      <!-- svelte-ignore a11y-autofocus -->
+      <!-- svelte-ignore a11y_autofocus -->
       <input
         autofocus={index === 0}
         type="text"
@@ -160,7 +163,7 @@
           text-5xl w-16 h-16
           sm:text-6xl sm:w-24 sm:h-24
           md:text-8xl md:w-32 md:h-32"
-        on:keydown={(event) => handleKeydown(index, event)}
+        onkeydown={(event) => handleKeydown(index, event)}
       />
     </li>
   {/each}

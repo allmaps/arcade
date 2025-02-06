@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+
 import type { MachineContext } from 'xstate'
 
 import type { Map } from '@allmaps/annotation'
@@ -6,6 +7,9 @@ import type { GcpTransformer } from '@allmaps/transform'
 import type { GeojsonPolygon, Point } from '@allmaps/types'
 
 import type { ConfigurationSchema, HighscoreSchema } from '$lib/shared/schemas.js'
+
+import type { FailedAnnotationUrlsState } from '$lib/shared/stores/failed-annotation-urls.svelte.js'
+import type { GameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
 
 export type Configuration = z.infer<typeof ConfigurationSchema>
 
@@ -18,10 +22,24 @@ export type KeyboardTarget = {
   library: MappingLibrary
 }
 
+export type LayoutData = {
+  environment: ArcadeEnvironment
+  configuration: Configuration
+}
+
+export type GameInput = {
+  environment: ArcadeEnvironment
+  configuration: Configuration
+  failedAnnotationUrlsState: FailedAnnotationUrlsState
+  gameTimeoutState: GameTimeoutState
+}
+
 export interface Context extends MachineContext {
   rounds: Rounds
   environment: ArcadeEnvironment
   configuration: Configuration
+  failedAnnotationUrlsState: FailedAnnotationUrlsState
+  gameTimeoutState: GameTimeoutState
   imageKeyboardTarget?: KeyboardTarget
   mapKeyboardTarget?: KeyboardTarget
   error?: Error

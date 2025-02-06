@@ -3,10 +3,14 @@
 
   import type { Point } from '@allmaps/types'
 
-  export let color: string
-  export let width: number
-  export let height: number
-  export let coordinates: Point[]
+  type Props = {
+    color: string
+    width: number
+    height: number
+    coordinates: Point[]
+  }
+
+  let { color, width, height, coordinates }: Props = $props()
 
   const triangleCount = 11
 

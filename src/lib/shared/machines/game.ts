@@ -1,6 +1,4 @@
-import { get, derived } from 'svelte/store'
-import { createMachine, createActor, assign, fromPromise, raise } from 'xstate'
-import { useSelector } from '@xstate/svelte'
+import { createMachine, assign, fromPromise, raise } from 'xstate'
 
 import { getArea } from 'ol/sphere.js'
 import GeoJSON from 'ol/format/GeoJSON.js'
@@ -8,7 +6,6 @@ import GeoJSON from 'ol/format/GeoJSON.js'
 import { fetchImageInfo } from '@allmaps/stdlib'
 import { GcpTransformer } from '@allmaps/transform'
 
-import { getConfiguration } from '$lib/shared/config.js'
 import { fetchMap } from '$lib/shared/maps.js'
 import {
   computeTotalScore,
@@ -19,18 +16,9 @@ import {
   isHighscore
 } from '$lib/shared/score.js'
 import { colorForRounds } from '$lib/shared/colors.js'
-import defaultConfig from '$lib/shared/default-config.js'
 import { getTimeoutSignal } from '$lib/shared/timeout.js'
 import { assignLastRound } from '$lib/shared/xstate.js'
 import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
-
-import {
-  failedAnnotationUrls,
-  addFailedAnnotationUrl,
-  resetFailedAnnotationUrls
-} from '$lib/shared/stores/failed-annotation-urls.js'
-import { environment } from '$lib/shared/stores/environment'
-import { startGameTimeout, stopGameTimeout } from '$lib/shared/stores/game-timeout.js'
 
 import type { Map } from '@allmaps/annotation'
 import type { GeojsonPolygon } from '@allmaps/types'
@@ -40,7 +28,7 @@ import type {
   GameEvent,
   Rounds,
   LoadedRound,
-  Configuration,
+  GameInput,
   ArcadeEnvironment,
   Highscore
 } from '$lib/shared/types.js'
@@ -50,38 +38,27 @@ function getTime() {
   return date.getTime()
 }
 
-export const machine = createMachine(
+export type GameMachine = typeof gameMachine
+
+export const gameMachine = createMachine(
   {
-    /** @xstate-layout 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-0DsUDYOg8yKFnB08BtYjBFl4RK62ttGJgD+YC-VfcDbyuypUJVdD2gTzNeCXWhpTCmCAA */
     id: 'game',
     types: {
       context: {} as Context,
       events: {} as GameEvent
     },
-    context: {
+    context: ({ input }: { input: GameInput }) => ({
+      ...input,
       rounds: [] as Rounds,
-      configuration: defaultConfig,
-      environment: get(environment),
       highscores: []
-    },
-    initial: 'loading',
+    }),
+    initial: 'title',
     on: {
       TIMEOUT: {
         target: '.title'
       }
     },
     states: {
-      loading: {
-        invoke: {
-          src: 'getConfiguration',
-          onDone: {
-            target: 'title',
-            actions: assign({
-              configuration: ({ event }) => event.output
-            })
-          }
-        }
-      },
       error: {
         on: {
           NEXT: {
@@ -129,9 +106,7 @@ export const machine = createMachine(
                 invoke: {
                   src: 'fetchRoundData',
                   input: ({ context }) => ({
-                    rounds: context.rounds,
-                    configuration: context.configuration,
-                    environment: context.environment
+                    context
                   }),
                   onDone: {
                     target: 'intro',
@@ -309,19 +284,18 @@ export const machine = createMachine(
             colors: colorForRounds[context.rounds.length]
           })
       }),
-      // resetFailedAnnotationUrls
       resetRounds: assign({
-        rounds: () => {
-          resetFailedAnnotationUrls()
+        rounds: ({ context }) => {
+          context.failedAnnotationUrlsState?.resetFailedAnnotationUrls()
           return []
         }
       }),
       startGameTimeout: ({ context }) => {
         if (context.environment.timeoutEnabled) {
-          startGameTimeout()
+          context.gameTimeoutState.startGameTimeout()
         }
       },
-      stopGameTimeout: () => stopGameTimeout(),
+      stopGameTimeout: ({ context }) => context.gameTimeoutState.stopGameTimeout(),
       setStartTime: assignLastRound((round) => {
         if (round.loaded) {
           round.startTime = getTime()
@@ -376,13 +350,10 @@ export const machine = createMachine(
       }
     },
     actors: {
-      getConfiguration: fromPromise(async (): Promise<Configuration> => getConfiguration()),
       fetchRoundData: fromPromise(
-        async ({
-          input
-        }: {
-          input: { rounds: Rounds; configuration: Configuration; environment: ArcadeEnvironment }
-        }): Promise<Partial<LoadedRound>> => {
+        async ({ input }: { input: { context: Context } }): Promise<Partial<LoadedRound>> => {
+          const { configuration, environment, failedAnnotationUrlsState } = input.context
+
           let annotationUrl: string | undefined
           let map: Map | undefined
           let transformer: GcpTransformer | undefined
@@ -397,14 +368,14 @@ export const machine = createMachine(
 
           while (!success && tries < maxTries) {
             const previousAnnotationUrls = [
-              ...input.rounds
+              ...input.context.rounds
                 .filter((round): round is LoadedRound => round.loaded)
                 .map((round) => round.annotationUrl),
-              ...get(failedAnnotationUrls)
+              ...failedAnnotationUrlsState?.failedAnnotationUrls
             ].filter((url) => url)
 
-            annotationUrl = await input.environment.getRandomAnnotationUrl(
-              input.configuration,
+            annotationUrl = await environment.getRandomAnnotationUrl(
+              configuration,
               previousAnnotationUrls
             )
 
@@ -422,12 +393,12 @@ export const machine = createMachine(
                   })
                 )
 
-                maxScore = computeMaxScore(input.configuration, area)
+                maxScore = computeMaxScore(configuration, area)
 
                 success = true
               } catch (err) {
                 console.warn('Failed to load annotation', annotationUrl, err)
-                addFailedAnnotationUrl(annotationUrl)
+                failedAnnotationUrlsState.addFailedAnnotationUrl(annotationUrl)
               }
             }
 
@@ -474,53 +445,3 @@ export const machine = createMachine(
     }
   }
 )
-
-export const actor = createActor(machine).start()
-
-export type Snapshot = ReturnType<typeof actor.getSnapshot>
-
-export const state = useSelector(actor, (state) => state)
-
-export const configuration = useSelector(actor, (state) => state.context.configuration)
-
-export const lastHighscore = useSelector(actor, (state) => state.context.lastHighscore)
-
-export const highscores = useSelector(actor, (state) => state.context.highscores)
-
-export const rounds = useSelector(actor, (state) => state.context.rounds)
-
-export const error = useSelector(actor, (state) => state.context.error)
-
-export const currentRound = useSelector(actor, (state) => {
-  if (state.context.rounds.length > 0) {
-    return state.context.rounds[state.context.rounds.length - 1]
-  }
-})
-
-export const currentRoundIndex = derived(currentRound, ($currentRound) => $currentRound?.index)
-
-export const currentRoundNumber = derived(currentRound, ($currentRound) => $currentRound?.number)
-
-export const isLastRound = useSelector(
-  actor,
-  (state) => state.context.rounds.length === NUMBER_OF_ROUNDS
-)
-
-export const totalScore = useSelector(actor, (state) => computeTotalScore(state.context))
-
-export const highscoresEnabled = useSelector(actor, (state) =>
-  getHighscoresEnabled(state.context.environment)
-)
-
-export const isNewHighscore = derived([highscores, totalScore], ([$highscores, $totalScore]) =>
-  isHighscore($highscores, $totalScore)
-)
-
-export const keyboardTarget = useSelector(actor, (state) => {
-  if (state.matches('round.display.image')) {
-    return state.context.imageKeyboardTarget
-  } else {
-    // in states 'round.display.map' and 'results'
-    return state.context.mapKeyboardTarget
-  }
-})

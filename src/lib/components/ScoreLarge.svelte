@@ -1,14 +1,20 @@
 <script lang="ts">
   import { formatScore } from '$lib/shared/format.js'
-  import { configuration } from '$lib/shared/machines/game'
+
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
   import Time from '$lib/components/Time.svelte'
 
   import type { SubmittedRound } from '$lib/shared/types.js'
 
-  export let round: SubmittedRound
+  type Props = {
+    round: SubmittedRound
+  }
 
-  // Add heading text:
+  let { round }: Props = $props()
+
+  const { snapshot } = getSnapshotState()
+
   // 1. maxScore: Perfect Score!
   // 2. found: Found!
   // 3. score > 50% maxScore: Well done!
@@ -29,8 +35,10 @@
     </div>
     <div>
       <div class="text-xl">
-        {formatScore($configuration, round.score)} Points
-        <span class="text-base opacity-25">/ {formatScore($configuration, round.maxScore)}</span>
+        {formatScore($snapshot.context.configuration, round.score)} Points
+        <span class="text-base opacity-25"
+          >/ {formatScore($snapshot.context.configuration, round.maxScore)}</span
+        >
       </div>
       <div class="text-sm">
         <Time milliseconds={round.endTime - round.startTime} />

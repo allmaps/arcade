@@ -1,27 +1,31 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
-  import { currentRound, currentRoundIndex, currentRoundNumber } from '$lib/shared/machines/game.js'
   import { ATTRIBUTION_MIN_MS, MIN_LOADING_MS } from '$lib/shared/constants.js'
 
   import Attribution from '$lib/components/Attribution.svelte'
 
-  export let annotationLoading: boolean
-  export let imageLoading: boolean
+  type Props = {
+    annotationLoading: boolean
+    imageLoading: boolean
+    onready: () => void
+  }
 
-  let loadingPercentage = 0
-  let loadingText = 'Loading map'
+  let { annotationLoading, imageLoading, onready }: Props = $props()
 
-  let minLoadingReady = false
+  const { currentRound, currentRoundIndex, currentRoundNumber } = getSnapshotState()
 
-  const showAttribution = $currentRoundIndex === 0
-  let attributionReady = false
+  let loadingPercentage = $state(0)
+  let loadingText = $state('Loading map')
+
+  let minLoadingReady = $state(false)
+
+  const showAttribution = $derived($currentRoundIndex === 0)
+  let attributionReady = $state(false)
 
   const firstStepPercentage = Math.random() * 10 + 10
   const firstStapAfterMs = Math.random() * 500 + 500
   const secondStepPercentage = Math.random() * 20 + 30
-
-  const dispatch = createEventDispatcher()
 
   setTimeout(() => (minLoadingReady = true), MIN_LOADING_MS)
   setTimeout(() => (attributionReady = true), ATTRIBUTION_MIN_MS)
@@ -31,7 +35,7 @@
     firstStapAfterMs
   )
 
-  $: {
+  $effect(() => {
     if (!annotationLoading) {
       loadingText = 'Loading image'
       loadingPercentage = Math.max(secondStepPercentage, loadingPercentage)
@@ -44,9 +48,9 @@
       (!showAttribution || attributionReady)
     ) {
       loadingPercentage = 100
-      setTimeout(() => dispatch('ready'), 150)
+      setTimeout(() => onready(), 150)
     }
-  }
+  })
 </script>
 
 <div class="w-full h-full flex flex-col items-center justify-center gap-4">

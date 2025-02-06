@@ -1,7 +1,11 @@
 <script lang="ts">
   import { fade } from 'svelte/transition'
 
-  export let timeout: number
+  type Props = {
+    timeout: number
+  }
+
+  let { timeout }: Props = $props()
 </script>
 
 <div
@@ -14,7 +18,7 @@
     <div
       style="animation-duration: {timeout}ms;"
       class="timeout absolute w-full h-full top-0 left-0 bg-blue"
-    />
+    ></div>
     <div class="relative">Press any key to continue</div>
   </div>
 </div>

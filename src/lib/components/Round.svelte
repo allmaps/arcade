@@ -2,22 +2,11 @@
   import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
 
-  import { configuration } from '$lib/shared/machines/game.js'
-  import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
   import { formatScore } from '$lib/shared/format.js'
 
-  import {
-    actor,
-    state,
-    totalScore,
-    currentRound,
-    isLastRound,
-    keyboardTarget,
-    type Snapshot
-  } from '$lib/shared/machines/game.js'
-  import { endTime } from '$lib/shared/stores/timer.js'
-  import { environment } from '$lib/shared/stores/environment.js'
-  import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
+  import { getTimerState } from '$lib/shared/stores/timer.svelte.js'
+  import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte'
 
   import Overlay from '$lib/components/Overlay.svelte'
   import Header from '$lib/components/Header.svelte'
@@ -34,33 +23,44 @@
   import ScoreLarge from '$lib/components/ScoreLarge.svelte'
   import Timer from '$lib/components/Timer.svelte'
 
+  import type { SnapshotFrom } from 'xstate'
+
+  import type { GameMachine } from '$lib/shared/machines/game.js'
+
   import type { KeyboardTarget, LoadedRound } from '$lib/shared/types.js'
 
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
+  import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
 
-  let containerImage: HTMLElement
-  let containerMap: HTMLElement
+  const { snapshot, send, actorRef, currentRound, keyboardTarget, isLastRound, totalScore } =
+    getSnapshotState()
+  const gameTimeoutState = getGameTimeoutState()
+  const timerState = getTimerState()
 
-  let bgClass: string | undefined = $currentRound?.colors.bgClass
+  let containerImage = $state<HTMLElement>()
+  let containerMap = $state<HTMLElement>()
 
-  let image: Image
-  let map: Map
+  let bgClass = $state($currentRound?.colors.bgClass)
+
+  let image = $state<Image>()
+  let map = $state<Map>()
 
   let startTime: number
   let intervalId: number
 
-  let ready = false
-  let imageReady = false
+  let ready = $state(false)
+  let imageReady = $state(false)
 
-  let annotationReady = false
-  $: annotationReady = !$state.matches('round.progress.loading')
+  let annotationReady = $derived(!$snapshot.matches('round.progress.loading'))
 
   // When SUBMIT event is received, submitted is set to true
   // Using $snapshot.matches('round.display.submitted') caused
   // strange race-condition bugs with svelte/transition
-  let submitted = false
+  // TODO: check!
+  // let submitted = $state(false)
+  let submitted = $derived($snapshot.matches('round.progress.submitted'))
 
-  let found = false
+  // let found = false
 
   function focusElement(element: HTMLElement, keyboardTarget: KeyboardTarget) {
     if (!element) {
@@ -73,43 +73,40 @@
     keyboardTarget.element.focus()
   }
 
-  let displayImage: boolean
-  let displayMap: boolean
+  let displayImage = $derived($snapshot.matches('round.display.image'))
+  let displayMap = $derived($snapshot.matches('round.display.map'))
 
-  $: displayImage = $state.matches('round.display.image')
-  $: displayMap = $state.matches('round.display.map')
+  let loading = $derived($snapshot.matches('round.progress.loading'))
+  let intro = $derived($snapshot.matches('round.progress.intro'))
 
-  $: loading = $state.matches('round.progress.loading')
-  $: intro = $state.matches('round.progress.intro')
+  let showLargeRoundScore = $derived(
+    $snapshot.matches('round.progress.submitted.animating') ||
+      $snapshot.matches('round.progress.submitted.score')
+  )
 
-  $: showLargeRoundScore =
-    $state.matches('round.progress.submitted.animating') ||
-    $state.matches('round.progress.submitted.score')
+  let canSubmit = $derived((($currentRound as LoadedRound)?.canSubmit || false) && displayMap)
 
-  $: canSubmit = (($currentRound as LoadedRound)?.canSubmit || false) && displayMap
-
-  $: {
+  $effect(() => {
     if ($keyboardTarget) {
-      if (displayImage) {
+      if (displayImage && containerImage) {
         focusElement(containerImage, $keyboardTarget)
-      } else if (displayMap) {
+      } else if (displayMap && containerMap) {
         focusElement(containerMap, $keyboardTarget)
       }
     }
-  }
+  })
 
-  function handleTransition(snapshot: Snapshot) {
-    if (snapshot.matches('round.progress.submitted')) {
-      // stopTimer()
-      submitted = true
+  function handleTransition(snapshot: SnapshotFrom<GameMachine>) {
+    if (snapshot.matches('round.progress.loading')) {
+      ready = false
     }
 
     if (snapshot.matches('round.progress.submitted.animating')) {
       stopTimer()
-      // submitted = true
-      if ($currentRound?.submitted) {
-        found = $currentRound.submission?.found
-      }
+
+      // if ($currentRound?.submitted) {
+      //   found = $currentRound.submission?.found
+      // }
     }
 
     bgClass = $currentRound?.colors.bgClass
@@ -121,7 +118,7 @@
   }
 
   function updateTimer() {
-    $endTime = getTime()
+    timerState.endTime = getTime()
   }
 
   function handleImageReady() {
@@ -129,15 +126,22 @@
   }
 
   function handleLoadingReady() {
+    startTimer()
     ready = true
   }
 
   function handleSubmit() {
-    actor.send({
-      type: 'SUBMIT',
-      endTime: $endTime,
-      submission: map.getSubmission()
-    })
+    if (map) {
+      send({
+        type: 'SUBMIT',
+        endTime: timerState.endTime,
+        submission: map.getSubmission()
+      })
+    }
+  }
+
+  function startTimer() {
+    intervalId = setInterval(updateTimer, 1000)
   }
 
   function stopTimer() {
@@ -145,28 +149,28 @@
   }
 
   function handleToggleImageStart() {
-    actor.send({ type: 'SHOW_IMAGE' })
+    send({ type: 'SHOW_IMAGE' })
   }
 
   function handleToggleImageEnd() {
-    actor.send({ type: 'SHOW_MAP' })
+    send({ type: 'SHOW_MAP' })
   }
 
   function handleToggleSubmissionStart() {
-    resetLastInteraction()
-    map.flyToSubmission()
+    gameTimeoutState.resetLastInteraction()
+    map?.flyToSubmission()
   }
 
   function handleToggleSubmissionEnd() {
-    resetLastInteraction()
-    map.flyToWarpedMap()
+    gameTimeoutState.resetLastInteraction()
+    map?.flyToWarpedMap()
   }
 
   onMount(() => {
     startTime = getTime()
-    intervalId = setInterval(updateTimer, 1000)
+    // startTimer()
 
-    const subscription = actor.subscribe(handleTransition)
+    const subscription = actorRef.subscribe(handleTransition)
 
     return () => {
       stopTimer()
@@ -183,7 +187,7 @@
         in:fade={{ duration: 1000 }}
         class="absolute w-full h-full left-0 top-0"
       >
-        <Image bind:this={image} on:ready={handleImageReady} />
+        <Image bind:this={image} onready={handleImageReady} />
       </div>
     {/if}
   {:else}
@@ -212,42 +216,43 @@
       <RoundLoading
         annotationLoading={!annotationReady}
         imageLoading={!imageReady}
-        on:ready={handleLoadingReady}
+        onready={handleLoadingReady}
       />
     </div>
   {/if}
 </div>
 <Overlay>
-  <Header slot="header">
-    <svelte:fragment slot="left">
-      {#if $state.matches('round')}
-        <HeaderItem>
-          <span class="hidden sm:inline">Round</span><span class="sm:hidden">#</span>
-          <span class="[letter-spacing:theme(spacing.1)]"
-            >{$currentRound?.number}/{NUMBER_OF_ROUNDS}</span
-          >
-        </HeaderItem>
+  {#snippet header()}
+    <Header>
+      {#snippet left()}
+        {#if $snapshot.matches('round')}
+          <HeaderItem>
+            <span class="hidden sm:inline">Round</span><span class="sm:hidden">#</span>
+            <span class="[letter-spacing:theme(spacing.1)]"
+              >{$currentRound?.number}/{NUMBER_OF_ROUNDS}</span
+            >
+          </HeaderItem>
+        {/if}
+      {/snippet}
+
+      {#if $snapshot.matches('round.progress.playing')}
+        <div transition:fade class="contents">
+          <Timer />
+        </div>
+      {:else if $currentRound?.submitted && $snapshot.matches('round.progress.submitted.review')}
+        <div transition:fade class="contents">
+          <Score round={$currentRound} border={false} />
+        </div>
       {/if}
-    </svelte:fragment>
 
-    {#if $state.matches('round.progress.playing')}
-      <div transition:fade class="contents">
-        <Timer />
-      </div>
-    {:else if $currentRound?.submitted && $state.matches('round.progress.submitted.review')}
-      <div transition:fade class="contents">
-        <Score round={$currentRound} border={false} />
-      </div>
-    {/if}
-
-    <svelte:fragment slot="right">
-      <HeaderItem>
-        {formatScore($configuration, $totalScore)} <span class="hidden sm:inline">Points</span><span
-          class="sm:hidden">Pts</span
-        >
-      </HeaderItem>
-    </svelte:fragment>
-  </Header>
+      {#snippet right()}
+        <HeaderItem>
+          {formatScore($snapshot.context.configuration, $totalScore)}
+          <span class="hidden sm:inline">Points</span><span class="sm:hidden">Pts</span>
+        </HeaderItem>
+      {/snippet}
+    </Header>
+  {/snippet}
 
   <div>
     {#if $currentRound?.submitted && showLargeRoundScore}
@@ -262,10 +267,10 @@
     {/if}
   </div>
 
-  <svelte:fragment slot="footer">
+  {#snippet footer()}
     {#if ready}
       <Footer showNorthArrow={true}>
-        <svelte:fragment slot="buttons">
+        {#snippet buttons()}
           {#if intro}
             <Buttons>
               <Zoom />
@@ -273,56 +278,56 @@
           {:else if !submitted}
             <Buttons>
               <Button
-                button={$environment.getButton('toggle')}
+                button={$snapshot.context.environment.getButton('toggle')}
                 verb="toggle image"
-                on:toggleStart={handleToggleImageStart}
-                on:toggleEnd={handleToggleImageEnd}><ArrowsIcon /></Button
+                ontogglestart={handleToggleImageStart}
+                ontoggleend={handleToggleImageEnd}><ArrowsIcon /></Button
               >
               <Zoom />
             </Buttons>
           {:else if submitted}
             <Buttons>
               <Button
-                button={$environment.getButton('toggle')}
+                button={$snapshot.context.environment.getButton('toggle')}
                 verb="show submission"
-                on:toggleStart={handleToggleSubmissionStart}
-                on:toggleEnd={handleToggleSubmissionEnd}><ArrowsIcon /></Button
+                ontogglestart={handleToggleSubmissionStart}
+                ontoggleend={handleToggleSubmissionEnd}><ArrowsIcon /></Button
               >
               <Zoom />
             </Buttons>
           {/if}
-        </svelte:fragment>
+        {/snippet}
 
         {#if intro}
           <Button
             timeout={AUTO_ADVANCE_MS}
             verb="show map"
-            button={$environment.getButton('submit')}
-            on:click={() => actor.send({ type: 'START' })}>Show map</Button
+            button={$snapshot.context.environment.getButton('submit')}
+            onclick={() => send({ type: 'START' })}>Show map</Button
           >
         {:else if !submitted}
           <Button
-            button={$environment.getButton('submit')}
+            button={$snapshot.context.environment.getButton('submit')}
             disabled={!canSubmit}
             verb="submit"
-            on:click={handleSubmit}>Submit</Button
+            onclick={handleSubmit}>Submit</Button
           >
         {:else if submitted}
           {#if $isLastRound}
             <Button
-              button={$environment.getButton('submit')}
+              button={$snapshot.context.environment.getButton('submit')}
               verb="show results"
-              on:click={() => actor.send({ type: 'NEXT' })}>Show results</Button
+              onclick={() => send({ type: 'NEXT' })}>Show results</Button
             >
           {:else}
             <Button
-              button={$environment.getButton('submit')}
+              button={$snapshot.context.environment.getButton('submit')}
               verb="go to next round"
-              on:click={() => actor.send({ type: 'NEXT' })}>Next round</Button
+              onclick={() => send({ type: 'NEXT' })}>Next round</Button
             >
           {/if}
         {/if}
       </Footer>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 </Overlay>

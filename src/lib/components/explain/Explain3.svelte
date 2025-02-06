@@ -1,22 +1,26 @@
 <script lang="ts">
-  import { environment } from '$lib/shared/stores/environment.js'
+  import { getDeviceState } from '$lib/shared/stores/device.svelte.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
-  import { isTouchDevice } from '$lib/shared/stores/touch.js'
   import { isCabinet } from '$lib/shared/cabinet.js'
 
   import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
+
+  const deviceState = getDeviceState()
+  const { snapshot } = getSnapshotState()
 </script>
 
 <p>
   <strong
     >{#if isCabinet}
-      Press <ArcadeButtonIcon button={$environment.getButton('submit')} /> if you have found the right
-      location.
-    {:else if $isTouchDevice}
+      Press <ArcadeButtonIcon button={$snapshot.context.environment.getButton('submit')} /> if you have
+      found the right location.
+    {:else if deviceState.isTouch}
       Click Submit if you have found the right location.
     {:else}
-      Click Submit or press <ArcadeButtonIcon button={$environment.getButton('submit')} /> if you have
-      found the right location.
+      Click Submit or press <ArcadeButtonIcon
+        button={$snapshot.context.environment.getButton('submit')}
+      /> if you have found the right location.
     {/if}</strong
   >
 </p>

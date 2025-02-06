@@ -5,25 +5,24 @@
   import Button from '$lib/components/Button.svelte'
   import NameInput from '$lib/components/NameInput.svelte'
 
-  import { actor, configuration, lastHighscore, totalScore } from '$lib/shared/machines/game.js'
-
-  import { environment } from '$lib/shared/stores/environment.js'
-  import { formatScore } from '$lib/shared/format'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
   import Overlay from '$lib/components/Overlay.svelte'
   import BackspaceIcon from '$lib/components/BackspaceIcon.svelte'
 
+  const { snapshot, send, lastHighscore, totalScore } = getSnapshotState()
+
   let nameInput: NameInput
 
-  let name = $lastHighscore?.name || ''
+  let name = $state(lastHighscore?.name || '')
 
   async function handleSubmit() {
-    actor.send({
+    send({
       type: 'SUBMIT_HIGHSCORE',
       highscore: {
         id: await generateRandomId(),
         name,
-        score: $totalScore,
+        score: totalScore,
         date: new Date()
       }
     })
@@ -35,25 +34,28 @@
 >
   <h1 class="text-3xl lg:text-5xl">Enter your name:</h1>
   <div>
-    <NameInput bind:this={nameInput} bind:value={name} on:submit={handleSubmit} />
+    <NameInput bind:this={nameInput} bind:value={name} onsubmit={handleSubmit} />
   </div>
 
   <Overlay>
-    <Footer slot="footer">
-      <Button
-        slot="buttons"
-        button={$environment.getButton('toggle')}
-        verb="delete last character"
-        on:click={() => nameInput.backspace()}
-      >
-        <BackspaceIcon />
-      </Button>
-      <Button
-        button={$environment.getButton('submit')}
-        disabled={name.length < 1}
-        verb="submit name"
-        on:click={handleSubmit}>Submit</Button
-      >
-    </Footer>
+    {#snippet footer()}
+      <Footer>
+        {#snippet buttons()}
+          <Button
+            button={$snapshot.context.environment.getButton('toggle')}
+            verb="delete last character"
+            onclick={() => nameInput.backspace()}
+          >
+            <BackspaceIcon />
+          </Button>
+        {/snippet}
+        <Button
+          button={$snapshot.context.environment.getButton('submit')}
+          disabled={name.length < 1}
+          verb="submit name"
+          onclick={handleSubmit}>Submit</Button
+        >
+      </Footer>
+    {/snippet}
   </Overlay>
 </div>

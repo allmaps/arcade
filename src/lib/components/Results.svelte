@@ -8,8 +8,8 @@
   import { computeBbox } from '@allmaps/stdlib'
   import { WarpedMapLayer } from '@allmaps/maplibre'
 
-  import { actor } from '$lib/shared/machines/game.js'
-  import { environment } from '$lib/shared/stores/environment.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
+  import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
 
   import Overlay from '$lib/components/Overlay.svelte'
   import Score from '$lib/components/Score.svelte'
@@ -21,7 +21,6 @@
   import Zoom from '$lib/components/Zoom.svelte'
   import ArrowsIcon from '$lib/components/ArrowsIcon.svelte'
 
-  import { rounds, configuration } from '$lib/shared/machines/game.js'
   import { RESULTS_ROUND_MS } from '$lib/shared/constants.js'
   import { generateEmptyFeatureCollection } from '$lib/shared/geojson.js'
   import {
@@ -31,7 +30,6 @@
     makeHandleKeydownWithPanStepAndZoomFraction,
     getFirstSymbolLayerId
   } from '$lib/shared/maplibre.js'
-  import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
 
   import { MAPLIBRE_PADDING } from '$lib/shared/constants.js'
 
@@ -39,6 +37,9 @@
   import type { GeojsonPolygon, Point } from '@allmaps/types'
 
   import type { SubmittedRound } from '$lib/shared/types.js'
+
+  const { snapshot, send, rounds } = getSnapshotState()
+  const gameTimeoutState = getGameTimeoutState()
 
   let map: Map
 
@@ -56,19 +57,18 @@
     view: 'submission' | 'warpedMap'
   }
 
-  let selectedRound: SelectedRound = {
+  let selectedRound: SelectedRound = $state({
     index: 0,
     view: 'warpedMap'
-  }
+  })
 
-  let intervalId: number | undefined
+  let intervalId: number | undefined = $state()
 
   function handleShowRounds(newSelectedRoundIndex?: number) {
     if (newSelectedRoundIndex !== undefined) {
       clearInterval(intervalId)
     }
-
-    resetLastInteraction()
+    gameTimeoutState.resetLastInteraction()
     if (newSelectedRoundIndex !== undefined) {
       selectedRound = {
         index: newSelectedRoundIndex % $rounds.length,
@@ -130,8 +130,8 @@
         },
         layers: getProtomapsTheme('protomaps', 'light')
       },
-      center: $configuration.map.center as Point,
-      zoom: $configuration.map.initialZoom,
+      center: $snapshot.context.configuration.map.center as Point,
+      zoom: $snapshot.context.configuration.map.initialZoom,
       maxPitch: 0,
       preserveDrawingBuffer: true,
       attributionControl: false
@@ -181,6 +181,7 @@
 
       warpedMapLayer = new WarpedMapLayer()
 
+      // @ts-expect-error: MapLibre typings are incomplete
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
 
       const geoMaskPolygons: GeojsonPolygon[] = []
@@ -232,7 +233,7 @@
 
       // nu fit bounds
 
-      actor.send({
+      send({
         type: 'SET_MAP_KEYBOARD_TARGET',
         element: map.getCanvas(),
         library: 'maplibre'
@@ -265,54 +266,62 @@
 </script>
 
 <div class="w-full h-full relative">
-  <div bind:this={container} class="w-full h-full ring-0" tabindex="-1" />
+  <div bind:this={container} class="w-full h-full ring-0" tabindex="-1"></div>
 </div>
 <!-- class="p-4 gap-4 top-0 h-full grid grid-cols-[repeat(5,_auto)] w-full max-w-full justify-center" -->
 <!-- style:grid-template-columns={`repeat(${$rounds.length}, 1fr)`} -->
 <Overlay>
-  <Header slot="header">
-    <div class="flex flex-col items-center gap-3">
-      <TotalScore />
-      <ol class="md:p-4 gap-2 md:gap-4 top-0 w-full h-full flex flex-row max-w-2xl justify-center">
-        {#each $rounds as round, index}
-          {#if round.submitted}
-            <li class="flex-1 flex justify-center">
-              <button on:click={() => handleShowRounds(index)}>
-                <Score
-                  {round}
-                  border={selectedRound.index === index}
-                  showPoints={selectedRound.index === index}
-                />
-              </button>
-            </li>
-          {/if}
-        {/each}
-      </ol>
-    </div>
-  </Header>
+  {#snippet header()}
+    <Header>
+      <div class="flex flex-col items-center gap-3">
+        <TotalScore />
+        <ol
+          class="md:p-4 gap-2 md:gap-4 top-0 w-full h-full flex flex-row max-w-2xl justify-center"
+        >
+          {#each $rounds as round, index}
+            {#if round.submitted}
+              <li class="flex-1 flex justify-center">
+                <button onclick={() => handleShowRounds(index)}>
+                  <Score
+                    {round}
+                    border={selectedRound.index === index}
+                    showPoints={selectedRound.index === index}
+                  />
+                </button>
+              </li>
+            {/if}
+          {/each}
+        </ol>
+      </div>
+    </Header>
+  {/snippet}
 
-  <Footer slot="footer">
-    <Buttons slot="buttons">
+  {#snippet footer()}
+    <Footer>
+      {#snippet buttons()}
+        <Buttons>
+          <Button
+            button={$snapshot.context.environment.getButton('toggle')}
+            verb="toggle rounds"
+            onclick={() => {
+              clearInterval(intervalId)
+              handleShowRounds()
+            }}
+          >
+            <ArrowsIcon />
+          </Button>
+
+          <Zoom />
+        </Buttons>
+      {/snippet}
+
       <Button
-        button={$environment.getButton('toggle')}
-        verb="toggle rounds"
-        on:click={() => {
-          clearInterval(intervalId)
-          handleShowRounds()
-        }}
+        button={$snapshot.context.environment.getButton('submit')}
+        verb="start new game"
+        onclick={() => send({ type: 'NEXT' })}
       >
-        <ArrowsIcon />
+        New game
       </Button>
-
-      <Zoom />
-    </Buttons>
-
-    <Button
-      button={$environment.getButton('submit')}
-      verb="start new game"
-      on:click={() => actor.send({ type: 'NEXT' })}
-    >
-      New game
-    </Button>
-  </Footer>
+    </Footer>
+  {/snippet}
 </Overlay>

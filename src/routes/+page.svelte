@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+
   import { crossfade } from 'svelte/transition'
   import { quintOut } from 'svelte/easing'
 
@@ -14,17 +15,20 @@
   import NewHighscore from '$lib/components/NewHighscore.svelte'
   import Highscores from '$lib/components/Highscores.svelte'
 
-  import { actor, state, currentRoundNumber, keyboardTarget } from '$lib/shared/machines/game.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
+  import { getDeviceState } from '$lib/shared/stores/device.svelte.js'
+  import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
 
-  import { environment } from '$lib/shared/stores/environment.js'
-  import { isTouchDevice } from '$lib/shared/stores/touch.js'
-  import { resetLastInteraction, showGameTimeoutWarning } from '$lib/shared/stores/game-timeout.js'
   import { isCabinet } from '$lib/shared/cabinet.js'
   import { GAME_TIMEOUT_WARNING_MS } from '$lib/shared/constants.js'
   import { zoomIn, zoomOut } from '$lib/shared/keyboard.js'
 
   import 'maplibre-gl/dist/maplibre-gl.css'
   import 'ol/ol.css'
+
+  const { snapshot, currentRoundNumber, keyboardTarget, actorRef } = getSnapshotState()
+  const deviceState = getDeviceState()
+  const gameTimeoutState = getGameTimeoutState()
 
   const key = 'page-crossfade'
 
@@ -34,26 +38,26 @@
   })
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.code === $environment.getButton('zoomIn').keyCode) {
+    if (event.code === $snapshot.context.environment.getButton('zoomIn').keyCode) {
       // Zoom in!
       zoomIn($keyboardTarget)
-    } else if (event.code === $environment.getButton('zoomOut').keyCode) {
+    } else if (event.code === $snapshot.context.environment.getButton('zoomOut').keyCode) {
       // Zoom out!
       zoomOut($keyboardTarget)
     }
   }
 
   function handleTransition() {
-    resetLastInteraction()
+    gameTimeoutState.resetLastInteraction()
   }
 
   function handleFirstTouch() {
-    isTouchDevice.set(true)
+    deviceState.isTouch = true
     window.removeEventListener('touchstart', handleFirstTouch, false)
   }
 
   onMount(() => {
-    const subscription = actor.subscribe(handleTransition)
+    const subscription = actorRef.subscribe(handleTransition)
 
     window.addEventListener('touchstart', handleFirstTouch, false)
 
@@ -63,13 +67,13 @@
   })
 </script>
 
-<svelte:document on:keydown={handleKeydown} />
+<svelte:document onkeydown={handleKeydown} />
 <Stats statsWebsiteId={import.meta.env.ARCADE_STATS_WEBSITE_ID} />
 
 <div class="w-full h-full" class:cursor-none={isCabinet}>
-  {#if $state.matches('error')}
+  {#if $snapshot.matches('error')}
     <Error />
-  {:else if $state.matches('loading') || $state.matches('title')}
+  {:else if $snapshot.matches('loading') || $snapshot.matches('title')}
     <div
       in:send={{ key }}
       out:receive={{ key }}
@@ -77,7 +81,7 @@
     >
       <Title />
     </div>
-  {:else if $state.matches('explain')}
+  {:else if $snapshot.matches('explain')}
     <div
       in:send={{ key }}
       out:receive={{ key }}
@@ -85,13 +89,13 @@
     >
       <Explain />
     </div>
-  {:else if $state.matches('round')}
+  {:else if $snapshot.matches('round')}
     <div class="absolute w-full h-full flex flex-col items-center justify-center">
-      {#key $currentRoundNumber}
+      {#key currentRoundNumber}
         <Round />
       {/key}
     </div>
-  {:else if $state.matches('results')}
+  {:else if $snapshot.matches('results')}
     <div
       in:send={{ key }}
       out:receive={{ key }}
@@ -99,7 +103,7 @@
     >
       <Results />
     </div>
-  {:else if $state.matches('highscores.new')}
+  {:else if $snapshot.matches('highscores.new')}
     <div
       in:send={{ key }}
       out:receive={{ key }}
@@ -107,7 +111,7 @@
     >
       <NewHighscore />
     </div>
-  {:else if $state.matches('highscores.show')}
+  {:else if $snapshot.matches('highscores.show')}
     <div
       in:send={{ key }}
       out:receive={{ key }}
@@ -117,7 +121,7 @@
     </div>
   {/if}
 
-  {#if $showGameTimeoutWarning}
+  {#if gameTimeoutState.showGameTimeoutWarning}
     <div class="absolute top-0 w-full h-full">
       <Timeout timeout={GAME_TIMEOUT_WARNING_MS} />
     </div>
