@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { createEventDispatcher } from 'svelte'
 
   import OLMap from 'ol/Map.js'
   import View from 'ol/View.js'
@@ -12,21 +11,27 @@
   import Feature from 'ol/Feature.js'
   import Polygon from 'ol/geom/Polygon.js'
 
-  import { actor, currentRound, currentRoundIndex } from '$lib/shared/machines/game.js'
-  import { resetLastInteraction } from '$lib/shared/stores/game-timeout.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
+  import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
 
   import { maskStyle, maskToPolygon } from '$lib/shared/openlayers.js'
   import { PADDING } from '$lib/shared/constants.js'
 
+  type Props = {
+    onready?: () => void
+  }
+
+  let { onready }: Props = $props()
+
+  const { send, currentRound, currentRoundIndex } = getSnapshotState()
+  const gameTimeoutState = getGameTimeoutState()
+
   let element: HTMLElement
 
-  const dispatch = createEventDispatcher()
-
-  let bgClass: string | undefined
-  $: bgClass = $currentRound?.colors.bgClassFaded
+  let bgClass: string | undefined = $derived($currentRound?.colors.bgClassFaded)
 
   onMount(() => {
-    if (!$currentRound || !$currentRound.loaded || $currentRoundIndex === undefined) {
+    if (!$currentRound || !$currentRound.loaded || currentRoundIndex === undefined) {
       return
     }
 
@@ -80,9 +85,9 @@
           // padding: PADDING
         })
 
-        ol.on('rendercomplete', () => dispatch('ready'))
+        ol.on('rendercomplete', () => onready?.())
 
-        actor.send({
+        send({
           type: 'SET_IMAGE_KEYBOARD_TARGET',
           element,
           library: 'openlayers'
@@ -90,12 +95,10 @@
 
         element.focus()
 
-        ol.on('moveend', () => {
-          resetLastInteraction()
-        })
+        ol.on('moveend', () => gameTimeoutState.resetLastInteraction())
       }
     }
   })
 </script>
 
-<div bind:this={element} class="w-full h-full ring-0 {bgClass}" tabindex="-1" />
+<div bind:this={element} class="w-full h-full ring-0 {bgClass}" tabindex="-1"></div>

@@ -1,12 +1,9 @@
 <script lang="ts">
-  import {
-    highscoresEnabled,
-    isNewHighscore,
-    totalScore,
-    configuration
-  } from '$lib/shared/machines/game.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
   import { formatScore } from '$lib/shared/format'
+
+  const { snapshot, totalScore, highscoresEnabled, isNewHighscore } = getSnapshotState()
 </script>
 
 <div
@@ -16,5 +13,6 @@
     <span>New highscore</span>
   {:else}
     <span>Total score</span>
-  {/if}: <span class="font-bold">{formatScore($configuration, $totalScore)} points</span>
+  {/if}:
+  <span class="font-bold">{formatScore($snapshot.context.configuration, $totalScore)} points</span>
 </div>

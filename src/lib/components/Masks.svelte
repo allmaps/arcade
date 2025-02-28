@@ -5,7 +5,7 @@
 
   import Mask from '$lib/components/Mask.svelte'
 
-  import initialtGeoMasks from '$lib/shared/initial-geo-masks.js'
+  import initialGeoMasks from '$lib/shared/initial-geo-masks.js'
 
   let intervalId: number | undefined
   const tickInterval = 4000
@@ -72,16 +72,16 @@
     }
   }
 
-  const geoMasks = initialtGeoMasks
+  const geoMasks = initialGeoMasks
 
   let keyDirection: SlideDirection | undefined
   let resetKeyDirectionOnNextTick = false
 
-  let bgColorClassIndex = 0
-  let strokeColorClassIndex = 1
+  let bgColorClassIndex = $state(0)
+  let strokeColorClassIndex = $state(1)
 
-  let geoMaskIndex = 0
-  let direction = directions.left
+  let geoMaskIndex = $state(0)
+  let direction = $state(directions.left)
 
   function tick() {
     geoMaskIndex =
@@ -151,7 +151,7 @@
   })
 </script>
 
-<svelte:document on:keydown={handleKeydown} on:keyup={handleKeyup} />
+<svelte:document onkeydown={handleKeydown} onkeyup={handleKeyup} />
 
 <div class="w-full h-full relative">
   {#key geoMaskIndex}

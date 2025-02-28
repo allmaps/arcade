@@ -1,4 +1,4 @@
-<div class="w-full h-full bg-no-repeat bg-center" />
+<div class="w-full h-full bg-no-repeat bg-center"></div>
 
 <style scoped>
   div {

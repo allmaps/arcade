@@ -1,12 +1,18 @@
 <script lang="ts">
   import { formatScore } from '$lib/shared/format.js'
-  import { configuration } from '$lib/shared/machines/game'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
   import type { SubmittedRound } from '$lib/shared/types.js'
 
-  export let round: SubmittedRound
-  export let border = true
-  export let showPoints = true
+  const { snapshot } = getSnapshotState()
+
+  type Props = {
+    round: SubmittedRound
+    border?: boolean
+    showPoints?: boolean
+  }
+
+  let { round, border = true, showPoints = true }: Props = $props()
 </script>
 
 <div
@@ -23,9 +29,9 @@
   </div>
   {#if showPoints}
     <div class="px-2">
-      {formatScore($configuration, round.score)}&nbsp;<span class="md:hidden">pts</span><span
-        class="hidden md:inline">points</span
-      >
+      {formatScore($snapshot.context.configuration, round.score)}&nbsp;<span class="md:hidden"
+        >pts</span
+      ><span class="hidden md:inline">points</span>
     </div>
   {/if}
 </div>

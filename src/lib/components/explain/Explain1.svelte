@@ -1,10 +1,13 @@
 <script lang="ts">
-  import { environment } from '$lib/shared/stores/environment.js'
+  import { getDeviceState } from '$lib/shared/stores/device.svelte.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
-  import { isTouchDevice } from '$lib/shared/stores/touch.js'
   import { isCabinet } from '$lib/shared/cabinet.js'
 
   import ArcadeButtonIcon from '$lib/components/ArcadeButtonIcon.svelte'
+
+  const deviceState = getDeviceState()
+  const { snapshot } = getSnapshotState()
 </script>
 
 Look at the historic map for clues about the location it depicts.
@@ -12,13 +15,13 @@ Look at the historic map for clues about the location it depicts.
 <strong
   >{#if isCabinet}
     You can always view the image again by pressing <ArcadeButtonIcon
-      button={$environment.getButton('toggle')}
+      button={$snapshot.context.environment.getButton('toggle')}
     />.
-  {:else if $isTouchDevice}
+  {:else if deviceState.isTouch}
     You can view the image again by clicking the button with the two arrows.
   {:else}
     You can view the image again by clicking the white button with the two arrows or by pressing <ArcadeButtonIcon
-      button={$environment.getButton('toggle')}
+      button={$snapshot.context.environment.getButton('toggle')}
     />.
   {/if}</strong
 >

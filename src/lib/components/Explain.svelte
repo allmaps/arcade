@@ -5,9 +5,7 @@
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
 
-  import { actor } from '$lib/shared/machines/game.js'
-  import { EXPLAIN_STEP_MS } from '$lib/shared//constants.js'
-  import { environment } from '$lib/shared/stores/environment.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
   import { geometryToPath } from '$lib/shared/svg.js'
 
@@ -26,12 +24,16 @@
   import protomapsAmsterdam from '$lib/explain/protomaps-amsterdam.jpg'
   import lomanBuurtQQGeoMaskImported from '$lib/explain/loman-buurt-qq.json'
 
+  import { EXPLAIN_STEP_MS } from '$lib/shared//constants.js'
+
   const lomanBuurtQQGeoMask = lomanBuurtQQGeoMaskImported as GeojsonPolygon
 
-  let intervalId: number | undefined
-  let step = 0
+  const { snapshot, send } = getSnapshotState()
 
-  let showAbout = false
+  let intervalId: number | undefined
+  let step = $state(0)
+
+  let showAbout = $state(false)
 
   function handleToggleAboutStart() {
     showAbout = true
@@ -66,22 +68,24 @@
       <ExplainItemContainer title="Find location" image={protomapsAmsterdam} highlight={step > 1}>
         <Explain2 />
 
-        <div slot="image-overlay" class="absolute top-o w-full h-full p-2">
-          <svg
-            class="w-full h-full top-0"
-            width="100%"
-            height="100%"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="xMidYMid meet"
-          >
-            <path
-              vector-effect="non-scaling-stroke"
-              transform-origin="50 50"
-              class="transition-all duration-300 fill-none z-0 stroke-darkblue stroke-[8] md:stroke-[12]"
-              d={geometryToPath(lomanBuurtQQGeoMask)}
-            />
-          </svg>
-        </div>
+        {#snippet imageOverlay()}
+          <div class="absolute top-o w-full h-full p-2">
+            <svg
+              class="w-full h-full top-0"
+              width="100%"
+              height="100%"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <path
+                vector-effect="non-scaling-stroke"
+                transform-origin="50 50"
+                class="transition-all duration-300 fill-none z-0 stroke-darkblue stroke-[8] md:stroke-[12]"
+                d={geometryToPath(lomanBuurtQQGeoMask)}
+              />
+            </svg>
+          </div>
+        {/snippet}
       </ExplainItemContainer>
 
       <ExplainItemContainer
@@ -102,19 +106,22 @@
       </div>
     {/if}
 
-    <Footer slot="footer">
-      <Button
-        slot="buttons"
-        button={$environment.getButton('toggle')}
-        verb="learn more about Allmaps Arcade"
-        on:toggleStart={handleToggleAboutStart}
-        on:toggleEnd={handleToggleAboutEnd}><ArrowsIcon /></Button
-      >
-      <Button
-        button={$environment.getButton('submit')}
-        verb="start playing"
-        on:click={() => actor.send({ type: 'NEXT' })}>Start playing</Button
-      >
-    </Footer>
+    {#snippet footer()}
+      <Footer>
+        {#snippet buttons()}
+          <Button
+            button={$snapshot.context.environment.getButton('toggle')}
+            verb="learn more about Allmaps Arcade"
+            ontogglestart={handleToggleAboutStart}
+            ontoggleend={handleToggleAboutEnd}><ArrowsIcon /></Button
+          >
+        {/snippet}
+        <Button
+          button={$snapshot.context.environment.getButton('submit')}
+          verb="start playing"
+          onclick={() => send({ type: 'NEXT' })}>Start playing</Button
+        >
+      </Footer>
+    {/snippet}
   </Overlay>
 </div>

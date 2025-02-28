@@ -1,21 +1,26 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import { environment } from '$lib/shared/stores/environment.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
   import { geometryToPath } from '$lib/shared/svg.js'
 
   import type { GeojsonPolygon } from '@allmaps/types'
 
-  export let geoMask: GeojsonPolygon
+  type Props = {
+    geoMask: GeojsonPolygon
+    strokeClass: string
+    tickInterval: number
+  }
 
-  export let strokeClass: string
-  export let tickInterval: number
+  const { geoMask, strokeClass, tickInterval }: Props = $props()
+
+  const { snapshot } = getSnapshotState()
 
   let intervalId: number | undefined
   const scaleMultiplier = 1.4
 
-  let scale = 1 * scaleMultiplier ** Math.round(Math.random() * 2 - 1)
+  let scale = $state(1 * scaleMultiplier ** Math.round(Math.random() * 2 - 1))
 
   const minScale = 1 / scaleMultiplier ** 4
   const maxScale = 1 * scaleMultiplier ** 2
@@ -30,13 +35,13 @@
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.code === $environment.getButton('zoomIn').keyCode) {
+    if (event.code === $snapshot.context.environment.getButton('zoomIn').keyCode) {
       // Zoom in!
       if (scale < maxScale) {
         scale *= scaleMultiplier
       }
       clearInterval(intervalId)
-    } else if (event.code === $environment.getButton('zoomOut').keyCode) {
+    } else if (event.code === $snapshot.context.environment.getButton('zoomOut').keyCode) {
       // Zoom out!
       if (scale > minScale) {
         scale /= scaleMultiplier
@@ -51,7 +56,7 @@
   })
 </script>
 
-<svelte:document on:keydown={handleKeydown} />
+<svelte:document onkeydown={handleKeydown} />
 
 <div class="w-full h-full transition-all duration-500">
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">

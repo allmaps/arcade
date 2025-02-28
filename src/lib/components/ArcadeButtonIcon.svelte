@@ -1,8 +1,11 @@
 <script lang="ts">
   import type { Button } from '$lib/shared/types.js'
 
-  export let button: Button
-  // export let kbdBgClass: string
+  type Props = {
+    button: Button
+  }
+
+  let { button }: Props = $props()
 </script>
 
 {#if button.keyLabel}
@@ -13,7 +16,7 @@
   <span class="inline-block relative mx-1 top-0.5 w-4 h-4">
     <span
       class="arcade-button inline-block absolute w-[160%] h-[160%] left-[-30%] top-[-30%] rounded-full {button.bgClass} shadow-inner"
-    />
+    ></span>
   </span>
 {/if}
 

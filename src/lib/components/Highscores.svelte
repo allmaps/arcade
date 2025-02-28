@@ -3,14 +3,15 @@
 
   import Footer from '$lib/components/Footer.svelte'
   import Button from '$lib/components/Button.svelte'
-
-  import { actor, configuration, highscores, lastHighscore } from '$lib/shared/machines/game.js'
-  import { formatScore, formatTimeAgo } from '$lib/shared/format'
-  import { environment } from '$lib/shared/stores/environment.js'
-
   import Overlay from '$lib/components/Overlay.svelte'
 
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
+
+  import { formatScore, formatTimeAgo } from '$lib/shared/format'
+
   const HIGHSCORE_MAX_DISPLAY_COUNT = 10
+
+  const { send, snapshot, highscores, lastHighscore } = getSnapshotState()
 
   const colors = ['bg-red', 'bg-blue', 'bg-yellow', 'bg-purple', 'bg-orange', 'bg-green', 'bg-pink']
 
@@ -18,10 +19,11 @@
     return id === $lastHighscore?.id
   }
 
-  $: allHighscores = uniqBy(
-    [...$highscores, ...($lastHighscore ? [$lastHighscore] : [])],
-    'id'
-  ).toSorted((a, b) => b.score - a.score)
+  const allHighscores = $derived(
+    uniqBy([...$highscores, ...($lastHighscore ? [$lastHighscore] : [])], 'id').toSorted(
+      (a, b) => b.score - a.score
+    )
+  )
 </script>
 
 <div
@@ -50,7 +52,7 @@
               </div>
               <div class="font-bold tracking-widest">{highscore.name}</div>
               <div class="text-right capitalize">
-                {formatScore($configuration, highscore.score)}
+                {formatScore($snapshot.context.configuration, highscore.score)}
               </div>
               <div class="font-light text-sm whlg:text-lg hidden whmd:inline">
                 {formatTimeAgo(highscore.date)}
@@ -61,12 +63,14 @@
       </div>
     </div>
 
-    <Footer slot="footer">
-      <Button
-        button={$environment.getButton('submit')}
-        verb="start playing"
-        on:click={() => actor.send({ type: 'NEXT' })}>New game</Button
-      >
-    </Footer>
+    {#snippet footer()}
+      <Footer>
+        <Button
+          button={$snapshot.context.environment.getButton('submit')}
+          verb="start playing"
+          onclick={() => send({ type: 'NEXT' })}>New game</Button
+        >
+      </Footer>
+    {/snippet}
   </Overlay>
 </div>

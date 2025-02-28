@@ -4,31 +4,31 @@
 
   import computeBearing from '@turf/bearing'
 
-  import { state, currentRound } from '$lib/shared/machines/game.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
 
-  let bearing = 0
-  let rotation = 0
+  const { snapshot, currentRound } = getSnapshotState()
 
-  $: {
-    if ($state.matches('round.display.image')) {
-      rotation = bearing
-    } else if ($state.matches('round.display.map')) {
-      rotation = 0
-    }
-  }
+  let bearing = $derived.by(() => {
+    if (currentRound && currentRound.loaded) {
+      const transformer = new GcpTransformer(currentRound.map.gcps)
 
-  $: {
-    if ($currentRound && $currentRound.loaded) {
-      const transformer = new GcpTransformer($currentRound.map.gcps)
-
-      const bbox = computeBbox($currentRound.map.resourceMask)
+      const bbox = computeBbox(currentRound.map.resourceMask)
 
       const topLeft = transformer.transformToGeo([bbox[0], bbox[1]])
       const bottomLeft = transformer.transformToGeo([bbox[0], bbox[3]])
 
-      bearing = -computeBearing(bottomLeft, topLeft)
+      return -computeBearing(bottomLeft, topLeft)
     }
-  }
+
+    return 0
+  })
+  let rotation = $derived.by(() => {
+    if ($snapshot.matches('round.display.image')) {
+      return bearing
+    } else if ($snapshot.matches('round.display.map')) {
+      return 0
+    }
+  })
 </script>
 
 <div class="w-12 md:w-14 rounded-full shadow-md">

@@ -1,7 +1,14 @@
 <script lang="ts">
-  export let title: string
-  export let image: string
-  export let highlight = false
+  import type { Snippet } from 'svelte'
+
+  type Props = {
+    title: string
+    image: string
+    highlight?: boolean
+    children?: Snippet
+    imageOverlay?: Snippet
+  }
+  let { title, image, highlight = false, children, imageOverlay }: Props = $props()
 
   const scaledClass = 'scale-150'
 </script>
@@ -21,15 +28,15 @@
       style="background-image: url({image});"
     ></div>
 
-    {#if $$slots['image-overlay']}
+    {#if imageOverlay}
       <div class="absolute top-0 w-full h-full">
-        <slot name="image-overlay" />
+        {@render imageOverlay()}
       </div>
     {/if}
   </div>
   <h2 class="[grid-area:title] text-lg font-bold">{title}</h2>
   <div class="[grid-area:content]">
-    <slot />
+    {@render children?.()}
   </div>
 </li>
 

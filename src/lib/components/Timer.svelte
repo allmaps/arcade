@@ -1,17 +1,16 @@
 <script lang="ts">
-  import { currentRound } from '$lib/shared/machines/game.js'
-  import { endTime } from '$lib/shared/stores/timer.js'
+  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
+  import { getTimerState } from '$lib/shared/stores/timer.svelte.js'
 
   import HeaderItem from '$lib/components/HeaderItem.svelte'
   import Time from '$lib/components/Time.svelte'
 
-  let diffTime = 0
+  const { currentRound } = getSnapshotState()
+  const timerState = getTimerState()
 
-  $: {
-    if ($currentRound?.loaded) {
-      diffTime = Math.max($endTime - $currentRound.startTime, 0)
-    }
-  }
+  const diffTime = $derived(
+    $currentRound?.loaded ? Math.max(timerState.endTime - $currentRound.startTime, 0) : 0
+  )
 </script>
 
 <HeaderItem>
