@@ -5,7 +5,7 @@ map:
   center: [0, 0]
   # Initial zoom level of the map.
   # The minimum and maximum zoom levels are set automatically, depending on the annotation
-  # Default is 2
+  # Default is 1
   initialZoom: 1
 
 # Score configuration
@@ -28,12 +28,12 @@ score:
 
   time:
     # Time in seconds before timer starts to make maximum round score smaller.
-    # Default is 5 seconds
-    min: 8
+    # Default is 2 seconds
+    min: 1.5
     # Maximum duration of a round, in seconds.
     # Players get 0 points if they don't make a guess within this time.
-    # Default is 300 seconds (5 minutes)
-    max: 300
+    # Default is 60 seconds
+    max: 60
 
   # Score multiplier for displaying scores. 100 turns a score of 10 into 1000 points.
   # Default is 100
