@@ -14,8 +14,8 @@
 </script>
 
 <li
-  class="grid gap-4 [grid-template-areas:--template-areas] md:[grid-template-areas:--md-template-areas]
-  grid-cols-[minmax(100px,_1fr)_1fr] grid-rows-[min-content_1fr]
+  class="grid gap-4 [grid-template-areas:var(--template-areas)] md:[grid-template-areas:var(--md-template-areas)]
+  grid-cols-[minmax(100px,1fr)_1fr] grid-rows-[min-content_1fr]
   md:grid-cols-none md:grid-rows-subgrid md:row-span-3"
 >
   <div

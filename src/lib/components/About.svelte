@@ -13,7 +13,7 @@
   class="min-h-min max-h-full pointer-events-auto overflow-auto bg-white/50 backdrop-blur-md rounded-2xl shadow-md p-4 lg:p-6 max-w-lg md:max-w-xl prose prose-sm md:prose-base"
 >
   <h2 class="text-center">
-    About Allmaps <span class="w-10 inline-block [&>*]:inline-block"><Logo inverted={false} /></span
+    About Allmaps <span class="w-10 inline-block *:inline-block"><Logo inverted={false} /></span
     >
     Arcade
   </h2>

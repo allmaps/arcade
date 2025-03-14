@@ -80,7 +80,7 @@
               <path
                 vector-effect="non-scaling-stroke"
                 transform-origin="50 50"
-                class="transition-all duration-300 fill-none z-0 stroke-darkblue stroke-[8] md:stroke-[12]"
+                class="transition-all duration-300 fill-none z-0 stroke-darkblue stroke-8 md:stroke-12"
                 d={geometryToPath(lomanBuurtQQGeoMask)}
               />
             </svg>

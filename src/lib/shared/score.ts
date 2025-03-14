@@ -82,7 +82,7 @@ export function computeDistanceRatio(
 
   // How higher d, how smaller the influence of warpedMapDistance on the score
   // TODO: d should be high for small-area maps
-  const d = 4
+  const d = 3
 
   return 1 / (1 + warpedMapDistance / d)
 }

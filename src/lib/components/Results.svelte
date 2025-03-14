@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
 
   import { Map, addProtocol } from 'maplibre-gl'
-  import getProtomapsTheme from 'protomaps-themes-base'
+  import { layers, namedFlavor } from '@protomaps/basemaps'
   import { Protocol } from 'pmtiles'
 
   import { computeBbox } from '@allmaps/stdlib'
@@ -114,6 +114,13 @@
     const protocol = new Protocol()
     addProtocol('pmtiles', protocol.tile)
 
+    const pmLayers = layers('protomaps', namedFlavor('light'), { lang: 'en' })
+
+    // Override background color
+    if (pmLayers[0] && pmLayers[0].paint && 'background-color' in pmLayers[0].paint) {
+      pmLayers[0].paint['background-color'] = 'rgba(0, 0, 0, 0)'
+    }
+
     map = new Map({
       container,
       style: {
@@ -128,7 +135,7 @@
               '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
           }
         },
-        layers: getProtomapsTheme('protomaps', 'light')
+        layers: pmLayers
       },
       center: $snapshot.context.configuration.map.center as Point,
       zoom: $snapshot.context.configuration.map.initialZoom,
@@ -180,8 +187,6 @@
       )
 
       warpedMapLayer = new WarpedMapLayer()
-
-      // @ts-expect-error: MapLibre typings are incomplete
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
 
       const geoMaskPolygons: GeojsonPolygon[] = []
@@ -222,16 +227,10 @@
         }))
       })
 
-      // if (bbox) {
-      //   firstRound.geoMask
-      // }
-
       const center = firstRound.submission.center.warpedMap
       const zoom = firstRound.submission.zoom.warpedMap
 
       flyTo(map, center, zoom)
-
-      // nu fit bounds
 
       send({
         type: 'SET_MAP_KEYBOARD_TARGET',
@@ -268,7 +267,7 @@
 <div class="w-full h-full relative">
   <div bind:this={container} class="w-full h-full ring-0" tabindex="-1"></div>
 </div>
-<!-- class="p-4 gap-4 top-0 h-full grid grid-cols-[repeat(5,_auto)] w-full max-w-full justify-center" -->
+<!-- class="p-4 gap-4 top-0 h-full grid grid-cols-[repeat(5,auto)] w-full max-w-full justify-center" -->
 <!-- style:grid-template-columns={`repeat(${$rounds.length}, 1fr)`} -->
 <Overlay>
   {#snippet header()}

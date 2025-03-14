@@ -228,7 +228,7 @@
         {#if $snapshot.matches('round')}
           <HeaderItem>
             <span class="hidden sm:inline">Round</span><span class="sm:hidden">#</span>
-            <span class="[letter-spacing:theme(spacing.1)]"
+            <span class="[letter-spacing:--spacing(1)]"
               >{$currentRound?.number}/{NUMBER_OF_ROUNDS}</span
             >
           </HeaderItem>

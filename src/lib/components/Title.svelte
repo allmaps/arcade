@@ -31,7 +31,7 @@
   </div>
 
   <Overlay>
-    <main class="relative w-full h-full [&>*]:absolute">
+    <main class="relative w-full h-full *:absolute">
       {#if !showAbout}
         <div
           transition:fade={{ duration: 100 }}
@@ -41,12 +41,12 @@
             class="text-white text-3xl md:text-4xl lg:text-6xl font-bold text-center drop-shadow-md leading-tight"
           >
             Allmaps<span
-              class="m-0.5 w-16 md:w-24 lg:m-1 lg:w-32 relative inline-block [&>*]:inline-block -top-1"
+              class="m-0.5 w-16 md:w-24 lg:m-1 lg:w-32 relative inline-block *:inline-block -top-1"
               ><Logo inverted={true} /></span
             ><span class="font-normal">Arcade</span>
           </h1>
           <h2
-            class="text-white text-xl sm:text-2xl lg:text-4xl text-center font-bold max-w-lg lg:max-w-2xl drop-shadow-sm"
+            class="text-white text-xl sm:text-2xl lg:text-4xl text-center font-bold max-w-lg lg:max-w-2xl drop-shadow-xs"
           >
             Put the historical maps back where they belong! Be quick. The faster you are, the more
             points you'll earn.
