@@ -112,9 +112,7 @@
   onMount(() => {
     if (timeout > 0) {
       timeoutId = setTimeout(() => {
-        console.log('nu klikk')
         onclick?.()
-        // element.dispatchEvent(new Event('click'))
       }, timeout)
     }
 
