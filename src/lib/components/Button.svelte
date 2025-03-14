@@ -126,7 +126,7 @@
   <Tooltip.Root delayDuration={2000}>
     <Tooltip.Trigger
       class="inline-flex size-10 items-center justify-center rounded-full
-		border border-border-input bg-background-alt shadow-btn ring-dark ring-offset-background hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dark focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+		border border-border-input focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-dark focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       {#snippet child({ props })}
         <button
@@ -136,18 +136,23 @@
           onmousedown={handleMousedown}
           onmouseup={handleMouseup}
           onclick={handleClick}
-          class:toggled
+          data-active={toggled || undefined}
           {disabled}
-          class="{bgClass} {typeClasses} group relative transition-all duration-75 top-0 shadow-md font-medium rounded-full pointer-events-auto overflow-hidden focus:outline-none"
+          class="{bgClass} {typeClasses}
+            cursor-pointer group relative transition-all
+            duration-75 top-0 shadow-md font-medium rounded-full
+            pointer-events-auto overflow-hidden focus:outline-hidden
+            active:top-[1px] active:shadow-sm
+            data-active:top-[1px] data-active:shadow-sm"
         >
           <div class="absolute w-full h-full top-0 left-0 bg-white/20"></div>
           <div
             style="animation-duration: {timeout}ms;"
-            class="timeout absolute w-full h-full top-0 left-0 transition-all group-active:bg-white/20 {toggled
-              ? 'bg-none'
-              : bgClass}"
+            class="timeout absolute w-full h-full top-0 left-0 transition-all
+            group-active:bg-white/20 hover:bg-white/5
+            {toggled ? 'bg-none' : bgClass}"
           ></div>
-          <div class="relative {textClass} w-full h-full">
+          <div class="relative {textClass} w-full h-full pointer-events-none">
             {@render children?.()}
           </div></button
         >
@@ -161,7 +166,7 @@
               <div {...props} transition:flyAndScale={{ y: 8, duration: 150 }} class="text-white">
                 <Tooltip.Arrow />
                 <div
-                  class="flex items-center justify-center rounded-lg bg-white px-4 py-3 text-black text-sm shadow-lg outline-none"
+                  class="flex items-center justify-center rounded-lg bg-white px-4 py-3 text-black text-sm shadow-lg outline-hidden"
                 >
                   Press <span class="mx-1"><ArcadeButtonIcon {button} /></span> to {verb}
                 </div>
@@ -173,10 +178,3 @@
     </Tooltip.Portal>
   </Tooltip.Root>
 </Tooltip.Provider>
-
-<style scoped lang="postcss">
-  .active,
-  button:active {
-    @apply shadow-sm top-[1px];
-  }
-</style>

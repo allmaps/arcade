@@ -2,7 +2,7 @@ import type { z } from 'zod'
 
 import type { MachineContext } from 'xstate'
 
-import type { Map } from '@allmaps/annotation'
+import type { GeoreferencedMap } from '@allmaps/annotation'
 import type { GcpTransformer } from '@allmaps/transform'
 import type { GeojsonPolygon, Point } from '@allmaps/types'
 
@@ -85,7 +85,7 @@ export type LoadedRound = BaseRound & {
   submitted: false
   canSubmit: boolean
   annotationUrl: string
-  map: Map
+  map: GeoreferencedMap
   transformer: GcpTransformer
   geoMask: GeojsonPolygon
   area: number

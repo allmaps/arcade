@@ -2,8 +2,8 @@
   import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
 
-  import { Map, addProtocol } from 'maplibre-gl'
-  import getProtomapsTheme from 'protomaps-themes-base'
+  import { Map, addProtocol, type MapLayerEventType } from 'maplibre-gl'
+  import { layers, namedFlavor } from '@protomaps/basemaps'
   import { Protocol } from 'pmtiles'
 
   import { throttle } from 'lodash-es'
@@ -55,8 +55,11 @@
 
   let warpedMapLayer: WarpedMapLayer
 
+  let mounted = $state(false)
+
   // TODO: get from config
   const panStep = 150
+  const ENABLE_INTERACTION_TIMEOUT = 500
 
   let container: HTMLElement
 
@@ -246,9 +249,15 @@
         const convexHullSource = map.getSource('convex-hull') as GeoJSONSource
         convexHullSource.setData(convexHull)
 
-        flyToWarpedMap(() => {
-          send({ type: 'FINISHED' })
-          map.setPaintProperty('convex-hull', 'fill-opacity', 0)
+        disableInteraction(map, () => {
+          flyToWarpedMap(() => {
+            if (mounted) {
+              send({ type: 'FINISHED' })
+              map.setPaintProperty('convex-hull', 'fill-opacity', 0)
+
+              setTimeoutEnableInteraction()
+            }
+          })
         })
       }
     }
@@ -304,9 +313,17 @@
 
   const throttledHandleMapmove = throttle(handleMapmove, 100)
 
-  function handleMovestart() {
+  function handleMovestart(event: MapLayerEventType) {
     mapHadFirstInteraction = true
     send({ type: 'MAP_MOVED' })
+  }
+
+  function setTimeoutEnableInteraction() {
+    setTimeout(() => {
+      if (mounted) {
+        enableInteraction(map)
+      }
+    }, ENABLE_INTERACTION_TIMEOUT)
   }
 
   function handleMoveend() {
@@ -330,20 +347,21 @@
           if (distanceX < distanceThreshold && distanceY < distanceThreshold) {
             // Perfect score!!!
             perfectScore = true
-            map.stop()
 
-            // disableInteraction(map)
+            disableInteraction(map, () => {
+              flyToWarpedMap(() => {
+                map.stop()
 
-            flyToWarpedMap(() => {
-              showPerfectScore = true
-              handleSubmit(true)
-              send({ type: 'FINISHED' })
+                if (mounted) {
+                  showPerfectScore = true
+
+                  handleSubmit(true)
+                  send({ type: 'FINISHED' })
+
+                  setTimeoutEnableInteraction()
+                }
+              })
             })
-
-            // ol.getView().fit(getExtent(geoMask), {
-            //   duration: 200,
-            //   callback: handleSubmit
-            // })
           }
         }
       }
@@ -361,11 +379,11 @@
     const protocol = new Protocol()
     addProtocol('pmtiles', protocol.tile)
 
-    const layers = getProtomapsTheme('protomaps', 'light')
+    const pmLayers = layers('protomaps', namedFlavor('light'), { lang: 'en' })
 
     // Override background color
-    if (layers[0] && layers[0].paint && 'background-color' in layers[0].paint) {
-      layers[0].paint['background-color'] = 'rgba(0, 0, 0, 0)'
+    if (pmLayers[0] && pmLayers[0].paint && 'background-color' in pmLayers[0].paint) {
+      pmLayers[0].paint['background-color'] = 'rgba(0, 0, 0, 0)'
     }
 
     map = new Map({
@@ -382,7 +400,7 @@
               '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
           }
         },
-        layers
+        layers: pmLayers
       },
       center: $snapshot.context.configuration.map.center as Point,
       zoom: 7,
@@ -423,7 +441,7 @@
       )
 
       warpedMapLayer = new WarpedMapLayer()
-      // @ts-expect-error: MapLibre typings are incomplete
+
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
 
       map.addLayer(
@@ -489,10 +507,13 @@
 
     resizeObserver.observe(container)
 
+    mounted = true
+
     return () => {
       subscription.unsubscribe()
       map.removeLayer('warped-map-layer')
       map.remove()
+      mounted = false
     }
   })
 </script>

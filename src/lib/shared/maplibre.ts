@@ -5,6 +5,10 @@ import type { CallbackFn } from '$lib/shared/types.js'
 
 import { WARPED_MAP_BEHIND_LABELS } from '$lib/shared/constants.js'
 
+// Wait for all keyboard interactions to finish, then call callback
+// https://github.com/maplibre/maplibre-gl-js/blob/main/src/ui/handler/keyboard.ts#L122C1-L123C1
+const DISABLE_INTERACTION_TIMEOUT = 300
+
 function easeOut(t: number) {
   return t * (2 - t)
 }
@@ -98,11 +102,14 @@ export function flyTo(map: Map, center: LngLatLike, zoom: number, callback?: Cal
     map.on('moveend', handleMoveend)
   }
 
-  map.flyTo({
-    center,
-    zoom,
-    essential: true
-  })
+  map.flyTo(
+    {
+      center,
+      zoom,
+      essential: true
+    },
+    { flyTo: true }
+  )
 }
 
 export function createZoomInEvent() {
@@ -166,12 +173,18 @@ export function getFirstSymbolLayerId(map: Map) {
   return firstSymboLayerlId
 }
 
-export function disableInteraction(map: Map) {
+export function disableInteraction(map: Map, callback?: CallbackFn) {
+  map.stop()
+
   map.scrollZoom.disable()
   map.boxZoom.disable()
   map.dragPan.disable()
   map.keyboard.disable()
   map.doubleClickZoom.disable()
+
+  if (callback) {
+    setTimeout(callback, 300)
+  }
 }
 
 export function enableInteraction(map: Map) {

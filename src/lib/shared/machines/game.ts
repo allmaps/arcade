@@ -20,7 +20,7 @@ import { getTimeoutSignal } from '$lib/shared/timeout.js'
 import { assignLastRound } from '$lib/shared/xstate.js'
 import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
 
-import type { Map } from '@allmaps/annotation'
+import type { GeoreferencedMap } from '@allmaps/annotation'
 import type { GeojsonPolygon } from '@allmaps/types'
 
 import type {
@@ -355,7 +355,7 @@ export const gameMachine = createMachine(
           const { configuration, environment, failedAnnotationUrlsState } = input.context
 
           let annotationUrl: string | undefined
-          let map: Map | undefined
+          let map: GeoreferencedMap | undefined
           let transformer: GcpTransformer | undefined
           let imageInfo: unknown | undefined
           let geoMask: GeojsonPolygon | undefined

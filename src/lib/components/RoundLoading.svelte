@@ -74,7 +74,7 @@
       class="absolute left-0 h-full transition-all bg-white/35"
       style:width={`${loadingPercentage}%`}
     ></div>
-    <div class="relative text-sm">{loadingText}…</div>
+    <div class="relative text-sm font-semibold text-white opacity-80">{loadingText}…</div>
   </div>
 </div>
 

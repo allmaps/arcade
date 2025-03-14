@@ -11,8 +11,8 @@
   const hasHeader = header !== undefined
   const hasContent = children !== undefined
 
-  const gridRowsWithHeader = 'grid-rows-[min-content,1fr,min-content]'
-  const gridRowsWithoutHeader = 'grid-rows-[1fr,min-content]'
+  const gridRowsWithHeader = 'grid-rows-[min-content_1fr_min-content]'
+  const gridRowsWithoutHeader = 'grid-rows-[1fr_min-content]'
 </script>
 
 <section
