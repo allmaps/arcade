@@ -33,7 +33,7 @@ export class GameTimeoutState extends EventTarget {
 
   startGameTimeout() {
     if (this.#intervalId === undefined) {
-      this.#intervalId = setInterval(this.#tick, 1000)
+      this.#intervalId = setInterval(this.#tick.bind(this), 1000)
     }
   }
 
