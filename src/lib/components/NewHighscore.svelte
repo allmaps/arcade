@@ -14,7 +14,7 @@
 
   let nameInput: NameInput
 
-  let name = $state(lastHighscore?.name || '')
+  let name = $state($lastHighscore?.name || '')
 
   async function handleSubmit() {
     send({
@@ -22,7 +22,7 @@
       highscore: {
         id: await generateRandomId(),
         name,
-        score: totalScore,
+        score: $totalScore,
         date: new Date()
       }
     })

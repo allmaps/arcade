@@ -159,7 +159,9 @@
         minlength="1"
         maxlength="1"
         pattern="^[a-zA-Z]$"
-        class="text-black font-semibold caret-[transparent] select-all uppercase rounded-lg text-center p-2 focus:bg-green transition-colors duration-200
+        class="text-black bg-white font-semibold caret-[transparent] select-all uppercase rounded-lg text-center p-2 focus:bg-green
+          transition-colors transition-opacity duration-200
+          {value.length >= index ? '' : 'opacity-30'}
           text-5xl w-16 h-16
           sm:text-6xl sm:w-24 sm:h-24
           md:text-8xl md:w-32 md:h-32"
