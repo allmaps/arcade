@@ -26,13 +26,13 @@
   import 'maplibre-gl/dist/maplibre-gl.css'
   import 'ol/ol.css'
 
-  const { snapshot, currentRoundNumber, keyboardTarget, actorRef } = getSnapshotState()
+  const { snapshot, send, currentRoundNumber, keyboardTarget, actorRef } = getSnapshotState()
   const deviceState = getDeviceState()
   const gameTimeoutState = getGameTimeoutState()
 
   const key = 'page-crossfade'
 
-  const [send, receive] = crossfade({
+  const [crossfadeSend, crossfadeReceive] = crossfade({
     duration: 750,
     easing: quintOut
   })
@@ -59,9 +59,12 @@
   onMount(() => {
     const subscription = actorRef.subscribe(handleTransition)
 
+    gameTimeoutState.addEventListener('timeout', () => send({ type: 'TIMEOUT' }))
+
     window.addEventListener('touchstart', handleFirstTouch, false)
 
     return () => {
+      // TODO: cancel event listeners!
       subscription.unsubscribe()
     }
   })
@@ -75,16 +78,16 @@
     <Error />
   {:else if $snapshot.matches('loading') || $snapshot.matches('title')}
     <div
-      in:send={{ key }}
-      out:receive={{ key }}
+      in:crossfadeSend={{ key }}
+      out:crossfadeReceive={{ key }}
       class="absolute w-full h-full flex flex-col items-center justify-center"
     >
       <Title />
     </div>
   {:else if $snapshot.matches('explain')}
     <div
-      in:send={{ key }}
-      out:receive={{ key }}
+      in:crossfadeSend={{ key }}
+      out:crossfadeReceive={{ key }}
       class="absolute w-full h-full flex flex-col items-center justify-center"
     >
       <Explain />
@@ -97,24 +100,24 @@
     </div>
   {:else if $snapshot.matches('results')}
     <div
-      in:send={{ key }}
-      out:receive={{ key }}
+      in:crossfadeSend={{ key }}
+      out:crossfadeReceive={{ key }}
       class="absolute w-full h-full flex flex-col items-center justify-center"
     >
       <Results />
     </div>
   {:else if $snapshot.matches('highscores.new')}
     <div
-      in:send={{ key }}
-      out:receive={{ key }}
+      in:crossfadeSend={{ key }}
+      out:crossfadeReceive={{ key }}
       class="absolute w-full h-full flex flex-col items-center justify-center"
     >
       <NewHighscore />
     </div>
   {:else if $snapshot.matches('highscores.show')}
     <div
-      in:send={{ key }}
-      out:receive={{ key }}
+      in:crossfadeSend={{ key }}
+      out:crossfadeReceive={{ key }}
       class="absolute w-full h-full flex flex-col items-center justify-center"
     >
       <Highscores />

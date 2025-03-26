@@ -53,7 +53,7 @@
           button={$snapshot.context.environment.getButton('submit')}
           disabled={name.length < 1}
           verb="submit name"
-          onclick={handleSubmit}>Submit</Button
+          onclick={() => handleSubmit()}>Submit</Button
         >
       </Footer>
     {/snippet}
