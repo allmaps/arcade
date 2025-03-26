@@ -1,7 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
+  import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
+
   import { isCabinet } from '$lib/shared/cabinet.js'
+
+  const gameTimeoutState = getGameTimeoutState()
 
   const HIGHSCORE_NAME_LENGTH = 5
 
@@ -72,29 +76,42 @@
   }
 
   function handleKeydown(index: number, event: KeyboardEvent) {
+    gameTimeoutState.resetLastInteraction()
+
     if (event.key === 'Tab') {
+      event.preventDefault()
+
       return
     }
 
-    event.preventDefault()
-
     const input = event.target as HTMLInputElement
-    if (event.key === 'Enter') {
+    if (!isCabinet && event.key === 'Enter') {
+      event.preventDefault()
+
       onsubmit?.(value)
     } else if (event.key === 'Backspace') {
+      event.preventDefault()
+
       backspace(index)
+
       return
     } else if (event.key === 'ArrowUp') {
       if (input) {
         if (input.value) {
           if (input.value === 'a' || input.value === 'A') {
+            event.preventDefault()
+
             input.value = 'Z'
           } else {
+            event.preventDefault()
+
             const previousCharCode = input.value.charCodeAt(0) - 1
             const previousValue = String.fromCharCode(previousCharCode)
             input.value = previousValue
           }
         } else {
+          event.preventDefault()
+
           input.value = 'Z'
         }
       }
@@ -102,21 +119,33 @@
       if (input) {
         if (input.value) {
           if (input.value === 'z' || input.value === 'Z') {
+            event.preventDefault()
+
             input.value = 'A'
           } else {
+            event.preventDefault()
+
             const nextCharCode = input.value.charCodeAt(0) + 1
             const nextValue = String.fromCharCode(nextCharCode)
             input.value = nextValue
           }
         } else {
+          event.preventDefault()
+
           input.value = 'A'
         }
       }
     } else if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+
       selectAndFocusInput(index - 1)
     } else if (event.key === 'ArrowRight') {
+      event.preventDefault()
+
       selectAndFocusInput(index + 1)
     } else if (!isCabinet && new RegExp(input.pattern).test(event.key)) {
+      event.preventDefault()
+
       // On the Arcade cabinet, the arcade buttons are mapped keyboard keys.
       // Regular keyboard keys should not change the input value on the cabinet.
 
