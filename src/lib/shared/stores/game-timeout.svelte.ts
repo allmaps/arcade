@@ -11,12 +11,16 @@ export class GameTimeoutState extends EventTarget {
   #lastInteraction = $state<Date>(new Date())
   #showGameTimeoutWarning = $state<boolean>(false)
 
-  #gameDuration = $derived.by(() => {
+  #gameDuration = $state<number>(0)
+
+  #updateGameDuration() {
     const now = new Date()
-    return now.getTime() - this.#lastInteraction.getTime()
-  })
+    this.#gameDuration = now.getTime() - this.#lastInteraction.getTime()
+  }
 
   #tick() {
+    this.#updateGameDuration()
+
     if (this.#gameDuration > GAME_TIMEOUT_MS) {
       this.resetLastInteraction()
       this.#timedOut = true
