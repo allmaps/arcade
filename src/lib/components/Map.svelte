@@ -405,7 +405,9 @@
       center: $snapshot.context.configuration.map.center as Point,
       zoom: 7,
       maxPitch: 0,
-      preserveDrawingBuffer: true,
+      canvasContextAttributes: {
+        preserveDrawingBuffer: true
+      },
       attributionControl: false
     })
 
@@ -442,6 +444,7 @@
 
       warpedMapLayer = new WarpedMapLayer()
 
+      // @ts-expect-error: MapLibre typings are incomplete
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
 
       map.addLayer(
