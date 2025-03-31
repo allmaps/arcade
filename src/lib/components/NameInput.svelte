@@ -21,7 +21,13 @@
 
   export function backspace(index?: number) {
     if (index === undefined) {
-      index = value.length - 1
+      const selectedInputIndex = getSelectedInputIndex()
+
+      if (selectedInputIndex !== null) {
+        index = selectedInputIndex
+      } else {
+        index = value.length
+      }
     }
 
     if (index > value.length - 2) {
@@ -67,8 +73,19 @@
     return name.toUpperCase().trim()
   }
 
+  function getSelectedInputIndex() {
+    for (const [index, input] of inputs.entries()) {
+      if (input === document.activeElement) {
+        return index
+      }
+    }
+
+    return null
+  }
+
   function selectAndFocusInput(index: number) {
     const input = inputs[index]
+
     if (input && !input.disabled) {
       input.focus()
       input.select()
@@ -85,11 +102,8 @@
     }
 
     const input = event.target as HTMLInputElement
-    if (!isCabinet && event.key === 'Enter') {
-      event.preventDefault()
 
-      onsubmit?.(value)
-    } else if (event.key === 'Backspace') {
+    if (event.key === 'Backspace') {
       event.preventDefault()
 
       backspace(index)
@@ -188,8 +202,9 @@
         minlength="1"
         maxlength="1"
         pattern="^[a-zA-Z]$"
-        class="text-black bg-white font-semibold caret-[transparent] select-all uppercase rounded-lg text-center p-2 focus:bg-green
-          transition-colors transition-opacity duration-200
+        class="text-black bg-white font-semibold caret-[transparent] select-all uppercase
+          rounded-lg text-center p-2 focus:bg-green
+          transition-all duration-200
           {value.length >= index ? '' : 'opacity-30'}
           text-5xl w-16 h-16
           sm:text-6xl sm:w-24 sm:h-24
