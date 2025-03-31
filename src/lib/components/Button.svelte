@@ -65,12 +65,6 @@
     ontoggleend?.()
   }
 
-  function handleKeypress(event: KeyboardEvent) {
-    if (event.code === button.keyCode && !event.repeat && !disabled) {
-      onclick?.()
-    }
-  }
-
   function handleKeydown(event: KeyboardEvent) {
     if (event.code === button.keyCode && !event.repeat && !disabled) {
       handleToggleStart()
@@ -80,6 +74,7 @@
   function handleKeyup(event: KeyboardEvent) {
     if (event.code === button.keyCode && !event.repeat && !disabled) {
       handleToggleEnd()
+      onclick?.()
       // element.dispatchEvent(new Event('mouseup'))
       // touch ? dispatch('touchend') : dispatch('mouseup')
     }
@@ -120,7 +115,7 @@
   })
 </script>
 
-<svelte:document onkeypress={handleKeypress} onkeydown={handleKeydown} onkeyup={handleKeyup} />
+<svelte:document onkeydown={handleKeydown} onkeyup={handleKeyup} />
 
 <Tooltip.Provider>
   <Tooltip.Root delayDuration={2000}>

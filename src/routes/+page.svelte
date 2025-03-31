@@ -125,7 +125,7 @@
   {/if}
 
   {#if gameTimeoutState.showGameTimeoutWarning}
-    <div class="absolute top-0 w-full h-full">
+    <div class="absolute top-0 w-full h-full pointer-events-none">
       <Timeout timeout={GAME_TIMEOUT_WARNING_MS} />
     </div>
   {/if}
