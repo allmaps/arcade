@@ -390,7 +390,7 @@
       container,
       style: {
         version: 8,
-        glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
+        glyphs: import.meta.env.ARCADE_GLYPHS_URL || 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
         sources: {
           protomaps: {
             type: 'vector',
