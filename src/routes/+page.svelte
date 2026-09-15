@@ -20,6 +20,7 @@
   import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
 
   import { isCabinet } from '$lib/shared/cabinet.js'
+  import { cabinetFocus } from '$lib/shared/cabinet-focus.js'
   import { GAME_TIMEOUT_WARNING_MS } from '$lib/shared/constants.js'
   import { zoomIn, zoomOut } from '$lib/shared/keyboard.js'
 
@@ -73,7 +74,7 @@
 <svelte:document onkeydown={handleKeydown} />
 <Stats statsWebsiteId={import.meta.env.ARCADE_STATS_WEBSITE_ID} />
 
-<div class="w-full h-full" class:cursor-none={isCabinet}>
+<div use:cabinetFocus={isCabinet} class="w-full h-full outline-none" class:cursor-none={isCabinet}>
   {#if $snapshot.matches('error')}
     <Error />
   {:else if $snapshot.matches('loading') || $snapshot.matches('title')}
