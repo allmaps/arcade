@@ -23,8 +23,9 @@ export function isHighscore(highscores: Highscore[], score: number) {
     return true
   }
 
+  // Saved history can exceed the leaderboard: only beating a top-ten entry qualifies.
   for (const highscore of highscores
-    .toSorted((a, b) => a.score - b.score)
+    .toSorted((a, b) => b.score - a.score)
     .slice(0, HIGHSCORE_DISPLAY_COUNT)) {
     if (score > highscore.score) {
       return true
