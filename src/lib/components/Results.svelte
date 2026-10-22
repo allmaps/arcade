@@ -10,6 +10,7 @@
 
   import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
   import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
+  import { getZoomState } from '$lib/shared/stores/zoom.svelte.js'
 
   import Overlay from '$lib/components/Overlay.svelte'
   import Score from '$lib/components/Score.svelte'
@@ -40,6 +41,7 @@
 
   const { snapshot, send, rounds } = getSnapshotState()
   const gameTimeoutState = getGameTimeoutState()
+  const zoomState = getZoomState()
 
   let map: Map
 
@@ -153,6 +155,10 @@
       if (event.originalEvent) {
         clearInterval(intervalId)
       }
+    })
+
+    map.on('zoom', () => {
+      zoomState.setZoom('maplibre', map.getZoom(), map.getMinZoom(), map.getMaxZoom())
     })
 
     map.on('load', () => {

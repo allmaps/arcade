@@ -8,6 +8,7 @@
   import { setFailedAnnotationUrlsState } from '$lib/shared/stores/failed-annotation-urls.svelte'
   import { setGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
   import { setTimerState } from '$lib/shared/stores/timer.svelte.js'
+  import { setZoomState } from '$lib/shared/stores/zoom.svelte.js'
 
   import type { Snippet } from 'svelte'
 
@@ -38,6 +39,7 @@
   })
 
   setDeviceState()
+  setZoomState()
   setSnapshotState(snapshot, send, actorRef)
 </script>
 
