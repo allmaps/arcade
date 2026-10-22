@@ -13,6 +13,7 @@
 
   import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
   import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
+  import { getZoomState } from '$lib/shared/stores/zoom.svelte.js'
 
   import { maskStyle, maskToPolygon } from '$lib/shared/openlayers.js'
   import { PADDING } from '$lib/shared/constants.js'
@@ -25,6 +26,7 @@
 
   const { send, currentRound, currentRoundIndex } = getSnapshotState()
   const gameTimeoutState = getGameTimeoutState()
+  const zoomState = getZoomState()
 
   let element: HTMLElement
 
@@ -84,6 +86,28 @@
         ol.getView().fit(extent, {
           // padding: PADDING
         })
+
+        const fitZoom = ol.getView().getZoom()
+        const fullResolutionZoom = ol
+          .getView()
+          .getZoomForResolution(tileGrid.getResolution(tileGrid.getMaxZoom()))
+
+        if (fitZoom !== undefined) {
+          ol.getView().setMinZoom(fitZoom - 2)
+          ol.getView().setMaxZoom(Math.max(fitZoom + 4, fullResolutionZoom ?? fitZoom + 4))
+        }
+
+        function handleResolutionChange() {
+          const view = ol.getView()
+          const zoom = view.getZoom()
+
+          if (zoom !== undefined) {
+            zoomState.setZoom('openlayers', zoom, view.getMinZoom(), view.getMaxZoom())
+          }
+        }
+
+        ol.getView().on('change:resolution', handleResolutionChange)
+        handleResolutionChange()
 
         ol.on('rendercomplete', () => onready?.())
 

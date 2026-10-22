@@ -21,6 +21,7 @@
   import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
   import { getTimerState } from '$lib/shared/stores/timer.svelte.js'
   import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
+  import { getZoomState } from '$lib/shared/stores/zoom.svelte.js'
 
   import {
     flyTo,
@@ -50,6 +51,7 @@
   const { snapshot, send, actorRef, currentRound, currentRoundIndex } = getSnapshotState()
   const gameTimeoutState = getGameTimeoutState()
   const timerState = getTimerState()
+  const zoomState = getZoomState()
 
   let map: Map
 
@@ -60,6 +62,7 @@
   // TODO: get from config
   const panStep = 150
   const ENABLE_INTERACTION_TIMEOUT = 500
+  const MAPLIBRE_MAX_ZOOM = 24
 
   let container: HTMLElement
 
@@ -318,6 +321,10 @@
     send({ type: 'MAP_MOVED' })
   }
 
+  function handleZoom() {
+    zoomState.setZoom('maplibre', map.getZoom(), map.getMinZoom(), map.getMaxZoom())
+  }
+
   function setTimeoutEnableInteraction() {
     setTimeout(() => {
       if (mounted) {
@@ -474,8 +481,8 @@
     const zoomFraction = warpedMapZoom % 1
 
     const initialZoom = $snapshot.context.configuration.map.initialZoom + zoomFraction
-    const minZoom = 1 + zoomFraction
-    const maxZoom = warpedMapZoom + 4
+    const minZoom = Math.min(1 + zoomFraction, warpedMapZoom)
+    const maxZoom = Math.min(warpedMapZoom + 4, MAPLIBRE_MAX_ZOOM)
 
     // MapLibre's regular keyboard handler rounds the zoom level
     // when zooming with the keyboard. Override the keydown
@@ -497,6 +504,9 @@
     map.on('move', throttledHandleMapmove)
     map.on('movestart', handleMovestart)
     map.on('moveend', handleMoveend)
+    map.on('zoom', handleZoom)
+
+    handleZoom()
 
     contentBoxSize = { inlineSize: container.clientWidth, blockSize: container.clientHeight }
 
