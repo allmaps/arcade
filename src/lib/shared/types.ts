@@ -15,11 +15,8 @@ export type Configuration = z.infer<typeof ConfigurationSchema>
 
 export type Highscore = z.infer<typeof HighscoreSchema>
 
-export type MappingLibrary = 'maplibre' | 'openlayers'
-
 export type KeyboardTarget = {
   element: HTMLElement
-  library: MappingLibrary
 }
 
 export type LayoutData = {
@@ -52,8 +49,8 @@ export type GameEvent =
   | { type: 'START' }
   | { type: 'FINISHED' }
   | { type: 'MAP_MOVED' }
-  | { type: 'SET_IMAGE_KEYBOARD_TARGET'; element: HTMLElement; library: MappingLibrary }
-  | { type: 'SET_MAP_KEYBOARD_TARGET'; element: HTMLElement; library: MappingLibrary }
+  | { type: 'SET_IMAGE_KEYBOARD_TARGET'; element: HTMLElement }
+  | { type: 'SET_MAP_KEYBOARD_TARGET'; element: HTMLElement }
   | { type: 'SHOW_IMAGE' }
   | { type: 'SHOW_MAP' }
   | { type: 'SUBMIT'; endTime: number; submission: Submission }

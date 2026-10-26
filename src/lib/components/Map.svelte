@@ -8,9 +8,7 @@
 
   import { throttle } from 'lodash-es'
 
-  import { readGeometry } from '$lib/shared/openlayers.js'
-
-  import { getDistance, getArea } from 'ol/sphere.js'
+  import { getDistance, getArea } from '$lib/shared/geodesy.js'
 
   import { computeBbox, bboxToCenter } from '@allmaps/stdlib'
   import { WarpedMapLayer } from '@allmaps/maplibre'
@@ -193,7 +191,7 @@
       submittedGeoMask = getSubmittedGeoMask()
     }
 
-    const area = getArea(readGeometry(submittedGeoMask))
+    const area = getArea(submittedGeoMask)
 
     convexHull = getConvexHull(geoMask, submittedGeoMask)
 
@@ -453,8 +451,7 @@
 
       send({
         type: 'SET_MAP_KEYBOARD_TARGET',
-        element: map.getCanvas(),
-        library: 'maplibre'
+        element: map.getCanvas()
       })
     })
 

@@ -78,7 +78,7 @@ export function makeHandleKeydownWithPanStepAndZoomFraction(panStep: number, zoo
             easeId: 'keyboardHandler',
             easing: easeOut,
             zoom: zoomDir ? newZoom : currentZoom,
-            bearing: 0,
+            bearing: map.getBearing(),
             pitch: 0,
             offset: [-xDir * panStep, -yDir * panStep],
             center

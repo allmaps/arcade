@@ -66,8 +66,7 @@
       return
     }
 
-    // This is a hack to ensure sure $olTarget's container
-    // is visible before focusing
+    // Make the active view visible before focusing its canvas.
     element.classList.remove('fade-to-invisible')
     keyboardTarget.element.focus()
   }

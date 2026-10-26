@@ -11,7 +11,7 @@ import type { SnapshotFrom, EventFromLogic, Actor } from 'xstate'
 
 import type { GameMachine } from '$lib/shared/machines/game.js'
 
-import type { Highscore, Round } from '$lib/shared/types.js'
+import type { Highscore, Round, KeyboardTarget } from '$lib/shared/types.js'
 
 import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
 
@@ -37,9 +37,7 @@ export class SnapshotState {
   #highscoresEnabled: Readable<boolean>
   #isNewHighscore: Readable<boolean>
 
-  #keyboardTarget: Readable<
-    { element: HTMLElement; library: 'maplibre' | 'openlayers' } | undefined
-  >
+  #keyboardTarget: Readable<KeyboardTarget | undefined>
 
   constructor(
     snapshot: Readable<SnapshotFrom<GameMachine>>,

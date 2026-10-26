@@ -24,7 +24,6 @@
   import { zoomIn, zoomOut } from '$lib/shared/keyboard.js'
 
   import 'maplibre-gl/dist/maplibre-gl.css'
-  import 'ol/ol.css'
 
   const { snapshot, send, currentRoundNumber, keyboardTarget, actorRef } = getSnapshotState()
   const deviceState = getDeviceState()

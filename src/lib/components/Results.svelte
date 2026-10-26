@@ -234,8 +234,7 @@
 
       send({
         type: 'SET_MAP_KEYBOARD_TARGET',
-        element: map.getCanvas(),
-        library: 'maplibre'
+        element: map.getCanvas()
       })
     })
 

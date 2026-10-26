@@ -1,9 +1,6 @@
 import turfRewind from '@turf/rewind'
 import turfConvex from '@turf/convex'
 import { geoProjection, geoPath } from 'd3-geo'
-// import { fromLonLat } from 'ol/proj'
-
-// import type { Extent } from 'ol/extent.js'
 import type { Size, Point, GeojsonPolygon } from '@allmaps/types'
 
 import type { Padding } from '$lib/shared/types.js'
@@ -79,12 +76,3 @@ export function getConvexHull(
     return convexFeature.geometry as GeojsonPolygon
   }
 }
-
-// export function extentFromMaxBounds(maxBounds?: number[][] | null): Extent | undefined {
-//   if (maxBounds) {
-//     const [x1, y1] = fromLonLat(maxBounds[0])
-//     const [x2, y2] = fromLonLat(maxBounds[1])
-
-//     return [Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2)] as Extent
-//   }
-// }

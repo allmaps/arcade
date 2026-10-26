@@ -1,7 +1,6 @@
 import { createMachine, assign, fromPromise, raise } from 'xstate'
 
-import { getArea } from 'ol/sphere.js'
-import { readGeometry } from '$lib/shared/openlayers.js'
+import { getArea } from '$lib/shared/geodesy.js'
 
 import { fetchImageInfo, polygonToGeojsonPolygon } from '@allmaps/stdlib'
 import { GcpTransformer } from '@allmaps/transform'
@@ -327,15 +326,11 @@ export const gameMachine = createMachine(
       }),
       setImageKeyboardTarget: assign({
         imageKeyboardTarget: ({ event }) =>
-          event.type === 'SET_IMAGE_KEYBOARD_TARGET'
-            ? { element: event.element, library: event.library }
-            : undefined
+          event.type === 'SET_IMAGE_KEYBOARD_TARGET' ? { element: event.element } : undefined
       }),
       setMapKeyboardTarget: assign({
         mapKeyboardTarget: ({ event }) =>
-          event.type === 'SET_MAP_KEYBOARD_TARGET'
-            ? { element: event.element, library: event.library }
-            : undefined
+          event.type === 'SET_MAP_KEYBOARD_TARGET' ? { element: event.element } : undefined
       }),
       saveHighscore: ({ context, event }) => {
         if (event.type === 'SUBMIT_HIGHSCORE') {
@@ -386,7 +381,7 @@ export const gameMachine = createMachine(
                 imageInfo = await fetchImageInfo(map.resource.id, getTimeoutSignal())
 
                 geoMask = polygonToGeojsonPolygon(transformer.transformToGeo([map.resourceMask]))
-                area = getArea(readGeometry(geoMask))
+                area = getArea(geoMask)
 
                 maxScore = computeMaxScore(configuration, area)
 
