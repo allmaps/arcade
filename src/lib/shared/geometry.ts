@@ -32,7 +32,7 @@ export function geometryToPixels(polygon: GeojsonPolygon, size: Size, padding: P
 
   mercator.scale(scale).translate(translate)
 
-  let pixelCoordinates: Point[] = []
+  const pixelCoordinates: Point[] = []
 
   polygon.coordinates[0].slice(1).forEach((coordinate) => {
     const pixelCoordinate = mercator([coordinate[0], coordinate[1]])

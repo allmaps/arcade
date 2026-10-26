@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
+
   import { useMachine } from '@xstate/svelte'
 
   import { gameMachine } from '$lib/shared/machines/game.js'
@@ -22,7 +24,8 @@
   }
 
   let { data, children }: Props = $props()
-  const { environment, configuration } = data
+  // The game actor is initialized once for the lifetime of this layout.
+  const { environment, configuration } = untrack(() => data)
 
   const failedAnnotationUrlsState = setFailedAnnotationUrlsState()
   const gameTimeoutState = setGameTimeoutState()

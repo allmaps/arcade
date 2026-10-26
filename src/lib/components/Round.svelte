@@ -45,7 +45,6 @@
   let image = $state<Image>()
   let map = $state<Map>()
 
-  let startTime: number
   let intervalId: number
 
   let ready = $state(false)
@@ -167,7 +166,6 @@
   }
 
   onMount(() => {
-    startTime = getTime()
     // startTimer()
 
     const subscription = actorRef.subscribe(handleTransition)

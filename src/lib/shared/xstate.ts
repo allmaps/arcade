@@ -15,8 +15,7 @@ export function assignLastRound<
   TContext extends MachineContext,
   TExpressionEvent extends AnyEventObject = AnyEventObject,
   TParams extends ParameterizedObject['params'] | undefined =
-    | ParameterizedObject['params']
-    | undefined,
+    ParameterizedObject['params'] | undefined,
   TEvent extends EventObject = EventObject,
   TActor extends ProvidedActor = ProvidedActor
 >(

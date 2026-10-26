@@ -140,7 +140,7 @@
       center: $snapshot.context.configuration.map.center as Point,
       zoom: $snapshot.context.configuration.map.initialZoom,
       maxPitch: 0,
-      preserveDrawingBuffer: true,
+      canvasContextAttributes: { preserveDrawingBuffer: true },
       attributionControl: false
     })
 
@@ -247,7 +247,6 @@
     // MapLibre's regular keyboard handler rounds the zoom level
     // when zooming with the keyboard. Override the keydown
     // handler to prevent this.
-    // @ts-expect-error: MapLibre typings are incomplete
     map.keyboard.keydown = makeHandleKeydownWithPanStepAndZoomFraction(panStep)
 
     // element.focus()
@@ -277,7 +276,7 @@
         <ol
           class="md:p-4 gap-2 md:gap-4 top-0 w-full h-full flex flex-row max-w-2xl justify-center"
         >
-          {#each $rounds as round, index}
+          {#each $rounds as round, index (round.index)}
             {#if round.submitted}
               <li class="flex-1 flex justify-center">
                 <button onclick={() => handleShowRounds(index)}>

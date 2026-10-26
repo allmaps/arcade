@@ -21,7 +21,7 @@ export default class CabinetEnvironment implements ArcadeEnvironment {
     return this.buttons[type]
   }
 
-  async getAnnotationUrls(configuration: Configuration) {
+  async getAnnotationUrls() {
     if (import.meta.env.ARCADE_ANNOTATIONS_DIR) {
       // Fetch JSON directory list from Caddy server
       this.annotationUrls = await fetch(import.meta.env.ARCADE_ANNOTATIONS_DIR, {
@@ -47,7 +47,7 @@ export default class CabinetEnvironment implements ArcadeEnvironment {
 
   async getRandomAnnotationUrl(configuration: Configuration, previousAnnotationUrls: string[]) {
     if (!this.fetched) {
-      await this.getAnnotationUrls(configuration)
+      await this.getAnnotationUrls()
     }
 
     const filteredAnnotationUrls = this.annotationUrls.filter(

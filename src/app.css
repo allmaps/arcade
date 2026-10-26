@@ -4,6 +4,17 @@
 
 @config '../tailwind.config.ts';
 
+@custom-variant hsm (@media (min-height: 640px));
+@custom-variant whsm (@media (min-height: 640px) and (min-width: 640px));
+@custom-variant hmd (@media (min-height: 768px));
+@custom-variant whmd (@media (min-height: 768px) and (min-width: 768px));
+@custom-variant hlg (@media (min-height: 1024px));
+@custom-variant whlg (@media (min-height: 1024px) and (min-width: 1024px));
+@custom-variant hxl (@media (min-height: 1280px));
+@custom-variant whxl (@media (min-height: 1280px) and (min-width: 1280px));
+@custom-variant h2xl (@media (min-height: 1536px));
+@custom-variant wh2xl (@media (min-height: 1536px) and (min-width: 1536px));
+
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still

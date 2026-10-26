@@ -1,9 +1,9 @@
 import { createMachine, assign, fromPromise, raise } from 'xstate'
 
 import { getArea } from 'ol/sphere.js'
-import GeoJSON from 'ol/format/GeoJSON.js'
+import { readGeometry } from '$lib/shared/openlayers.js'
 
-import { fetchImageInfo } from '@allmaps/stdlib'
+import { fetchImageInfo, polygonToGeojsonPolygon } from '@allmaps/stdlib'
 import { GcpTransformer } from '@allmaps/transform'
 
 import { fetchMap } from '$lib/shared/maps.js'
@@ -371,7 +371,7 @@ export const gameMachine = createMachine(
               ...input.context.rounds
                 .filter((round): round is LoadedRound => round.loaded)
                 .map((round) => round.annotationUrl),
-              ...failedAnnotationUrlsState?.failedAnnotationUrls
+              ...failedAnnotationUrlsState.failedAnnotationUrls
             ].filter((url) => url)
 
             annotationUrl = await environment.getRandomAnnotationUrl(
@@ -385,13 +385,8 @@ export const gameMachine = createMachine(
                 transformer = new GcpTransformer(map.gcps)
                 imageInfo = await fetchImageInfo(map.resource.id, getTimeoutSignal())
 
-                geoMask = transformer.transformToGeoAsGeojson([map.resourceMask])
-                area = getArea(
-                  new GeoJSON().readGeometry(geoMask, {
-                    dataProjection: 'EPSG:4326',
-                    featureProjection: 'EPSG:3857'
-                  })
-                )
+                geoMask = polygonToGeojsonPolygon(transformer.transformToGeo([map.resourceMask]))
+                area = getArea(readGeometry(geoMask))
 
                 maxScore = computeMaxScore(configuration, area)
 

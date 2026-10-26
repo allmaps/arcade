@@ -32,13 +32,19 @@ export function convexHullStyle(color: string) {
   })
 }
 
+export function readGeometry(polygon: GeojsonPolygon) {
+  const geometry = new GeoJSON().readGeometry(polygon, {
+    dataProjection: 'EPSG:4326',
+    featureProjection: 'EPSG:3857'
+  })
+  if (!geometry) {
+    throw new Error('Could not read polygon geometry')
+  }
+  return geometry
+}
+
 export function getExtent(polygon: GeojsonPolygon) {
-  return new GeoJSON()
-    .readGeometry(polygon, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: 'EPSG:3857'
-    })
-    .getExtent()
+  return readGeometry(polygon).getExtent()
 }
 
 export function createZoomInEvent() {

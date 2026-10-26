@@ -17,7 +17,7 @@
     onsubmit?: (value: string) => void
   }
 
-  let { value = $bindable(''), onsubmit }: Props = $props()
+  let { value = $bindable('') }: Props = $props()
 
   export function backspace(index?: number) {
     if (index === undefined) {
@@ -193,7 +193,7 @@
 </script>
 
 <ol class="flex gap-2" bind:this={inputList}>
-  {#each { length: HIGHSCORE_NAME_LENGTH } as _, index}
+  {#each Array.from({ length: HIGHSCORE_NAME_LENGTH }, (_, index) => index) as index (index)}
     <li>
       <!-- svelte-ignore a11y_autofocus -->
       <input

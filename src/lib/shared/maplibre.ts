@@ -1,9 +1,14 @@
+import { setWorkerUrl } from 'maplibre-gl'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
+
 import type { Map, LngLatLike } from 'maplibre-gl'
 
 import type { DataDrivenPropertyValueSpecification, ColorSpecification } from 'maplibre-gl'
 import type { CallbackFn } from '$lib/shared/types.js'
 
 import { WARPED_MAP_BEHIND_LABELS } from '$lib/shared/constants.js'
+
+setWorkerUrl(workerUrl)
 
 // Wait for all keyboard interactions to finish, then call callback
 // https://github.com/maplibre/maplibre-gl-js/blob/main/src/ui/handler/keyboard.ts#L122C1-L123C1
@@ -183,7 +188,7 @@ export function disableInteraction(map: Map, callback?: CallbackFn) {
   map.doubleClickZoom.disable()
 
   if (callback) {
-    setTimeout(callback, 300)
+    setTimeout(callback, DISABLE_INTERACTION_TIMEOUT)
   }
 }
 

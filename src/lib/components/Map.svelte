@@ -2,13 +2,13 @@
   import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
 
-  import { Map, addProtocol, type MapLayerEventType } from 'maplibre-gl'
+  import { Map, addProtocol } from 'maplibre-gl'
   import { layers, namedFlavor } from '@protomaps/basemaps'
   import { Protocol } from 'pmtiles'
 
   import { throttle } from 'lodash-es'
 
-  import GeoJSON from 'ol/format/GeoJSON.js'
+  import { readGeometry } from '$lib/shared/openlayers.js'
 
   import { getDistance, getArea } from 'ol/sphere.js'
 
@@ -70,8 +70,6 @@
   let contentBoxSize = $state<ResizeObserverSize>()
 
   let warpedMapZoom: number
-
-  let mapHadFirstInteraction = false
 
   let submitted = false
   let perfectScore = false
@@ -195,12 +193,7 @@
       submittedGeoMask = getSubmittedGeoMask()
     }
 
-    const area = getArea(
-      new GeoJSON().readGeometry(submittedGeoMask, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857'
-      })
-    )
+    const area = getArea(readGeometry(submittedGeoMask))
 
     convexHull = getConvexHull(geoMask, submittedGeoMask)
 
@@ -313,8 +306,7 @@
 
   const throttledHandleMapmove = throttle(handleMapmove, 100)
 
-  function handleMovestart(event: MapLayerEventType) {
-    mapHadFirstInteraction = true
+  function handleMovestart() {
     send({ type: 'MAP_MOVED' })
   }
 
@@ -444,7 +436,6 @@
 
       warpedMapLayer = new WarpedMapLayer()
 
-      // @ts-expect-error: MapLibre typings are incomplete
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
 
       map.addLayer(
@@ -480,7 +471,6 @@
     // MapLibre's regular keyboard handler rounds the zoom level
     // when zooming with the keyboard. Override the keydown
     // handler to prevent this.
-    // @ts-expect-error: MapLibre typings are incomplete
     map.keyboard.keydown = makeHandleKeydownWithPanStepAndZoomFraction(panStep, zoomFraction)
 
     map.setMinZoom(minZoom)

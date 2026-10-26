@@ -9,10 +9,10 @@
   const { snapshot, currentRound } = getSnapshotState()
 
   let bearing = $derived.by(() => {
-    if (currentRound && currentRound.loaded) {
-      const transformer = new GcpTransformer(currentRound.map.gcps)
+    if ($currentRound && $currentRound.loaded) {
+      const transformer = new GcpTransformer($currentRound.map.gcps)
 
-      const bbox = computeBbox(currentRound.map.resourceMask)
+      const bbox = computeBbox($currentRound.map.resourceMask)
 
       const topLeft = transformer.transformToGeo([bbox[0], bbox[1]])
       const bottomLeft = transformer.transformToGeo([bbox[0], bbox[3]])

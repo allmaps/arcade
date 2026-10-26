@@ -41,6 +41,10 @@ We're working on adding the following features to Allmaps Arcade:
 
 ## Running locally
 
+Use Node.js 22.13 or newer in the 22.x release line, or Node.js 24 or newer.
+The dependencies currently use SvelteKit 2 because `@allmaps/ui` requires it,
+and TypeScript 6.0 because that is the version supported by the checking and linting tools.
+
 Install dependencies:
 
     pnpm install

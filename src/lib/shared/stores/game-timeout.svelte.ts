@@ -8,14 +8,13 @@ export class GameTimeoutState extends EventTarget {
   #intervalId: number | undefined
 
   #timedOut = $state<boolean>(false)
-  #lastInteraction = $state<Date>(new Date())
+  #lastInteraction = $state(Date.now())
   #showGameTimeoutWarning = $state<boolean>(false)
 
   #gameDuration = $state<number>(0)
 
   #updateGameDuration() {
-    const now = new Date()
-    this.#gameDuration = now.getTime() - this.#lastInteraction.getTime()
+    this.#gameDuration = Date.now() - this.#lastInteraction
   }
 
   #tick() {
@@ -52,7 +51,7 @@ export class GameTimeoutState extends EventTarget {
 
   resetLastInteraction() {
     this.#showGameTimeoutWarning = false
-    this.#lastInteraction = new Date()
+    this.#lastInteraction = Date.now()
   }
 
   get showGameTimeoutWarning() {

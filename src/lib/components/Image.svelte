@@ -5,7 +5,7 @@
   import View from 'ol/View.js'
   import TileLayer from 'ol/layer/Tile.js'
   import IIIFSource from 'ol/source/IIIF.js'
-  import IIIFInfo from 'ol/format/IIIFInfo.js'
+  import IIIFInfo, { type ImageInformationResponse } from 'ol/format/IIIFInfo.js'
   import VectorSource from 'ol/source/Vector.js'
   import VectorLayer from 'ol/layer/Vector.js'
   import Feature from 'ol/Feature.js'
@@ -53,7 +53,9 @@
 
     vectorSource.addFeature(feature)
 
-    let options = new IIIFInfo($currentRound.imageInfo).getTileSourceOptions()
+    let options = new IIIFInfo(
+      $currentRound.imageInfo as ImageInformationResponse
+    ).getTileSourceOptions()
 
     if (options) {
       options.zDirection = -1
@@ -81,9 +83,9 @@
           extent = featureGeometry.getExtent()
         }
 
-        ol.getView().fit(extent, {
-          // padding: PADDING
-        })
+        if (extent) {
+          ol.getView().fit(extent)
+        }
 
         ol.on('rendercomplete', () => onready?.())
 

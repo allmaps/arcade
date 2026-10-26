@@ -31,6 +31,18 @@ export const ConfigurationSchema = z.object({
   annotationUrls: z.array(z.string().url())
 })
 
+// YAML files can override individual nested configuration fields.
+export const PartialConfigurationSchema = ConfigurationSchema.extend({
+  map: ConfigurationSchema.shape.map.partial(),
+  score: ConfigurationSchema.shape.score
+    .extend({
+      maxScore: ConfigurationSchema.shape.score.shape.maxScore.partial(),
+      area: ConfigurationSchema.shape.score.shape.area.partial(),
+      time: ConfigurationSchema.shape.score.shape.time.partial()
+    })
+    .partial()
+}).partial()
+
 export const HighscoreSchema = z.object({
   id: z.string(),
   name: z.string(),

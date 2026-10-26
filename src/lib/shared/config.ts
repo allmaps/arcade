@@ -2,7 +2,7 @@ import { merge } from 'lodash-es'
 import { parse } from 'yaml'
 
 import defaultConfig from '$lib/shared/default-config.js'
-import { ConfigurationSchema } from '$lib/shared/schemas.js'
+import { PartialConfigurationSchema } from '$lib/shared/schemas.js'
 
 import type { Configuration } from '$lib/shared/types.js'
 
@@ -14,7 +14,7 @@ type DeepPartial<T> = {
 
 async function fetchConfiguration(yamlConfigUrl: string): Promise<DeepPartial<Configuration>> {
   const yamlConfig = await fetch(yamlConfigUrl).then((response) => response.text())
-  return ConfigurationSchema.deepPartial().parse(parse(yamlConfig))
+  return PartialConfigurationSchema.parse(parse(yamlConfig))
 }
 
 export async function getConfiguration(): Promise<Configuration> {

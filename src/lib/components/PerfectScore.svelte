@@ -39,7 +39,7 @@
 
     <g clip-path="url(#only-outside)">
       <g transform-origin="center" opacity="0.9">
-        {#each Array.from({ length: triangleCount * 2 }) as _, index}
+        {#each Array.from({ length: triangleCount * 2 }, (_, index) => index) as index (index)}
           <polygon
             fill={index % 2 === 0 ? color : 'none'}
             points="{width / 2},{height / 2} {svgPointFromAngle(

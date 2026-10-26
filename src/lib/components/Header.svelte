@@ -9,12 +9,12 @@
 
   let { left, right, children }: Props = $props()
 
-  const hasLeft = left !== undefined
-  const hasRight = right !== undefined
+  const hasLeft = $derived(left !== undefined)
+  const hasRight = $derived(right !== undefined)
 
-  const hasOnlyCenter = !hasLeft && !hasRight
+  const hasOnlyCenter = $derived(!hasLeft && !hasRight)
 
-  const gridColsClass = hasOnlyCenter ? 'grid-cols-1' : 'grid-cols-[1fr_max-content_1fr]'
+  const gridColsClass = $derived(hasOnlyCenter ? 'grid-cols-1' : 'grid-cols-[1fr_max-content_1fr]')
 </script>
 
 <header class="z-10 grid grid-flow-col {gridColsClass} w-full pointer-events-none gap-4">

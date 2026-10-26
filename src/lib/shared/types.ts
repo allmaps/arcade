@@ -90,7 +90,7 @@ export type LoadedRound = BaseRound & {
   geoMask: GeojsonPolygon
   area: number
   maxScore: number
-  imageInfo: any
+  imageInfo: unknown
   startTime: number
 }
 

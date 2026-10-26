@@ -36,7 +36,7 @@
         <ol
           class="text-base whsm:text-lg whmd:text-xl grid grid-cols-[repeat(4,max-content)] gap-1 h-min"
         >
-          {#each allHighscores.slice(0, HIGHSCORE_MAX_DISPLAY_COUNT) as highscore, index}
+          {#each allHighscores.slice(0, HIGHSCORE_MAX_DISPLAY_COUNT) as highscore, index (highscore.id)}
             <li
               class="p-1 whsm:p-2 whmd:p-3 whlg:p-4 gap-2 whsm:gap-3 whmd:gap-4 grid col-span-4 grid-cols-subgrid rounded-full items-center
             {isLastHighscore(highscore.id) ? 'bg-white/20' : ''}"
