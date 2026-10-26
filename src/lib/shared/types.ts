@@ -15,10 +15,6 @@ export type Configuration = z.infer<typeof ConfigurationSchema>
 
 export type Highscore = z.infer<typeof HighscoreSchema>
 
-export type KeyboardTarget = {
-  element: HTMLElement
-}
-
 export type LayoutData = {
   environment: ArcadeEnvironment
   configuration: Configuration
@@ -37,8 +33,6 @@ export interface Context extends MachineContext {
   configuration: Configuration
   failedAnnotationUrlsState: FailedAnnotationUrlsState
   gameTimeoutState: GameTimeoutState
-  imageKeyboardTarget?: KeyboardTarget
-  mapKeyboardTarget?: KeyboardTarget
   error?: Error
   lastHighscore?: Highscore
   highscores: Highscore[]
@@ -49,8 +43,6 @@ export type GameEvent =
   | { type: 'START' }
   | { type: 'FINISHED' }
   | { type: 'MAP_MOVED' }
-  | { type: 'SET_IMAGE_KEYBOARD_TARGET'; element: HTMLElement }
-  | { type: 'SET_MAP_KEYBOARD_TARGET'; element: HTMLElement }
   | { type: 'SHOW_IMAGE' }
   | { type: 'SHOW_MAP' }
   | { type: 'SUBMIT'; endTime: number; submission: Submission }

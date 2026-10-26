@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import { Map } from 'maplibre-gl'
   import { WarpedMapLayer } from '@allmaps/maplibre'
   import { webMercatorProjection } from '@allmaps/project'
   import { WarpedMapEventType } from '@allmaps/render'
 
   import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
   import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
-  import { makeHandleKeydownWithPanStepAndZoomFraction } from '$lib/shared/maplibre.js'
+  import { createArcadeMap } from '$lib/shared/maplibre.js'
+  import { getMapControlsState } from '$lib/shared/stores/map-controls.svelte.js'
   import { MAPLIBRE_PADDING } from '$lib/shared/constants.js'
 
   type Props = {
@@ -17,8 +17,9 @@
 
   let { onready }: Props = $props()
 
-  const { send, currentRound } = getSnapshotState()
+  const { currentRound } = getSnapshotState()
   const gameTimeoutState = getGameTimeoutState()
+  const mapControlsState = getMapControlsState()
 
   let container: HTMLElement
   const bgClass = $derived($currentRound?.colors.bgClassFaded)
@@ -29,20 +30,9 @@
       return
     }
 
-    const map = new Map({
-      container,
-      style: { version: 8, sources: {}, layers: [] },
-      maxPitch: 0,
-      bearingSnap: 0,
-      renderWorldCopies: false,
-      attributionControl: false
-    })
-
-    map.dragRotate.disable()
-    map.touchZoomRotate.disableRotation()
-    map.touchPitch.disable()
-    map.keyboard.disableRotation()
-    map.keyboard.keydown = makeHandleKeydownWithPanStepAndZoomFraction(150)
+    const view = createArcadeMap({ container, basemap: false, renderWorldCopies: false })
+    const { map, controls } = view
+    const unregisterControls = mapControlsState.register('image', map, controls)
 
     map.on('load', () => {
       const layer = new WarpedMapLayer()
@@ -75,20 +65,13 @@
         applyMask: true
       })
       map.jumpTo({ ...camera, padding: MAPLIBRE_PADDING })
-
-      const element = map.getCanvas()
-      send({ type: 'SET_IMAGE_KEYBOARD_TARGET', element })
-      element.focus()
     })
 
     map.on('moveend', () => gameTimeoutState.resetLastInteraction())
 
-    const resizeObserver = new ResizeObserver(() => map.resize())
-    resizeObserver.observe(container)
-
     return () => {
-      resizeObserver.disconnect()
-      map.remove()
+      unregisterControls()
+      view.destroy()
     }
   })
 </script>

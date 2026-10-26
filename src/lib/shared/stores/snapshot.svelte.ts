@@ -11,7 +11,7 @@ import type { SnapshotFrom, EventFromLogic, Actor } from 'xstate'
 
 import type { GameMachine } from '$lib/shared/machines/game.js'
 
-import type { Highscore, Round, KeyboardTarget } from '$lib/shared/types.js'
+import type { Highscore, Round } from '$lib/shared/types.js'
 
 import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
 
@@ -36,8 +36,6 @@ export class SnapshotState {
   #lastHighscore: Readable<Highscore | undefined>
   #highscoresEnabled: Readable<boolean>
   #isNewHighscore: Readable<boolean>
-
-  #keyboardTarget: Readable<KeyboardTarget | undefined>
 
   constructor(
     snapshot: Readable<SnapshotFrom<GameMachine>>,
@@ -77,15 +75,6 @@ export class SnapshotState {
       [this.#highscores, this.#totalScore],
       ([$highscores, $totalScore]) => isHighscore($highscores, $totalScore)
     )
-
-    this.#keyboardTarget = useSelector(this.#actorRef, (state) => {
-      if (state.matches('round.display.image')) {
-        return state.context.imageKeyboardTarget
-      } else {
-        // in states 'round.display.map' and 'results'
-        return state.context.mapKeyboardTarget
-      }
-    })
   }
 
   get snapshot() {
@@ -142,10 +131,6 @@ export class SnapshotState {
 
   get isNewHighscore() {
     return this.#isNewHighscore
-  }
-
-  get keyboardTarget() {
-    return this.#keyboardTarget
   }
 }
 

@@ -17,6 +17,7 @@
     verb: string
     timeout?: number
     disabled?: boolean
+    keyboardClick?: boolean
     onclick?: () => void
     ontogglestart?: () => void
     ontoggleend?: () => void
@@ -28,6 +29,7 @@
     verb,
     timeout = 0,
     disabled = false,
+    keyboardClick = true,
     onclick,
     ontogglestart,
     ontoggleend,
@@ -74,9 +76,7 @@
   function handleKeyup(event: KeyboardEvent) {
     if (event.code === button.keyCode && !event.repeat && !disabled) {
       handleToggleEnd()
-      onclick?.()
-      // element.dispatchEvent(new Event('mouseup'))
-      // touch ? dispatch('touchend') : dispatch('mouseup')
+      if (keyboardClick) onclick?.()
     }
   }
 

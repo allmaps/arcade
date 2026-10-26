@@ -9,6 +9,7 @@
   import { setSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
   import { setFailedAnnotationUrlsState } from '$lib/shared/stores/failed-annotation-urls.svelte'
   import { setGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
+  import { setMapControlsState } from '$lib/shared/stores/map-controls.svelte.js'
   import { setTimerState } from '$lib/shared/stores/timer.svelte.js'
 
   import type { Snippet } from 'svelte'
@@ -30,6 +31,7 @@
   const failedAnnotationUrlsState = setFailedAnnotationUrlsState()
   const gameTimeoutState = setGameTimeoutState()
   setTimerState()
+  setMapControlsState()
 
   const { snapshot, send, actorRef } = useMachine(gameMachine, {
     input: {

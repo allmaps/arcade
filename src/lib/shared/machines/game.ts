@@ -202,14 +202,6 @@ export const gameMachine = createMachine(
                   }
                 }
               }
-            },
-            on: {
-              SET_IMAGE_KEYBOARD_TARGET: {
-                actions: 'setImageKeyboardTarget'
-              },
-              SET_MAP_KEYBOARD_TARGET: {
-                actions: 'setMapKeyboardTarget'
-              }
             }
           }
         }
@@ -221,12 +213,6 @@ export const gameMachine = createMachine(
           review: {}
         },
         on: {
-          SET_IMAGE_KEYBOARD_TARGET: {
-            actions: ['setImageKeyboardTarget']
-          },
-          SET_MAP_KEYBOARD_TARGET: {
-            actions: ['setMapKeyboardTarget']
-          },
           NEXT: [
             {
               target: '#game.title',
@@ -323,14 +309,6 @@ export const gameMachine = createMachine(
         }
 
         return round
-      }),
-      setImageKeyboardTarget: assign({
-        imageKeyboardTarget: ({ event }) =>
-          event.type === 'SET_IMAGE_KEYBOARD_TARGET' ? { element: event.element } : undefined
-      }),
-      setMapKeyboardTarget: assign({
-        mapKeyboardTarget: ({ event }) =>
-          event.type === 'SET_MAP_KEYBOARD_TARGET' ? { element: event.element } : undefined
       }),
       saveHighscore: ({ context, event }) => {
         if (event.type === 'SUBMIT_HIGHSCORE') {

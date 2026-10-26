@@ -27,15 +27,17 @@
 
   import type { GameMachine } from '$lib/shared/machines/game.js'
 
-  import type { KeyboardTarget, LoadedRound } from '$lib/shared/types.js'
+  import type { LoadedRound } from '$lib/shared/types.js'
+
+  import { getMapControlsState } from '$lib/shared/stores/map-controls.svelte.js'
 
   import { AUTO_ADVANCE_MS } from '$lib/shared/constants.js'
   import { NUMBER_OF_ROUNDS } from '$lib/shared/constants.js'
 
-  const { snapshot, send, actorRef, currentRound, keyboardTarget, isLastRound, totalScore } =
-    getSnapshotState()
+  const { snapshot, send, actorRef, currentRound, isLastRound, totalScore } = getSnapshotState()
   const gameTimeoutState = getGameTimeoutState()
   const timerState = getTimerState()
+  const mapControlsState = getMapControlsState()
 
   let containerImage = $state<HTMLElement>()
   let containerMap = $state<HTMLElement>()
@@ -61,16 +63,6 @@
 
   // let found = false
 
-  function focusElement(element: HTMLElement, keyboardTarget: KeyboardTarget) {
-    if (!element) {
-      return
-    }
-
-    // Make the active view visible before focusing its canvas.
-    element.classList.remove('fade-to-invisible')
-    keyboardTarget.element.focus()
-  }
-
   let displayImage = $derived($snapshot.matches('round.display.image'))
   let displayMap = $derived($snapshot.matches('round.display.map'))
 
@@ -85,12 +77,12 @@
   let canSubmit = $derived((($currentRound as LoadedRound)?.canSubmit || false) && displayMap)
 
   $effect(() => {
-    if ($keyboardTarget) {
-      if (displayImage && containerImage) {
-        focusElement(containerImage, $keyboardTarget)
-      } else if (displayMap && containerMap) {
-        focusElement(containerMap, $keyboardTarget)
-      }
+    const view = submitted || displayMap ? 'map' : 'image'
+    const container = view === 'image' ? containerImage : containerMap
+    if (container) {
+      // The view must be visible before focusing its canvas.
+      container.classList.remove('fade-to-invisible')
+      mapControlsState.activate(view)
     }
   })
 

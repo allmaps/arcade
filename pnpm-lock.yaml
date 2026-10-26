@@ -47,9 +47,6 @@ importers:
       '@turf/area':
         specifier: ^7.4.0
         version: 7.4.0
-      '@turf/bearing':
-        specifier: ^7.4.0
-        version: 7.4.0
       '@turf/convex':
         specifier: ^7.4.0
         version: 7.4.0

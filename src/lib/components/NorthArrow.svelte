@@ -1,34 +1,8 @@
 <script lang="ts">
-  import { GcpTransformer } from '@allmaps/transform'
-  import { computeBbox } from '@allmaps/stdlib'
+  import { getMapControlsState } from '$lib/shared/stores/map-controls.svelte.js'
 
-  import computeBearing from '@turf/bearing'
-
-  import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
-
-  const { snapshot, currentRound } = getSnapshotState()
-
-  let bearing = $derived.by(() => {
-    if ($currentRound && $currentRound.loaded) {
-      const transformer = new GcpTransformer($currentRound.map.gcps)
-
-      const bbox = computeBbox($currentRound.map.resourceMask)
-
-      const topLeft = transformer.transformToGeo([bbox[0], bbox[1]])
-      const bottomLeft = transformer.transformToGeo([bbox[0], bbox[3]])
-
-      return -computeBearing(bottomLeft, topLeft)
-    }
-
-    return 0
-  })
-  let rotation = $derived.by(() => {
-    if ($snapshot.matches('round.display.image')) {
-      return bearing
-    } else if ($snapshot.matches('round.display.map')) {
-      return 0
-    }
-  })
+  const mapControlsState = getMapControlsState()
+  const rotation = $derived(-mapControlsState.bearing)
 </script>
 
 <div class="w-12 md:w-14 rounded-full shadow-md">
