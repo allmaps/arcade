@@ -2,15 +2,13 @@
   import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
 
-  import { Map, addProtocol, type MapLayerEventType } from 'maplibre-gl'
-  import { layers, namedFlavor } from '@protomaps/basemaps'
-  import { Protocol } from 'pmtiles'
+  import type { Map } from 'maplibre-gl'
+  import { PAN_STEP, type MapControls } from '$lib/shared/map-controls.js'
+  import { getMapControlsState } from '$lib/shared/stores/map-controls.svelte.js'
 
   import { throttle } from 'lodash-es'
 
-  import GeoJSON from 'ol/format/GeoJSON.js'
-
-  import { getDistance, getArea } from 'ol/sphere.js'
+  import { getDistance, getArea } from '$lib/shared/geodesy.js'
 
   import { computeBbox, bboxToCenter } from '@allmaps/stdlib'
   import { WarpedMapLayer } from '@allmaps/maplibre'
@@ -26,10 +24,8 @@
     flyTo,
     convexHullStyle,
     maskStyle,
-    makeHandleKeydownWithPanStepAndZoomFraction,
-    getFirstSymbolLayerId,
-    disableInteraction,
-    enableInteraction
+    createArcadeMap,
+    getFirstSymbolLayerId
   } from '$lib/shared/maplibre.js'
 
   import { computeZoomRatio, computeDistanceRatio } from '$lib/shared/score.js'
@@ -50,15 +46,17 @@
   const { snapshot, send, actorRef, currentRound, currentRoundIndex } = getSnapshotState()
   const gameTimeoutState = getGameTimeoutState()
   const timerState = getTimerState()
+  const mapControlsState = getMapControlsState()
 
   let map: Map
+  let controls: MapControls
 
   let warpedMapLayer: WarpedMapLayer
 
   let mounted = $state(false)
 
   // TODO: get from config
-  const panStep = 150
+  const panStep = PAN_STEP
   const ENABLE_INTERACTION_TIMEOUT = 500
 
   let container: HTMLElement
@@ -70,8 +68,6 @@
   let contentBoxSize = $state<ResizeObserverSize>()
 
   let warpedMapZoom: number
-
-  let mapHadFirstInteraction = false
 
   let submitted = false
   let perfectScore = false
@@ -195,12 +191,7 @@
       submittedGeoMask = getSubmittedGeoMask()
     }
 
-    const area = getArea(
-      new GeoJSON().readGeometry(submittedGeoMask, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857'
-      })
-    )
+    const area = getArea(submittedGeoMask)
 
     convexHull = getConvexHull(geoMask, submittedGeoMask)
 
@@ -249,7 +240,7 @@
         const convexHullSource = map.getSource('convex-hull') as GeoJSONSource
         convexHullSource.setData(convexHull)
 
-        disableInteraction(map, () => {
+        controls.disable(() => {
           flyToWarpedMap(() => {
             if (mounted) {
               send({ type: 'FINISHED' })
@@ -313,15 +304,14 @@
 
   const throttledHandleMapmove = throttle(handleMapmove, 100)
 
-  function handleMovestart(event: MapLayerEventType) {
-    mapHadFirstInteraction = true
+  function handleMovestart() {
     send({ type: 'MAP_MOVED' })
   }
 
   function setTimeoutEnableInteraction() {
     setTimeout(() => {
       if (mounted) {
-        enableInteraction(map)
+        controls.enable()
       }
     }, ENABLE_INTERACTION_TIMEOUT)
   }
@@ -348,7 +338,7 @@
             // Perfect score!!!
             perfectScore = true
 
-            disableInteraction(map, () => {
+            controls.disable(() => {
               flyToWarpedMap(() => {
                 map.stop()
 
@@ -376,43 +366,15 @@
 
     strokeColor = $currentRound.colors.color
 
-    const protocol = new Protocol()
-    addProtocol('pmtiles', protocol.tile)
-
-    const pmLayers = layers('protomaps', namedFlavor('light'), { lang: 'en' })
-
-    // Override background color
-    if (pmLayers[0] && pmLayers[0].paint && 'background-color' in pmLayers[0].paint) {
-      pmLayers[0].paint['background-color'] = 'rgba(0, 0, 0, 0)'
-    }
-
-    map = new Map({
+    const view = createArcadeMap({
       container,
-      style: {
-        version: 8,
-        glyphs: import.meta.env.ARCADE_GLYPHS_URL || 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
-        sources: {
-          protomaps: {
-            type: 'vector',
-            tiles: [import.meta.env.ARCADE_PMTILES_URL],
-            maxzoom: 14,
-            attribution:
-              '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
-          }
-        },
-        layers: pmLayers
-      },
       center: $snapshot.context.configuration.map.center as Point,
       zoom: 7,
-      maxPitch: 0,
-      canvasContextAttributes: {
-        preserveDrawingBuffer: true
-      },
-      attributionControl: false
+      canvasContextAttributes: { preserveDrawingBuffer: true }
     })
-
-    map.dragRotate.disable()
-    map.touchZoomRotate.disableRotation()
+    map = view.map
+    controls = view.controls
+    const unregisterControls = mapControlsState.register('map', map, controls)
 
     map.on('load', () => {
       const firstSymbolLayerId = getFirstSymbolLayerId(map)
@@ -444,7 +406,6 @@
 
       warpedMapLayer = new WarpedMapLayer()
 
-      // @ts-expect-error: MapLibre typings are incomplete
       map.addLayer(warpedMapLayer, firstSymbolLayerId)
 
       map.addLayer(
@@ -460,11 +421,10 @@
       warpedMapLayer.setOpacity(0)
       warpedMapLayer.addGeoreferencedMap($currentRound.map)
 
-      send({
-        type: 'SET_MAP_KEYBOARD_TARGET',
-        element: map.getCanvas(),
-        library: 'maplibre'
-      })
+      // Resizing can move the camera before the style and scoring layers are ready.
+      map.on('move', throttledHandleMapmove)
+      map.on('movestart', handleMovestart)
+      map.on('moveend', handleMoveend)
     })
 
     const subscription = actorRef.subscribe(handleTransition)
@@ -477,26 +437,12 @@
     const minZoom = 1 + zoomFraction
     const maxZoom = warpedMapZoom + 4
 
-    // MapLibre's regular keyboard handler rounds the zoom level
-    // when zooming with the keyboard. Override the keydown
-    // handler to prevent this.
-    // @ts-expect-error: MapLibre typings are incomplete
-    map.keyboard.keydown = makeHandleKeydownWithPanStepAndZoomFraction(panStep, zoomFraction)
+    controls.setZoomFraction(zoomFraction)
 
     map.setMinZoom(minZoom)
     map.setMaxZoom(maxZoom)
 
     map.setZoom(initialZoom)
-
-    // function handleRendercomplete() {
-    //   mapHadFirstInteraction = false
-
-    //   ol.un('rendercomplete', handleRendercomplete)
-    // }
-
-    map.on('move', throttledHandleMapmove)
-    map.on('movestart', handleMovestart)
-    map.on('moveend', handleMoveend)
 
     contentBoxSize = { inlineSize: container.clientWidth, blockSize: container.clientHeight }
 
@@ -513,10 +459,12 @@
     mounted = true
 
     return () => {
-      subscription.unsubscribe()
-      map.removeLayer('warped-map-layer')
-      map.remove()
       mounted = false
+      subscription.unsubscribe()
+      throttledHandleMapmove.cancel()
+      resizeObserver.disconnect()
+      unregisterControls()
+      view.destroy()
     }
   })
 </script>

@@ -37,10 +37,6 @@ export class SnapshotState {
   #highscoresEnabled: Readable<boolean>
   #isNewHighscore: Readable<boolean>
 
-  #keyboardTarget: Readable<
-    { element: HTMLElement; library: 'maplibre' | 'openlayers' } | undefined
-  >
-
   constructor(
     snapshot: Readable<SnapshotFrom<GameMachine>>,
     send: (event: EventFromLogic<GameMachine>) => void,
@@ -79,15 +75,6 @@ export class SnapshotState {
       [this.#highscores, this.#totalScore],
       ([$highscores, $totalScore]) => isHighscore($highscores, $totalScore)
     )
-
-    this.#keyboardTarget = useSelector(this.#actorRef, (state) => {
-      if (state.matches('round.display.image')) {
-        return state.context.imageKeyboardTarget
-      } else {
-        // in states 'round.display.map' and 'results'
-        return state.context.mapKeyboardTarget
-      }
-    })
   }
 
   get snapshot() {
@@ -144,10 +131,6 @@ export class SnapshotState {
 
   get isNewHighscore() {
     return this.#isNewHighscore
-  }
-
-  get keyboardTarget() {
-    return this.#keyboardTarget
   }
 }
 

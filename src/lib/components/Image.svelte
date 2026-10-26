@@ -1,21 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import OLMap from 'ol/Map.js'
-  import View from 'ol/View.js'
-  import TileLayer from 'ol/layer/Tile.js'
-  import IIIFSource from 'ol/source/IIIF.js'
-  import IIIFInfo from 'ol/format/IIIFInfo.js'
-  import VectorSource from 'ol/source/Vector.js'
-  import VectorLayer from 'ol/layer/Vector.js'
-  import Feature from 'ol/Feature.js'
-  import Polygon from 'ol/geom/Polygon.js'
+  import { WarpedMapLayer } from '@allmaps/maplibre'
+  import { webMercatorProjection } from '@allmaps/project'
+  import { WarpedMapEventType } from '@allmaps/render'
 
   import { getSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
   import { getGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
-
-  import { maskStyle, maskToPolygon } from '$lib/shared/openlayers.js'
-  import { PADDING } from '$lib/shared/constants.js'
+  import { createArcadeMap } from '$lib/shared/maplibre.js'
+  import { getMapControlsState } from '$lib/shared/stores/map-controls.svelte.js'
+  import { MAPLIBRE_PADDING } from '$lib/shared/constants.js'
 
   type Props = {
     onready?: () => void
@@ -23,82 +17,66 @@
 
   let { onready }: Props = $props()
 
-  const { send, currentRound, currentRoundIndex } = getSnapshotState()
+  const { currentRound } = getSnapshotState()
   const gameTimeoutState = getGameTimeoutState()
+  const mapControlsState = getMapControlsState()
 
-  let element: HTMLElement
-
-  let bgClass: string | undefined = $derived($currentRound?.colors.bgClassFaded)
+  let container: HTMLElement
+  const bgClass = $derived($currentRound?.colors.bgClassFaded)
 
   onMount(() => {
-    if (!$currentRound || !$currentRound.loaded || currentRoundIndex === undefined) {
+    const round = $currentRound
+    if (!round?.loaded) {
       return
     }
 
-    const tileLayer = new TileLayer()
+    const view = createArcadeMap({ container, basemap: false, renderWorldCopies: false })
+    const { map, controls } = view
+    const unregisterControls = mapControlsState.register('image', map, controls)
 
-    const vectorSource = new VectorSource()
+    map.on('load', () => {
+      const layer = new WarpedMapLayer()
+      map.addLayer(layer)
 
-    const vectorLayer = new VectorLayer({
-      source: vectorSource,
-      style: maskStyle($currentRound.colors.color),
-      updateWhileAnimating: true,
-      updateWhileInteracting: true
+      // Image tiles load independently of MapLibre's style and sources. Wait for
+      // an actual image tile and its next frame before dismissing the loading screen.
+      layer.renderer?.tileCache.addEventListener(
+        WarpedMapEventType.FIRSTMAPTILELOADED,
+        () => map.once('render', () => onready?.()),
+        { once: true }
+      )
+      layer.addImageInfos([round.imageInfo])
+
+      // Match Viewer's image mode: a similarity transform in Web Mercator
+      // preserves the image's shape while the camera makes it upright.
+      const mapId = layer.addGeoreferencedMap(round.map, {
+        transformationType: 'helmert',
+        internalProjection: webMercatorProjection,
+        applyMask: false,
+        renderAppliedMask: false,
+        renderMask: true,
+        renderMaskColor: round.colors.color,
+        renderMaskSize: 10,
+        renderMaskBorderSize: 0
+      })
+
+      const camera = layer.getMapsCenterZoomBearing([mapId], {
+        padding: MAPLIBRE_PADDING,
+        applyMask: true
+      })
+      map.jumpTo({ ...camera, padding: MAPLIBRE_PADDING })
     })
 
-    const feature = new Feature({
-      index: 0,
-      geometry: new Polygon(maskToPolygon($currentRound.map.resourceMask))
-    })
+    map.on('moveend', () => gameTimeoutState.resetLastInteraction())
 
-    vectorSource.addFeature(feature)
-
-    let options = new IIIFInfo($currentRound.imageInfo).getTileSourceOptions()
-
-    if (options) {
-      options.zDirection = -1
-      const iiifTileSource = new IIIFSource(options)
-
-      const tileGrid = iiifTileSource.getTileGrid()
-
-      if (tileGrid) {
-        const ol = new OLMap({
-          target: element,
-          controls: [],
-          layers: [tileLayer, vectorLayer],
-          view: new View({
-            padding: PADDING,
-            enableRotation: false
-          }),
-          keyboardEventTarget: element
-        })
-
-        tileLayer.setSource(iiifTileSource)
-
-        let extent = tileGrid.getExtent()
-        const featureGeometry = feature.getGeometry()
-        if (featureGeometry) {
-          extent = featureGeometry.getExtent()
-        }
-
-        ol.getView().fit(extent, {
-          // padding: PADDING
-        })
-
-        ol.on('rendercomplete', () => onready?.())
-
-        send({
-          type: 'SET_IMAGE_KEYBOARD_TARGET',
-          element,
-          library: 'openlayers'
-        })
-
-        element.focus()
-
-        ol.on('moveend', () => gameTimeoutState.resetLastInteraction())
-      }
+    return () => {
+      unregisterControls()
+      view.destroy()
     }
   })
 </script>
 
-<div bind:this={element} class="w-full h-full ring-0 {bgClass}" tabindex="-1"></div>
+<div
+  bind:this={container}
+  class="w-full h-full ring-0 [&_canvas:focus-visible]:outline-none {bgClass}"
+></div>

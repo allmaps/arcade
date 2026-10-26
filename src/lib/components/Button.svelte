@@ -17,6 +17,7 @@
     verb: string
     timeout?: number
     disabled?: boolean
+    keyboardClick?: boolean
     onclick?: () => void
     ontogglestart?: () => void
     ontoggleend?: () => void
@@ -28,6 +29,7 @@
     verb,
     timeout = 0,
     disabled = false,
+    keyboardClick = true,
     onclick,
     ontogglestart,
     ontoggleend,
@@ -43,17 +45,17 @@
   let element: HTMLButtonElement
 
   let bgClass = $derived(disabled ? 'bg-gray' : button.bgClass || 'bg-green')
-  const textClass = button.textClass || 'text-white'
-  const type = button.type || 'secondary'
-  const icon = button.icon || false
+  const textClass = $derived(button.textClass || 'text-white')
+  const type = $derived(button.type || 'secondary')
+  const icon = $derived(button.icon || false)
 
-  let typeClasses = $state(
-    type === 'primary' ? 'px-6 py-3 lg:px-9 lg:py-5 text-lg' : 'px-4 py-2 lg:px-6 lg:py-3 text-base'
+  const typeClasses = $derived(
+    icon
+      ? 'w-[2.9rem] h-[2.9rem] p-[0.7rem]'
+      : type === 'primary'
+        ? 'px-6 py-3 lg:px-9 lg:py-5 text-lg'
+        : 'px-4 py-2 lg:px-6 lg:py-3 text-base'
   )
-
-  if (icon) {
-    typeClasses = 'w-[2.9rem] h-[2.9rem] p-[0.7rem]'
-  }
 
   function handleToggleStart() {
     toggled = true
@@ -74,9 +76,7 @@
   function handleKeyup(event: KeyboardEvent) {
     if (event.code === button.keyCode && !event.repeat && !disabled) {
       handleToggleEnd()
-      onclick?.()
-      // element.dispatchEvent(new Event('mouseup'))
-      // touch ? dispatch('touchend') : dispatch('mouseup')
+      if (keyboardClick) onclick?.()
     }
   }
 

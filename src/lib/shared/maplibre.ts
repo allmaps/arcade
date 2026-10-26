@@ -1,86 +1,74 @@
-import type { Map, LngLatLike } from 'maplibre-gl'
+import { Map, addProtocol, setWorkerUrl } from 'maplibre-gl'
+import { layers, namedFlavor } from '@protomaps/basemaps'
+import { Protocol } from 'pmtiles'
+import { createMapControls } from './map-controls.js'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
+
+import type { LngLatLike, MapOptions, StyleSpecification } from 'maplibre-gl'
 
 import type { DataDrivenPropertyValueSpecification, ColorSpecification } from 'maplibre-gl'
 import type { CallbackFn } from '$lib/shared/types.js'
 
 import { WARPED_MAP_BEHIND_LABELS } from '$lib/shared/constants.js'
 
-// Wait for all keyboard interactions to finish, then call callback
-// https://github.com/maplibre/maplibre-gl-js/blob/main/src/ui/handler/keyboard.ts#L122C1-L123C1
-const DISABLE_INTERACTION_TIMEOUT = 300
+setWorkerUrl(workerUrl)
 
-function easeOut(t: number) {
-  return t * (2 - t)
+let protocol: Protocol | undefined
+
+function createBasemapStyle(): StyleSpecification {
+  if (!protocol) {
+    protocol = new Protocol()
+    addProtocol('pmtiles', protocol.tile)
+  }
+
+  const basemapLayers = layers('protomaps', namedFlavor('light'), { lang: 'en' })
+  const background = basemapLayers.find((layer) => layer.type === 'background')
+  if (background?.type === 'background') {
+    background.paint = { ...background.paint, 'background-color': 'rgba(0, 0, 0, 0)' }
+  }
+
+  return {
+    version: 8,
+    glyphs:
+      import.meta.env.ARCADE_GLYPHS_URL ||
+      'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
+    sources: {
+      protomaps: {
+        type: 'vector',
+        tiles: [import.meta.env.ARCADE_PMTILES_URL],
+        maxzoom: 14,
+        attribution:
+          '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
+      }
+    },
+    layers: basemapLayers
+  }
 }
 
-export function makeHandleKeydownWithPanStepAndZoomFraction(panStep: number, zoomFraction = 0) {
-  return function handleKeydown(e: KeyboardEvent) {
-    // if (e.altKey || e.ctrlKey || e.metaKey) {
-    //   return
-    // }
+export function createArcadeMap(options: Omit<MapOptions, 'style'> & { basemap?: boolean }) {
+  const { basemap = true, ...mapOptions } = options
+  const map = new Map({
+    maxPitch: 0,
+    bearingSnap: 0,
+    attributionControl: false,
+    ...mapOptions,
+    style: basemap ? createBasemapStyle() : { version: 8, sources: {}, layers: [] }
+  })
+  map.dragRotate.disable()
+  map.touchZoomRotate.disableRotation()
+  map.touchPitch.disable()
 
-    let zoomDir = 0
-    let xDir = 0
-    let yDir = 0
+  const controls = createMapControls(map)
+  const resizeObserver = new ResizeObserver(() => map.resize())
+  resizeObserver.observe(map.getContainer())
 
-    switch (e.keyCode) {
-      case 61:
-      case 107:
-      case 171:
-      case 187:
-        zoomDir = 1
-        break
-
-      case 189:
-      case 109:
-      case 173:
-        zoomDir = -1
-        break
-
-      case 37:
-        e.preventDefault()
-        xDir = -1
-        break
-
-      case 39:
-        e.preventDefault()
-        xDir = 1
-        break
-
-      case 38:
-        e.preventDefault()
-        yDir = -1
-        break
-
-      case 40:
-        e.preventDefault()
-        yDir = 1
-        break
-
-      default:
-        return
-    }
-
-    return {
-      cameraAnimation: (map: Map) => {
-        const currentZoom = map.getZoom()
-        const newZoom = Math.round(currentZoom - zoomFraction + zoomDir) + zoomFraction
-        const center = map.getCenter()
-
-        map.easeTo(
-          {
-            duration: 300,
-            easeId: 'keyboardHandler',
-            easing: easeOut,
-            zoom: zoomDir ? newZoom : currentZoom,
-            bearing: 0,
-            pitch: 0,
-            offset: [-xDir * panStep, -yDir * panStep],
-            center
-          },
-          { originalEvent: e }
-        )
-      }
+  return {
+    map,
+    controls,
+    destroy: () => {
+      resizeObserver.disconnect()
+      controls.destroy()
+      map.remove()
     }
   }
 }
@@ -90,11 +78,13 @@ export function flyTo(map: Map, center: LngLatLike, zoom: number, callback?: Cal
 
   if (callback) {
     function handleMoveend({
-      originalEvent
+      originalEvent,
+      arcadeInteraction
     }: {
-      originalEvent: MouseEvent | TouchEvent | WheelEvent | undefined
+      originalEvent?: MouseEvent | TouchEvent | WheelEvent | KeyboardEvent
+      arcadeInteraction?: boolean
     }) {
-      if (!originalEvent) {
+      if (!originalEvent && !arcadeInteraction) {
         map.off('moveend', handleMoveend)
         callback?.()
       }
@@ -110,22 +100,6 @@ export function flyTo(map: Map, center: LngLatLike, zoom: number, callback?: Cal
     },
     { flyTo: true }
   )
-}
-
-export function createZoomInEvent() {
-  return new KeyboardEvent('keydown', {
-    keyCode: 187,
-    key: 'Equal',
-    bubbles: true
-  })
-}
-
-export function createZoomOutEvent() {
-  return new KeyboardEvent('keydown', {
-    keyCode: 189,
-    key: 'Minus',
-    bubbles: true
-  })
 }
 
 export function maskStyle(color: DataDrivenPropertyValueSpecification<ColorSpecification>) {
@@ -171,26 +145,4 @@ export function getFirstSymbolLayerId(map: Map) {
   }
 
   return firstSymboLayerlId
-}
-
-export function disableInteraction(map: Map, callback?: CallbackFn) {
-  map.stop()
-
-  map.scrollZoom.disable()
-  map.boxZoom.disable()
-  map.dragPan.disable()
-  map.keyboard.disable()
-  map.doubleClickZoom.disable()
-
-  if (callback) {
-    setTimeout(callback, 300)
-  }
-}
-
-export function enableInteraction(map: Map) {
-  map.scrollZoom.enable()
-  map.boxZoom.enable()
-  map.dragPan.enable()
-  map.keyboard.enable()
-  map.doubleClickZoom.enable()
 }

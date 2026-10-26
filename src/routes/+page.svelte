@@ -22,13 +22,13 @@
   import { isCabinet } from '$lib/shared/cabinet.js'
   import { cabinetFocus } from '$lib/shared/cabinet-focus.js'
   import { GAME_TIMEOUT_WARNING_MS } from '$lib/shared/constants.js'
-  import { zoomIn, zoomOut } from '$lib/shared/keyboard.js'
+  import { getMapControlsState } from '$lib/shared/stores/map-controls.svelte.js'
 
   import 'maplibre-gl/dist/maplibre-gl.css'
-  import 'ol/ol.css'
 
-  const { snapshot, send, currentRoundNumber, keyboardTarget, actorRef } = getSnapshotState()
+  const { snapshot, send, currentRoundNumber, actorRef } = getSnapshotState()
   const deviceState = getDeviceState()
+  const mapControlsState = getMapControlsState()
   const gameTimeoutState = getGameTimeoutState()
 
   const key = 'page-crossfade'
@@ -40,11 +40,9 @@
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.code === $snapshot.context.environment.getButton('zoomIn').keyCode) {
-      // Zoom in!
-      zoomIn($keyboardTarget)
+      mapControlsState.activeControls?.zoomIn()
     } else if (event.code === $snapshot.context.environment.getButton('zoomOut').keyCode) {
-      // Zoom out!
-      zoomOut($keyboardTarget)
+      mapControlsState.activeControls?.zoomOut()
     }
   }
 

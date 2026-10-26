@@ -8,8 +8,8 @@
   }
 
   let { header, children, footer }: Props = $props()
-  const hasHeader = header !== undefined
-  const hasContent = children !== undefined
+  const hasHeader = $derived(header !== undefined)
+  const hasContent = $derived(children !== undefined)
 
   const gridRowsWithHeader = 'grid-rows-[min-content_1fr_min-content]'
   const gridRowsWithoutHeader = 'grid-rows-[1fr_min-content]'

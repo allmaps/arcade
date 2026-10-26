@@ -1,9 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import { Map, addProtocol } from 'maplibre-gl'
-  import { layers, namedFlavor } from '@protomaps/basemaps'
-  import { Protocol } from 'pmtiles'
+  import type { Map } from 'maplibre-gl'
+  import { getMapControlsState } from '$lib/shared/stores/map-controls.svelte.js'
 
   import { computeBbox } from '@allmaps/stdlib'
   import { WarpedMapLayer } from '@allmaps/maplibre'
@@ -27,7 +26,7 @@
     flyTo,
     convexHullStyle,
     maskStyle,
-    makeHandleKeydownWithPanStepAndZoomFraction,
+    createArcadeMap,
     getFirstSymbolLayerId
   } from '$lib/shared/maplibre.js'
 
@@ -40,15 +39,13 @@
 
   const { snapshot, send, rounds } = getSnapshotState()
   const gameTimeoutState = getGameTimeoutState()
+  const mapControlsState = getMapControlsState()
 
   let map: Map
 
   let warpedMapLayer: WarpedMapLayer
 
   const firstRound = $rounds[0] as SubmittedRound
-
-  // TODO: get from config
-  const panStep = 150
 
   let container: HTMLElement
 
@@ -111,46 +108,18 @@
   }
 
   onMount(() => {
-    const protocol = new Protocol()
-    addProtocol('pmtiles', protocol.tile)
-
-    const pmLayers = layers('protomaps', namedFlavor('light'), { lang: 'en' })
-
-    // Override background color
-    if (pmLayers[0] && pmLayers[0].paint && 'background-color' in pmLayers[0].paint) {
-      pmLayers[0].paint['background-color'] = 'rgba(0, 0, 0, 0)'
-    }
-
-    map = new Map({
+    const view = createArcadeMap({
       container,
-      style: {
-        version: 8,
-        glyphs:
-          import.meta.env.ARCADE_GLYPHS_URL ||
-          'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
-        sources: {
-          protomaps: {
-            type: 'vector',
-            tiles: [import.meta.env.ARCADE_PMTILES_URL],
-            maxzoom: 14,
-            attribution:
-              '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
-          }
-        },
-        layers: pmLayers
-      },
       center: $snapshot.context.configuration.map.center as Point,
       zoom: $snapshot.context.configuration.map.initialZoom,
-      maxPitch: 0,
-      preserveDrawingBuffer: true,
-      attributionControl: false
+      canvasContextAttributes: { preserveDrawingBuffer: true }
     })
-
-    map.dragRotate.disable()
-    map.touchZoomRotate.disableRotation()
+    map = view.map
+    const unregisterControls = mapControlsState.register('results', map, view.controls)
+    mapControlsState.activate('results')
 
     map.on('movestart', (event) => {
-      if (event.originalEvent) {
+      if (event.originalEvent || ('arcadeInteraction' in event && event.arcadeInteraction)) {
         clearInterval(intervalId)
       }
     })
@@ -233,26 +202,7 @@
       const zoom = firstRound.submission.zoom.warpedMap
 
       flyTo(map, center, zoom)
-
-      send({
-        type: 'SET_MAP_KEYBOARD_TARGET',
-        element: map.getCanvas(),
-        library: 'maplibre'
-      })
     })
-
-    // actor.send({
-    //   type: 'SET_OL_MAP',
-    //   ol
-    // })
-
-    // MapLibre's regular keyboard handler rounds the zoom level
-    // when zooming with the keyboard. Override the keydown
-    // handler to prevent this.
-    // @ts-expect-error: MapLibre typings are incomplete
-    map.keyboard.keydown = makeHandleKeydownWithPanStepAndZoomFraction(panStep)
-
-    // element.focus()
 
     intervalId = setInterval(() => {
       handleShowRounds()
@@ -260,8 +210,8 @@
 
     return () => {
       clearInterval(intervalId)
-      map.removeLayer('warped-map-layer')
-      map.remove()
+      unregisterControls()
+      view.destroy()
     }
   })
 </script>
@@ -279,7 +229,7 @@
         <ol
           class="md:p-4 gap-2 md:gap-4 top-0 w-full h-full flex flex-row max-w-2xl justify-center"
         >
-          {#each $rounds as round, index}
+          {#each $rounds as round, index (round.index)}
             {#if round.submitted}
               <li class="flex-1 flex justify-center">
                 <button onclick={() => handleShowRounds(index)}>

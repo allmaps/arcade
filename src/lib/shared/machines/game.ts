@@ -1,9 +1,8 @@
 import { createMachine, assign, fromPromise, raise } from 'xstate'
 
-import { getArea } from 'ol/sphere.js'
-import GeoJSON from 'ol/format/GeoJSON.js'
+import { getArea } from '$lib/shared/geodesy.js'
 
-import { fetchImageInfo } from '@allmaps/stdlib'
+import { fetchImageInfo, polygonToGeojsonPolygon } from '@allmaps/stdlib'
 import { GcpTransformer } from '@allmaps/transform'
 
 import { fetchMap } from '$lib/shared/maps.js'
@@ -203,14 +202,6 @@ export const gameMachine = createMachine(
                   }
                 }
               }
-            },
-            on: {
-              SET_IMAGE_KEYBOARD_TARGET: {
-                actions: 'setImageKeyboardTarget'
-              },
-              SET_MAP_KEYBOARD_TARGET: {
-                actions: 'setMapKeyboardTarget'
-              }
             }
           }
         }
@@ -222,12 +213,6 @@ export const gameMachine = createMachine(
           review: {}
         },
         on: {
-          SET_IMAGE_KEYBOARD_TARGET: {
-            actions: ['setImageKeyboardTarget']
-          },
-          SET_MAP_KEYBOARD_TARGET: {
-            actions: ['setMapKeyboardTarget']
-          },
           NEXT: [
             {
               target: '#game.title',
@@ -325,18 +310,6 @@ export const gameMachine = createMachine(
 
         return round
       }),
-      setImageKeyboardTarget: assign({
-        imageKeyboardTarget: ({ event }) =>
-          event.type === 'SET_IMAGE_KEYBOARD_TARGET'
-            ? { element: event.element, library: event.library }
-            : undefined
-      }),
-      setMapKeyboardTarget: assign({
-        mapKeyboardTarget: ({ event }) =>
-          event.type === 'SET_MAP_KEYBOARD_TARGET'
-            ? { element: event.element, library: event.library }
-            : undefined
-      }),
       saveHighscore: ({ context, event }) => {
         if (event.type === 'SUBMIT_HIGHSCORE') {
           context.environment.saveHighscore?.(event.highscore)
@@ -371,7 +344,7 @@ export const gameMachine = createMachine(
               ...input.context.rounds
                 .filter((round): round is LoadedRound => round.loaded)
                 .map((round) => round.annotationUrl),
-              ...failedAnnotationUrlsState?.failedAnnotationUrls
+              ...failedAnnotationUrlsState.failedAnnotationUrls
             ].filter((url) => url)
 
             annotationUrl = await environment.getRandomAnnotationUrl(
@@ -385,13 +358,8 @@ export const gameMachine = createMachine(
                 transformer = new GcpTransformer(map.gcps)
                 imageInfo = await fetchImageInfo(map.resource.id, getTimeoutSignal())
 
-                geoMask = transformer.transformToGeoAsGeojson([map.resourceMask])
-                area = getArea(
-                  new GeoJSON().readGeometry(geoMask, {
-                    dataProjection: 'EPSG:4326',
-                    featureProjection: 'EPSG:3857'
-                  })
-                )
+                geoMask = polygonToGeojsonPolygon(transformer.transformToGeo([map.resourceMask]))
+                area = getArea(geoMask)
 
                 maxScore = computeMaxScore(configuration, area)
 

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
+
   import { useMachine } from '@xstate/svelte'
 
   import { gameMachine } from '$lib/shared/machines/game.js'
@@ -7,6 +9,7 @@
   import { setSnapshotState } from '$lib/shared/stores/snapshot.svelte.js'
   import { setFailedAnnotationUrlsState } from '$lib/shared/stores/failed-annotation-urls.svelte'
   import { setGameTimeoutState } from '$lib/shared/stores/game-timeout.svelte.js'
+  import { setMapControlsState } from '$lib/shared/stores/map-controls.svelte.js'
   import { setTimerState } from '$lib/shared/stores/timer.svelte.js'
 
   import type { Snippet } from 'svelte'
@@ -22,11 +25,13 @@
   }
 
   let { data, children }: Props = $props()
-  const { environment, configuration } = data
+  // The game actor is initialized once for the lifetime of this layout.
+  const { environment, configuration } = untrack(() => data)
 
   const failedAnnotationUrlsState = setFailedAnnotationUrlsState()
   const gameTimeoutState = setGameTimeoutState()
   setTimerState()
+  setMapControlsState()
 
   const { snapshot, send, actorRef } = useMachine(gameMachine, {
     input: {
